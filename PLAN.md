@@ -1049,6 +1049,309 @@ npx skills add remotion-dev/skills
 
 ---
 
+## 12. Research: Is Remotion The Right Choice?
+
+### The Zohran Video Style
+
+Based on research, Zohran Mamdani's viral Eid videos feature:
+- Bright flowers and rose heart wreaths
+- Face cutouts flashing with ironic/cringey transitions
+- Psychedelic, trippy morphing effects
+- Bollywood music backgrounds
+
+**Can Remotion handle this?** Yes, BUT with caveats:
+
+### Remotion Capabilities
+
+| Feature | Support | How |
+|---------|---------|-----|
+| Basic animations | ✅ Native | `spring()`, `interpolate()` |
+| Text effects | ✅ Native | CSS animations, custom components |
+| Image transitions | ✅ Native | Sequences, crossfades |
+| Particle effects | ✅ Via libraries | react-particles, custom Canvas |
+| 3D effects | ✅ Via Three.js | @remotion/three integration |
+| Lottie animations | ✅ Native | @remotion/lottie (After Effects import) |
+| WebGL shaders | ✅ Native | Custom shader components |
+| **Psychedelic morphing** | ⚠️ Complex | Requires custom WebGL/shaders |
+| **Face warping** | ⚠️ Complex | Need mesh distortion or AI |
+
+### For Trippy/Psychedelic Effects
+
+The Zohran-style effects require more advanced techniques:
+
+1. **Mesh Warp Distortion** - After Effects technique that can be replicated with WebGL
+2. **AI Morphing** - Tools like Deforum/Stable Diffusion for face morphs
+3. **Pre-rendered Lottie** - Create in After Effects, export as Lottie
+
+**Recommendation**: For MVP, use **pre-made Lottie animations** and **CSS-based effects**. Save complex shader effects for v2.
+
+### Alternative Tools Considered
+
+| Tool | Pros | Cons | Verdict |
+|------|------|------|---------|
+| **Remotion** | React-native, programmatic, great for templates | Complex effects need custom work | ✅ Best for our use case |
+| **FFmpeg directly** | Maximum control, free | Steep learning curve, no React | ❌ Too low-level |
+| **After Effects + Templater** | Pro-quality effects | Expensive, not programmatic | ❌ Wrong paradigm |
+| **Creatomate API** | Easy API, hosted | Less control, ongoing costs | 🤔 Consider for v2 rendering |
+| **Neural Frames** | AI psychedelic videos | Music-focused, less customizable | ❌ Wrong use case |
+
+### Verdict: Remotion + Lottie Hybrid
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    EFFECT PIPELINE                              │
+│                                                                 │
+│   Simple Effects          Complex Effects         AI Effects    │
+│   (Remotion native)       (Pre-made Lottie)       (Future v2)   │
+│                                                                 │
+│   • Text animations       • Psychedelic BGs       • Face morph  │
+│   • Image pop/slide       • Flower explosions     • Style xfer  │
+│   • Sparkle particles     • Face frame effects    • Deforum     │
+│   • Color transitions     • Trippy transitions                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 13. Meme Culture Research & Theme Expansion
+
+### Research Sources for Desi Meme Culture
+
+#### Publications & Media
+| Source | What to Learn | Link |
+|--------|---------------|------|
+| **The Juggernaut** | South Asian diaspora stories, cultural trends | thejuggernaut.com |
+| **Vice Desi Content** | Gen Z desi meme analysis | vice.com |
+| **MEL Magazine** | "Why South Asian Men Are Obsessed With Drake" | melmagazine.com |
+| **Brown Pundits** | Cultural commentary | brownpundits.com |
+
+#### Instagram Meme Pages to Study
+| Account | Followers | Vibe |
+|---------|-----------|------|
+| **@rajnikant_vs_cidjokes** | 13M | OG desi memes, Bollywood |
+| **@theindianmemes** | 412K | "Masala for your feed" |
+| **@trolls_official** | 6.2M | Puns + pictures |
+| **@desi.humor** | 21K | "Brown people be like" |
+| **@shitindianssay** | - | Cultural quirks, phrases |
+| **@thedesistuff** | - | Nostalgic, wholesome desi |
+| **@ghantaa** | - | Street-smart humor |
+| **@aksharpathak** | 389K | Design-forward memes |
+
+#### TikTok Trends to Watch
+- **Asoka Makeup Trend** - Shah Rukh Khan film inspired
+- **Desi Dad Reactions** - Relatable family humor
+- **Bollywood Lip Syncs** - Classic dialogues
+- **Brown Kid Struggles** - Diaspora experiences
+
+### Why Drake Matters
+
+Drake resonates with desi youth because:
+- Says "mashAllah" and "wallahi" in songs
+- Light-skinned, bearded aesthetic
+- Emotional/soft masculinity
+- Toronto connection (large South Asian population)
+- "Islamic remixes" of his songs went viral in 2010s
+
+**Template Idea**: "Drake Mode" - emotional captions, OVO aesthetic, Toronto vibes
+
+### Expanded Theme Ideas
+
+Based on research, here are MORE themes beyond Zohran/Aunty/Classic:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    EXPANDED THEME LIBRARY                       │
+│                                                                 │
+│   CORE THEMES (MVP)                                             │
+│   ├── 🎭 Zohran Mode      (politician greeting card energy)     │
+│   ├── 💅 Aunty Aesthetics (gold bling, dramatic, Bollywood)     │
+│   └── 🌙 Classic Eid      (elegant, lanterns, calligraphy)      │
+│                                                                 │
+│   MEME THEMES (v1.1)                                            │
+│   ├── 🦉 Drake Mode       (OVO vibes, emotional captions)       │
+│   ├── 🎬 Bollywood Drama  (SRK poses, filmi dialogues)          │
+│   ├── 👨‍👩‍👧 Desi Family     (WhatsApp forward energy)             │
+│   └── 🐐 Qurbani Vibes    (Eid al-Adha specific, goat memes)    │
+│                                                                 │
+│   NICHE THEMES (v2)                                             │
+│   ├── 🏏 Cricket Eid      (IPL/World Cup crossover)             │
+│   ├── 🎵 Coke Studio      (Pakistani music aesthetic)           │
+│   ├── 🌶️ Biryani Wars     (Hyderabadi vs Lucknowi)              │
+│   └── 📱 NRI Struggles    (Diaspora-specific humor)             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 14. Sound & Asset Sources
+
+### Nasheeds (Islamic Vocals)
+
+| Source | Type | License | Notes |
+|--------|------|---------|-------|
+| **NoCopyrightNasheeds** | Free | Credit required | Best free option, stream-safe |
+| **Internet Archive** | Free | Varies | Large collection, check each |
+| **Pixabay Music** | Free | No attribution | Limited selection |
+| **Envato Elements** | Paid | Royalty-free | High quality, $16.50/mo |
+
+**Recommended**: Start with NoCopyrightNasheeds, supplement with Envato
+
+### Bollywood & Desi Sounds
+
+| Source | Type | License | Notes |
+|--------|------|---------|-------|
+| **Pixabay** | Free | No attribution | SFX and short clips |
+| **Soundsnap** | Paid | Royalty-free | 500K+ SFX library |
+| **Storyblocks** | Subscription | Unlimited | Good Bollywood selection |
+| **AudioJungle** | Per-track | Royalty-free | 1,123 Bollywood tracks |
+
+**Legal Note**: For actual Bollywood song clips, you need sync licenses OR:
+- Use <10 second clips (fair use gray area)
+- Use royalty-free "Bollywood-style" music
+- Create original covers
+
+### Funny Voiceovers
+
+**DIY Approach** (Recommended for authenticity):
+1. Record friends/family saying classic phrases
+2. Use ElevenLabs to clone and generate variations
+3. Commission from Fiverr voice actors
+
+**Classic Phrases to Record**:
+- "Eid Mubarak beta!"
+- "Khana khao, bahut kamzor lag rahe ho"
+- "MashAllah, kitna bada ho gaya!"
+- "Beta, shaadi kab kar rahe ho?"
+- "Ammi ki kasam"
+- "Arey waah!"
+
+### Visual Assets
+
+| Source | Type | Best For |
+|--------|------|----------|
+| **LottieFiles** | Lottie JSON | Animated stickers, effects |
+| **Freepik** | SVG/PNG | Eid elements, Islamic patterns |
+| **Flaticon** | Icons | UI elements |
+| **Unsplash** | Photos | Backgrounds |
+| **Pexels Videos** | Stock video | BG loops |
+| **Pixabay** | Everything | General assets |
+
+### Where to Find Reference Videos
+
+| Platform | Search Terms | What to Study |
+|----------|--------------|---------------|
+| **TikTok** | #EidMubarak, #DesiMemes, @zohran_k_mamdani | Transitions, humor style |
+| **Instagram Reels** | #EidMubarak, #BrownMemes | Visual style, popular formats |
+| **YouTube** | "Eid Mubarak video template", "desi meme compilation" | Longer format examples |
+| **Pinterest** | "Eid card design", "Islamic art modern" | Static design inspiration |
+
+### Specific Videos to Study
+
+1. **Zohran Mamdani's Eid videos** - instagram.com/reel/DH0gm4euANO/
+2. **Drake desi edits** - Search TikTok "Drake desi"
+3. **Aunty WhatsApp forwards** - Search "Indian aunty WhatsApp video"
+4. **Pakistani Eid shows** - ARY/Geo TV Eid transmissions for OTT aesthetic
+
+---
+
+## 15. Technical Deep Dive: Psychedelic Effects
+
+### How to Achieve Zohran-Style Effects in Remotion
+
+#### 1. Flower Explosion Effect
+```typescript
+// Use Lottie for pre-made flower animations
+import { Lottie } from "@remotion/lottie";
+import flowerExplosion from "./flower-explosion.json";
+
+const FlowerBurst = () => (
+  <Lottie
+    animationData={flowerExplosion}
+    style={{ position: "absolute", width: "100%", height: "100%" }}
+  />
+);
+```
+
+#### 2. Face Pop-In Effect
+```typescript
+const FacePopIn = ({ imageUrl }) => {
+  const frame = useCurrentFrame();
+
+  // Elastic pop effect
+  const scale = spring({
+    frame,
+    fps: 30,
+    config: { damping: 8, stiffness: 200, mass: 0.5 }
+  });
+
+  // Slight rotation wiggle
+  const rotation = Math.sin(frame * 0.3) * 3;
+
+  // Glow pulse
+  const glow = interpolate(Math.sin(frame * 0.2), [-1, 1], [0, 20]);
+
+  return (
+    <Img
+      src={imageUrl}
+      style={{
+        transform: `scale(${scale}) rotate(${rotation}deg)`,
+        filter: `drop-shadow(0 0 ${glow}px gold)`,
+      }}
+    />
+  );
+};
+```
+
+#### 3. Psychedelic Background (WebGL Shader)
+```typescript
+// For truly trippy effects, use a shader
+import { ThreeCanvas } from "@remotion/three";
+
+const PsychedelicBG = () => {
+  const frame = useCurrentFrame();
+
+  return (
+    <ThreeCanvas>
+      <mesh>
+        <planeGeometry args={[10, 10]} />
+        <shaderMaterial
+          uniforms={{ time: { value: frame * 0.01 } }}
+          fragmentShader={psychedelicShader}
+        />
+      </mesh>
+    </ThreeCanvas>
+  );
+};
+
+const psychedelicShader = `
+  uniform float time;
+  varying vec2 vUv;
+
+  void main() {
+    vec2 uv = vUv;
+    float r = sin(uv.x * 10.0 + time) * 0.5 + 0.5;
+    float g = sin(uv.y * 10.0 + time * 1.5) * 0.5 + 0.5;
+    float b = sin((uv.x + uv.y) * 10.0 + time * 2.0) * 0.5 + 0.5;
+    gl_FragColor = vec4(r, g, b, 1.0);
+  }
+`;
+```
+
+#### 4. Pre-made Lottie Effects to License/Create
+
+| Effect | Source | Use For |
+|--------|--------|---------|
+| Confetti burst | LottieFiles | Celebrations |
+| Heart explosion | LottieFiles | Aunty aesthetic |
+| Gold particles | LottieFiles | Bling effect |
+| Flower bloom | Custom/Commission | Zohran style |
+| Sparkle overlay | LottieFiles | General |
+| VHS glitch | LottieFiles | Retro filter |
+
+---
+
 ## Summary
 
 EidMemeMaker differentiates from generic tools by:
@@ -1057,7 +1360,10 @@ EidMemeMaker differentiates from generic tools by:
 3. **Cultural authenticity** - Aunty filters, Bollywood sounds, cultural tropes
 4. **AI-powered** - Generate custom assets with prompts
 5. **Fun first** - Intentionally cheesy, meme-friendly
+6. **Meme-native** - Built on actual desi internet culture research
 
 The tech stack (Expo + Convex + Remotion + Replicate) is modern, cost-effective, and capable of delivering the vision. MVP can be built by a solo dev or small team.
+
+**Remotion Verdict**: YES, it handles our needs. Use native features for simple effects, Lottie for complex pre-made animations, and WebGL/Three.js for truly psychedelic stuff.
 
 Ready to start building? Let's go! 🌙✨
