@@ -76,175 +76,58 @@ Users want to:
 3. Place that head into meme templates
 4. Optionally add accessories (hijab, crown, sunglasses)
 
-### Technical Approaches for Head Extraction
+### Solution: remove.bg API
+
+We're using **remove.bg** as our sole background removal solution for MVP. It's the industry standard, handles hair and complex edges beautifully, and is dead simple to integrate.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│              HEAD EXTRACTION OPTIONS                            │
+│                    HEAD EXTRACTION FLOW                         │
 │                                                                 │
-│  OPTION A: Background Removal API (Recommended for MVP)         │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  1. User uploads photo                                   │   │
-│  │  2. Send to remove.bg API or Replicate rembg             │   │
-│  │  3. Returns PNG with transparent background              │   │
-│  │  4. Optionally crop to face bounds                       │   │
-│  │                                                          │   │
-│  │  Pros: High quality, handles hair well, fast             │   │
-│  │  Cons: API cost (~$0.01-0.05 per image)                  │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│   ┌──────────┐      ┌──────────────┐      ┌──────────────┐     │
+│   │  User    │      │  remove.bg   │      │  PNG with    │     │
+│   │  Photo   │  ──▶ │  API         │  ──▶ │  transparent │     │
+│   │  (JPG)   │      │              │      │  background  │     │
+│   └──────────┘      └──────────────┘      └──────────────┘     │
 │                                                                 │
-│  OPTION B: On-Device ML (Future optimization)                   │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  - expo-face-detector: Finds face bounds                 │   │
-│  │  - Apple Vision (iOS): Person segmentation               │   │
-│  │  - ML Kit (Android): Selfie segmentation                 │   │
-│  │                                                          │   │
-│  │  Pros: Free, offline, fast                               │   │
-│  │  Cons: Quality varies, more complex to implement         │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  OPTION C: Manual Crop Tool (Fallback)                          │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  - Show oval/circle guide over photo                     │   │
-│  │  - User pinch-zooms to fit head in guide                 │   │
-│  │  - Crop to oval shape                                    │   │
-│  │                                                          │   │
-│  │  Pros: No API cost, user control                         │   │
-│  │  Cons: Manual work, no true background removal           │   │
-│  └─────────────────────────────────────────────────────────┘   │
+│   Cost: ~$0.05 per image (preview) / ~$0.20 (full HD)          │
+│   Speed: 1-3 seconds                                            │
+│   Quality: Excellent (handles hair, edges, complex backgrounds) │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### FFmpeg for Cropping?
+### Why remove.bg?
 
-**FFmpeg CAN crop images**, but it's rectangular only:
+| Aspect | Details |
+|--------|---------|
+| **Quality** | Best-in-class edge detection, especially for hair |
+| **Speed** | 1-3 seconds per image |
+| **Simplicity** | Single API call, no ML setup required |
+| **Reliability** | Production-ready, used by millions |
+| **Pricing** | Free tier (50 images/month), then ~$0.05-0.20/image |
 
-```bash
-# Basic rectangular crop
-ffmpeg -i input.jpg -vf "crop=200:200:100:50" output.jpg
+### How It Works
 
-# With face detection? NO - FFmpeg doesn't detect faces
-```
+1. **User picks photo** via expo-image-picker (with optional crop)
+2. **Send to remove.bg** API endpoint
+3. **Receive PNG** with transparent background
+4. **Store in Convex** file storage
+5. **Use in template** as head layer
 
-**FFmpeg limitations for our use case:**
-- No background removal (just rectangular crop)
-- No face detection built-in
-- No transparency handling for PNG output in video
-- Would need separate face detection + FFmpeg = complex pipeline
+### Head Accessories (Drake with Hijab)
 
-**Verdict**: FFmpeg is NOT the right tool for head extraction. Use a background removal API.
+For accessories, we use pre-made PNG overlays positioned relative to the head image:
 
-### Recommended MVP Pipeline for Head Extraction
+| Accessory | Position | Notes |
+|-----------|----------|-------|
+| Hijab | Wraps around head | Sized ~140% of head |
+| Crown | Above head | Centered, ~80% width |
+| Sunglasses | Over eyes | Centered, ~60% width |
+| Party Hat | Top of head | Angled slightly |
+| Halo | Above head | Glowing effect |
 
-```typescript
-// Step 1: User picks/takes photo
-const pickImage = async () => {
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,  // Let user do initial crop
-    aspect: [1, 1],       // Square for head
-    quality: 0.8,
-  });
-  return result.assets[0].uri;
-};
-
-// Step 2: Remove background via API
-const removeBackground = async (imageUri: string) => {
-  // Option A: remove.bg (simple, reliable)
-  const formData = new FormData();
-  formData.append('image_file', {
-    uri: imageUri,
-    type: 'image/jpeg',
-    name: 'photo.jpg',
-  });
-  formData.append('size', 'preview'); // or 'full' for HD
-
-  const response = await fetch('https://api.remove.bg/v1.0/removebg', {
-    method: 'POST',
-    headers: {
-      'X-Api-Key': REMOVE_BG_API_KEY,
-    },
-    body: formData,
-  });
-
-  const blob = await response.blob();
-  return blob; // PNG with transparent background
-};
-
-// Option B: Replicate rembg (cheaper, self-hosted option)
-const removeBackgroundReplicate = async (imageUrl: string) => {
-  const response = await fetch('https://api.replicate.com/v1/predictions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Token ${REPLICATE_API_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      version: "fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003",
-      input: { image: imageUrl }
-    }),
-  });
-  // Returns URL to PNG with transparent background
-};
-
-// Step 3: Optionally detect face bounds for tighter crop
-const detectFace = async (imageUri: string) => {
-  // Using expo-face-detector
-  const { faces } = await FaceDetector.detectFacesAsync(imageUri, {
-    mode: FaceDetector.FaceDetectorMode.accurate,
-    detectLandmarks: FaceDetector.FaceDetectorLandmarks.all,
-  });
-
-  if (faces.length > 0) {
-    const face = faces[0];
-    // Add padding around face bounds
-    const padding = face.bounds.size.width * 0.3;
-    return {
-      x: face.bounds.origin.x - padding,
-      y: face.bounds.origin.y - padding,
-      width: face.bounds.size.width + padding * 2,
-      height: face.bounds.size.height + padding * 2,
-    };
-  }
-  return null;
-};
-```
-
-### Head Accessories Feature (Drake with Hijab)
-
-```typescript
-// Pre-made accessory overlays
-const accessories = [
-  { id: 'hijab-white', name: 'White Hijab', image: require('./assets/hijab-white.png') },
-  { id: 'hijab-black', name: 'Black Hijab', image: require('./assets/hijab-black.png') },
-  { id: 'crown', name: 'Gold Crown', image: require('./assets/crown.png') },
-  { id: 'sunglasses', name: 'Sunglasses', image: require('./assets/sunglasses.png') },
-  { id: 'party-hat', name: 'Party Hat', image: require('./assets/party-hat.png') },
-  { id: 'halo', name: 'Halo', image: require('./assets/halo.png') },
-];
-
-// Position accessory relative to face landmarks
-const positionAccessory = (faceLandmarks, accessoryType) => {
-  switch (accessoryType) {
-    case 'hijab':
-      // Position around entire head, slightly above forehead
-      return {
-        x: faceLandmarks.forehead.x - headWidth * 0.2,
-        y: faceLandmarks.forehead.y - headHeight * 0.3,
-        scale: 1.4,
-      };
-    case 'sunglasses':
-      // Position at eye level
-      return {
-        x: faceLandmarks.leftEye.x,
-        y: faceLandmarks.leftEye.y,
-        scale: 1.0,
-      };
-    // etc.
-  }
-};
-```
+The user can select an accessory in Step 2 (Customize), and it gets composited with their head in the Remotion template.
 
 ---
 
@@ -273,7 +156,6 @@ const positionAccessory = (faceLandmarks, accessoryType) => {
 │                                                                 │
 │  FRONTEND (Expo)                                                │
 │  ├── expo-image-picker     → Photo selection                    │
-│  ├── expo-face-detector    → Find face bounds                   │
 │  ├── expo-av               → Audio preview                      │
 │  └── react-native-skia     → Canvas preview (optional)          │
 │                                                                 │
@@ -283,8 +165,7 @@ const positionAccessory = (faceLandmarks, accessoryType) => {
 │  └── Render queue          → Track render jobs                  │
 │                                                                 │
 │  HEAD EXTRACTION                                                │
-│  └── remove.bg API         → Background removal ($0.01/image)   │
-│      OR Replicate rembg    → Self-hosted alternative            │
+│  └── remove.bg API         → Background removal                 │
 │                                                                 │
 │  VIDEO RENDERING                                                │
 │  └── Remotion Lambda       → React → MP4                        │
@@ -294,6 +175,107 @@ const positionAccessory = (faceLandmarks, accessoryType) => {
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+### What is a Render Queue?
+
+A **Render Queue** is a system that manages video rendering jobs. Since video rendering is CPU/GPU intensive and takes time (10-60 seconds per video), we can't do it synchronously while the user waits.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    RENDER QUEUE FLOW                            │
+│                                                                 │
+│   1. USER REQUESTS VIDEO                                        │
+│      └── "I want to export my meme!"                           │
+│                                                                 │
+│   2. JOB ADDED TO QUEUE                                         │
+│      └── Create record in Convex: { status: "pending" }        │
+│      └── User sees: "Your video is being prepared..."          │
+│                                                                 │
+│   3. WORKER PICKS UP JOB                                        │
+│      └── Remotion Lambda starts rendering                       │
+│      └── Update status: { status: "rendering", progress: 45% } │
+│      └── User sees: "Rendering... 45%"                         │
+│                                                                 │
+│   4. RENDER COMPLETES                                           │
+│      └── MP4 uploaded to storage                                │
+│      └── Update status: { status: "completed", url: "..." }    │
+│      └── User sees: "Done! Download or Share"                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Why do we need it?**
+- Video rendering takes 10-60 seconds (can't block the UI)
+- Multiple users might request renders simultaneously
+- We need to track progress and handle failures
+- Convex gives us real-time updates so users see progress live
+
+**In Convex, it looks like:**
+```
+renders table:
+┌────────────┬─────────────┬──────────┬─────────┬─────────────┐
+│ id         │ projectId   │ status   │ progress│ outputUrl   │
+├────────────┼─────────────┼──────────┼─────────┼─────────────┤
+│ render_123 │ project_456 │ pending  │ 0       │ null        │
+│ render_124 │ project_789 │ rendering│ 67      │ null        │
+│ render_125 │ project_012 │ completed│ 100     │ https://... │
+└────────────┴─────────────┴──────────┴─────────┴─────────────┘
+```
+
+---
+
+### What is Remotion Lambda?
+
+**Remotion Lambda** is Remotion's serverless video rendering service that runs on AWS Lambda. Instead of running video rendering on your own servers, you deploy a Lambda function that does the heavy lifting.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    REMOTION LAMBDA EXPLAINED                    │
+│                                                                 │
+│   WITHOUT REMOTION LAMBDA (Self-hosted):                        │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │  You need:                                               │  │
+│   │  • A server with FFmpeg installed                        │  │
+│   │  • Chromium/Puppeteer for rendering React                │  │
+│   │  • Always-on server ($50-100/month minimum)              │  │
+│   │  • Handle scaling yourself                               │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│   WITH REMOTION LAMBDA (Serverless):                            │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │  You get:                                                │  │
+│   │  • Pre-configured AWS Lambda function                    │  │
+│   │  • Pay only when rendering (~$0.01-0.05 per video)       │  │
+│   │  • Auto-scales to handle many concurrent renders         │  │
+│   │  • No server maintenance                                 │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**How it works:**
+
+1. **You deploy once**: Run `npx remotion lambda deploy` to set up the Lambda function on AWS
+2. **Your app calls the API**: When user wants a video, call `renderMediaOnLambda()`
+3. **Lambda renders**: The function spins up, renders your React composition to MP4
+4. **You get a URL**: The finished video is stored in S3, you get a download URL
+
+**Cost breakdown:**
+| Video Length | Approximate Cost |
+|--------------|------------------|
+| 10 seconds   | ~$0.01           |
+| 20 seconds   | ~$0.02           |
+| 60 seconds   | ~$0.05           |
+
+**Why Lambda vs. self-hosted?**
+- **No idle costs**: Only pay when actually rendering
+- **Auto-scaling**: Can handle 100 users rendering simultaneously
+- **No DevOps**: AWS manages the infrastructure
+- **Fast**: Lambda functions are optimized for this workload
+
+**Trade-off**: Requires AWS account setup, but Remotion has excellent docs for this.
 
 ---
 
