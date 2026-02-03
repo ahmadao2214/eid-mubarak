@@ -4,6 +4,692 @@
 
 ---
 
+# PART 1: MVP PROTOTYPE (FOCUSED SCOPE)
+
+## MVP-1. Zohran Video Breakdown
+
+### Frame-by-Frame Analysis
+
+The viral Zohran Eid video contains these distinct elements:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                 ZOHRAN VIDEO ANATOMY                            │
+│                                                                 │
+│  LAYER 1: BACKGROUND                                            │
+│  └── Psychedelic scenic road (mountain/desert highway)          │
+│      └── Subtle motion (slow zoom or pan)                       │
+│                                                                 │
+│  LAYER 2: HUE OVERLAY                                           │
+│  └── Color wash over entire video                               │
+│      └── Options: Gold, Pink/Magenta, Green, Blue               │
+│      └── Slightly animated (pulsing or shifting)                │
+│                                                                 │
+│  LAYER 3: DECORATIVE ELEMENTS                                   │
+│  ├── Heart made of roses (pumping animation)                    │
+│  ├── Flower that opens (reveals head)                           │
+│  └── Floating rose petals / sparkles                            │
+│                                                                 │
+│  LAYER 4: HEAD/FACE CUTOUT                                      │
+│  ├── Main head (zooms in/out from flower center)                │
+│  ├── Multiple heads (6 heads spiral around)                     │
+│  └── Head with accessories (hijab on Drake, etc.)               │
+│                                                                 │
+│  LAYER 5: TEXT OVERLAYS                                         │
+│  ├── "Eid Mubarak" (funky/psychedelic font)                     │
+│  ├── "Register to Vote" (call to action)                        │
+│  ├── Links/handles                                              │
+│  └── Floating text animation (rises from head)                  │
+│                                                                 │
+│  LAYER 6: AUDIO                                                 │
+│  └── Nasheed or Bollywood background music                      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Simplified Template Structure
+
+For MVP, we break this into **customizable slots**:
+
+| Slot | User Choice | Default |
+|------|-------------|---------|
+| **Background** | Mountain road, Desert highway, Scenic valley, Solid color | Mountain road |
+| **Hue Overlay** | Gold, Pink, Green, Blue, Purple, None | Gold |
+| **Decorative Element** | Rose heart, Sunflower, Lotus, Crescent moon, None | Rose heart |
+| **Flower for Head** | Rose bloom, Sunflower open, Lotus open, None | Rose bloom |
+| **Head Image** | User's photo (auto-cropped) | Required |
+| **Head Animation** | Single pop, 6-head spiral, Zoom pulse, Float | Single pop |
+| **Text Line 1** | Custom text | "Eid Mubarak!" |
+| **Text Line 2** | Custom text (optional) | "" |
+| **Font Style** | Psychedelic, Classic, Bollywood, Clean | Psychedelic |
+| **Sound** | Pick from library | Default nasheed |
+
+---
+
+## MVP-2. Face/Head Cropping Feature
+
+### The Core Problem
+
+Users want to:
+1. Take a selfie or pick a photo
+2. Have JUST THE HEAD extracted (no background)
+3. Place that head into meme templates
+4. Optionally add accessories (hijab, crown, sunglasses)
+
+### Technical Approaches for Head Extraction
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              HEAD EXTRACTION OPTIONS                            │
+│                                                                 │
+│  OPTION A: Background Removal API (Recommended for MVP)         │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  1. User uploads photo                                   │   │
+│  │  2. Send to remove.bg API or Replicate rembg             │   │
+│  │  3. Returns PNG with transparent background              │   │
+│  │  4. Optionally crop to face bounds                       │   │
+│  │                                                          │   │
+│  │  Pros: High quality, handles hair well, fast             │   │
+│  │  Cons: API cost (~$0.01-0.05 per image)                  │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  OPTION B: On-Device ML (Future optimization)                   │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  - expo-face-detector: Finds face bounds                 │   │
+│  │  - Apple Vision (iOS): Person segmentation               │   │
+│  │  - ML Kit (Android): Selfie segmentation                 │   │
+│  │                                                          │   │
+│  │  Pros: Free, offline, fast                               │   │
+│  │  Cons: Quality varies, more complex to implement         │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  OPTION C: Manual Crop Tool (Fallback)                          │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  - Show oval/circle guide over photo                     │   │
+│  │  - User pinch-zooms to fit head in guide                 │   │
+│  │  - Crop to oval shape                                    │   │
+│  │                                                          │   │
+│  │  Pros: No API cost, user control                         │   │
+│  │  Cons: Manual work, no true background removal           │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### FFmpeg for Cropping?
+
+**FFmpeg CAN crop images**, but it's rectangular only:
+
+```bash
+# Basic rectangular crop
+ffmpeg -i input.jpg -vf "crop=200:200:100:50" output.jpg
+
+# With face detection? NO - FFmpeg doesn't detect faces
+```
+
+**FFmpeg limitations for our use case:**
+- No background removal (just rectangular crop)
+- No face detection built-in
+- No transparency handling for PNG output in video
+- Would need separate face detection + FFmpeg = complex pipeline
+
+**Verdict**: FFmpeg is NOT the right tool for head extraction. Use a background removal API.
+
+### Recommended MVP Pipeline for Head Extraction
+
+```typescript
+// Step 1: User picks/takes photo
+const pickImage = async () => {
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,  // Let user do initial crop
+    aspect: [1, 1],       // Square for head
+    quality: 0.8,
+  });
+  return result.assets[0].uri;
+};
+
+// Step 2: Remove background via API
+const removeBackground = async (imageUri: string) => {
+  // Option A: remove.bg (simple, reliable)
+  const formData = new FormData();
+  formData.append('image_file', {
+    uri: imageUri,
+    type: 'image/jpeg',
+    name: 'photo.jpg',
+  });
+  formData.append('size', 'preview'); // or 'full' for HD
+
+  const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+    method: 'POST',
+    headers: {
+      'X-Api-Key': REMOVE_BG_API_KEY,
+    },
+    body: formData,
+  });
+
+  const blob = await response.blob();
+  return blob; // PNG with transparent background
+};
+
+// Option B: Replicate rembg (cheaper, self-hosted option)
+const removeBackgroundReplicate = async (imageUrl: string) => {
+  const response = await fetch('https://api.replicate.com/v1/predictions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Token ${REPLICATE_API_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      version: "fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003",
+      input: { image: imageUrl }
+    }),
+  });
+  // Returns URL to PNG with transparent background
+};
+
+// Step 3: Optionally detect face bounds for tighter crop
+const detectFace = async (imageUri: string) => {
+  // Using expo-face-detector
+  const { faces } = await FaceDetector.detectFacesAsync(imageUri, {
+    mode: FaceDetector.FaceDetectorMode.accurate,
+    detectLandmarks: FaceDetector.FaceDetectorLandmarks.all,
+  });
+
+  if (faces.length > 0) {
+    const face = faces[0];
+    // Add padding around face bounds
+    const padding = face.bounds.size.width * 0.3;
+    return {
+      x: face.bounds.origin.x - padding,
+      y: face.bounds.origin.y - padding,
+      width: face.bounds.size.width + padding * 2,
+      height: face.bounds.size.height + padding * 2,
+    };
+  }
+  return null;
+};
+```
+
+### Head Accessories Feature (Drake with Hijab)
+
+```typescript
+// Pre-made accessory overlays
+const accessories = [
+  { id: 'hijab-white', name: 'White Hijab', image: require('./assets/hijab-white.png') },
+  { id: 'hijab-black', name: 'Black Hijab', image: require('./assets/hijab-black.png') },
+  { id: 'crown', name: 'Gold Crown', image: require('./assets/crown.png') },
+  { id: 'sunglasses', name: 'Sunglasses', image: require('./assets/sunglasses.png') },
+  { id: 'party-hat', name: 'Party Hat', image: require('./assets/party-hat.png') },
+  { id: 'halo', name: 'Halo', image: require('./assets/halo.png') },
+];
+
+// Position accessory relative to face landmarks
+const positionAccessory = (faceLandmarks, accessoryType) => {
+  switch (accessoryType) {
+    case 'hijab':
+      // Position around entire head, slightly above forehead
+      return {
+        x: faceLandmarks.forehead.x - headWidth * 0.2,
+        y: faceLandmarks.forehead.y - headHeight * 0.3,
+        scale: 1.4,
+      };
+    case 'sunglasses':
+      // Position at eye level
+      return {
+        x: faceLandmarks.leftEye.x,
+        y: faceLandmarks.leftEye.y,
+        scale: 1.0,
+      };
+    // etc.
+  }
+};
+```
+
+---
+
+## MVP-3. Refined Tech Stack for Prototype
+
+### Remotion vs FFmpeg Decision
+
+| Requirement | FFmpeg | Remotion | Winner |
+|-------------|--------|----------|--------|
+| Compose layers (bg + head + text) | ✅ Complex filters | ✅ React components | Remotion |
+| Animate head (zoom, spiral) | ⚠️ Very complex | ✅ spring(), interpolate() | Remotion |
+| Add Lottie effects | ❌ No | ✅ @remotion/lottie | Remotion |
+| Text animations | ⚠️ Limited | ✅ Full CSS/JS | Remotion |
+| Hue overlay | ✅ colorchannelmixer | ✅ CSS filter | Tie |
+| Export MP4 | ✅ Native | ✅ Uses FFmpeg internally | Tie |
+| Learning curve | Steep | Medium (React) | Remotion |
+| Dev speed | Slow | Fast | Remotion |
+
+**Verdict: Remotion** - It uses FFmpeg under the hood anyway, but gives us React's composability.
+
+### Simplified MVP Stack
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    MVP TECH STACK                               │
+│                                                                 │
+│  FRONTEND (Expo)                                                │
+│  ├── expo-image-picker     → Photo selection                    │
+│  ├── expo-face-detector    → Find face bounds                   │
+│  ├── expo-av               → Audio preview                      │
+│  └── react-native-skia     → Canvas preview (optional)          │
+│                                                                 │
+│  BACKEND (Convex)                                               │
+│  ├── File storage          → Store user photos, outputs         │
+│  ├── Template configs      → Store template definitions         │
+│  └── Render queue          → Track render jobs                  │
+│                                                                 │
+│  HEAD EXTRACTION                                                │
+│  └── remove.bg API         → Background removal ($0.01/image)   │
+│      OR Replicate rembg    → Self-hosted alternative            │
+│                                                                 │
+│  VIDEO RENDERING                                                │
+│  └── Remotion Lambda       → React → MP4                        │
+│      └── @remotion/lottie  → Flower animations, effects         │
+│                                                                 │
+│  NO AI GENERATION FOR MVP                                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## MVP-4. Template System Design
+
+### Template Definition Schema
+
+```typescript
+interface MemeTemplate {
+  id: string;
+  name: string;
+  description: string;
+  thumbnail: string;
+
+  // Video settings
+  duration: number;        // seconds (10, 15, 20)
+  fps: number;             // 30
+  width: number;           // 1080
+  height: number;          // 1920 (9:16)
+
+  // Layers (back to front)
+  layers: {
+    background: {
+      type: 'video' | 'image' | 'solid';
+      source: string;      // URL or color
+      animation?: 'slow-zoom' | 'pan-left' | 'static';
+    };
+
+    hueOverlay: {
+      enabled: boolean;
+      color: string;       // hex color
+      opacity: number;     // 0-1
+      animation?: 'pulse' | 'static';
+    };
+
+    decorativeElements: Array<{
+      type: 'lottie' | 'image';
+      source: string;
+      position: { x: number; y: number };  // percentage
+      scale: number;
+      animation?: string;
+    }>;
+
+    headSlot: {
+      position: { x: number; y: number };
+      scale: number;
+      animation: 'pop' | 'zoom-pulse' | 'spiral-multiply' | 'float';
+      animationConfig?: {
+        spiralCount?: number;    // for spiral-multiply
+        pulseSpeed?: number;     // for zoom-pulse
+      };
+      flowerReveal?: {
+        enabled: boolean;
+        type: 'rose' | 'sunflower' | 'lotus';
+      };
+      accessory?: {
+        type: string;
+        position: 'above' | 'on' | 'below';
+      };
+    };
+
+    textSlots: Array<{
+      id: string;
+      defaultText: string;
+      position: { x: number; y: number };
+      style: {
+        fontFamily: string;
+        fontSize: number;
+        color: string;
+        stroke?: string;
+      };
+      animation: 'fade-in' | 'rise-up' | 'typewriter' | 'float';
+      enterAtSecond: number;
+    }>;
+  };
+
+  audio: {
+    defaultTrack: string;  // ID from sound library
+    volume: number;
+  };
+}
+```
+
+### Pre-built Templates for MVP
+
+```typescript
+const templates: MemeTemplate[] = [
+  {
+    id: 'zohran-classic',
+    name: 'Zohran Classic',
+    description: 'The OG politician greeting card energy',
+    layers: {
+      background: {
+        type: 'video',
+        source: 'mountain-road-psychedelic.mp4',
+        animation: 'slow-zoom',
+      },
+      hueOverlay: {
+        enabled: true,
+        color: '#FFD700',  // Gold
+        opacity: 0.3,
+        animation: 'pulse',
+      },
+      decorativeElements: [
+        {
+          type: 'lottie',
+          source: 'rose-heart-pumping.json',
+          position: { x: 50, y: 50 },
+          scale: 1.2,
+        },
+      ],
+      headSlot: {
+        position: { x: 50, y: 45 },
+        scale: 0.4,
+        animation: 'zoom-pulse',
+        flowerReveal: {
+          enabled: true,
+          type: 'rose',
+        },
+      },
+      textSlots: [
+        {
+          id: 'main',
+          defaultText: 'Eid Mubarak!',
+          position: { x: 50, y: 75 },
+          style: {
+            fontFamily: 'Psychedelic',
+            fontSize: 64,
+            color: '#FFFFFF',
+            stroke: '#000000',
+          },
+          animation: 'rise-up',
+          enterAtSecond: 1,
+        },
+        {
+          id: 'secondary',
+          defaultText: '',
+          position: { x: 50, y: 85 },
+          style: {
+            fontFamily: 'Clean',
+            fontSize: 32,
+            color: '#FFFFFF',
+          },
+          animation: 'fade-in',
+          enterAtSecond: 2,
+        },
+      ],
+    },
+    audio: {
+      defaultTrack: 'nasheed-1',
+      volume: 0.8,
+    },
+  },
+
+  {
+    id: 'six-head-spiral',
+    name: 'Head Spiral',
+    description: '6 heads spiraling around - maximum chaos',
+    layers: {
+      // ... similar structure with spiral animation
+      headSlot: {
+        position: { x: 50, y: 50 },
+        scale: 0.25,
+        animation: 'spiral-multiply',
+        animationConfig: {
+          spiralCount: 6,
+        },
+      },
+    },
+  },
+
+  {
+    id: 'drake-hijab',
+    name: 'Hijab Mode',
+    description: 'Any head + hijab = instant meme',
+    layers: {
+      background: {
+        type: 'solid',
+        source: '#1a1a2e',
+      },
+      headSlot: {
+        position: { x: 50, y: 50 },
+        scale: 0.5,
+        animation: 'pop',
+        accessory: {
+          type: 'hijab-white',
+          position: 'on',
+        },
+      },
+      // ...
+    },
+  },
+];
+```
+
+---
+
+## MVP-5. Simplified User Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     MVP USER FLOW                               │
+│                     (3 Steps, Not 5)                            │
+└─────────────────────────────────────────────────────────────────┘
+
+STEP 1: PICK TEMPLATE + ADD HEAD
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   Pick a vibe:                                                  │
+│   ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐         │
+│   │ Zohran   │ │ 6-Head   │ │ Hijab    │ │ Aunty    │         │
+│   │ Classic  │ │ Spiral   │ │ Mode     │ │ Forward  │         │
+│   └──────────┘ └──────────┘ └──────────┘ └──────────┘         │
+│                                                                 │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │                                                         │  │
+│   │              📸 TAP TO ADD YOUR HEAD                    │  │
+│   │                                                         │  │
+│   │         (We'll magically remove the background)         │  │
+│   │                                                         │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│   [Use Celebrity Instead ▼]  (Drake, SRK, Aunty stock)         │
+│                                                                 │
+│                              [ NEXT → ]                         │
+└─────────────────────────────────────────────────────────────────┘
+
+STEP 2: CUSTOMIZE
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   ┌─────────────────────────────────────────┐                  │
+│   │                                         │                  │
+│   │           LIVE PREVIEW                  │                  │
+│   │           (animated)                    │                  │
+│   │                                         │                  │
+│   └─────────────────────────────────────────┘                  │
+│                                                                 │
+│   TEXT LINE 1:                                                  │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │  Eid Mubarak!                                           │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│   TEXT LINE 2 (optional):                                       │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │  From your favorite aunty                               │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│   CUSTOMIZE:                                                    │
+│   [🎨 Hue: Gold ▼] [🌸 Flower: Rose ▼] [🔊 Sound ▼]           │
+│                                                                 │
+│   ACCESSORY (optional):                                         │
+│   [None] [🧕 Hijab] [👑 Crown] [🕶️ Shades] [🎉 Hat]           │
+│                                                                 │
+│                    [ ← BACK ]  [ NEXT → ]                       │
+└─────────────────────────────────────────────────────────────────┘
+
+STEP 3: EXPORT & SHARE
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   ┌─────────────────────────────────────────┐                  │
+│   │                                         │                  │
+│   │           FINAL PREVIEW                 │                  │
+│   │           (full quality)                │                  │
+│   │                                         │                  │
+│   └─────────────────────────────────────────┘                  │
+│                                                                 │
+│   FORMAT:  [📹 Video]  [🖼️ GIF]  [📸 Image]                    │
+│                                                                 │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │  [ 📱 Share to WhatsApp ]                               │  │
+│   │  [ 📸 Share to Instagram ]                              │  │
+│   │  [ 💾 Save to Camera Roll ]                             │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│   Rendering... ████████████░░░░ 75%                            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## MVP-6. What's IN vs OUT of MVP
+
+### IN (Must Have)
+
+| Feature | Why |
+|---------|-----|
+| 4 pre-built templates | Core product |
+| Head extraction (background removal) | Core feature |
+| Head accessories (hijab, crown, etc.) | Drake meme capability |
+| 2 text slots with animation | Customization |
+| 3 hue overlay options | Quick customization |
+| 3 flower/element options | Template variety |
+| 5 curated sounds | Audio is essential |
+| Export to MP4 | Primary output |
+| Share to WhatsApp/Instagram | Distribution |
+
+### OUT (Later)
+
+| Feature | Why Defer |
+|---------|-----------|
+| AI image generation | Cost, complexity |
+| Custom template builder | Scope creep |
+| User accounts | Can be anonymous MVP |
+| GIF export | MP4 first |
+| Sound upload | Moderation concerns |
+| Web version | Mobile first |
+| More than 4 templates | Validate first |
+
+---
+
+## MVP-7. Asset Checklist
+
+### Backgrounds Needed (4)
+- [ ] Mountain road (psychedelic color graded)
+- [ ] Desert highway (golden hour)
+- [ ] Scenic valley (green, lush)
+- [ ] Solid gradient (fallback)
+
+### Lottie Animations Needed (6)
+- [ ] Rose heart pumping
+- [ ] Rose bloom (reveals head)
+- [ ] Sunflower bloom (reveals head)
+- [ ] Lotus bloom (reveals head)
+- [ ] Sparkle overlay
+- [ ] Floating petals
+
+### Head Accessories Needed (5)
+- [ ] White hijab
+- [ ] Black hijab
+- [ ] Gold crown
+- [ ] Sunglasses
+- [ ] Party hat
+
+### Sounds Needed (5)
+- [ ] Nasheed 1 (upbeat)
+- [ ] Nasheed 2 (peaceful)
+- [ ] Bollywood clip 1
+- [ ] Funny voiceover ("Eid Mubarak beta!")
+- [ ] Dramatic Bollywood sting
+
+### Fonts Needed (4)
+- [ ] Psychedelic/groovy font
+- [ ] Classic Arabic-friendly font
+- [ ] Bollywood style font
+- [ ] Clean sans-serif
+
+---
+
+## MVP-8. Development Phases
+
+### Phase 1: Foundation (3-4 days)
+- [ ] Set up Expo project with TypeScript
+- [ ] Set up Convex backend
+- [ ] Implement image picker
+- [ ] Integrate remove.bg API for background removal
+- [ ] Basic face detection for cropping
+
+### Phase 2: Template Engine (4-5 days)
+- [ ] Set up Remotion project
+- [ ] Create base composition component
+- [ ] Implement layer system (bg, hue, decorative, head, text)
+- [ ] Create 1 working template (Zohran Classic)
+- [ ] Test head placement and animation
+
+### Phase 3: Customization UI (3-4 days)
+- [ ] Build 3-step wizard navigation
+- [ ] Template selection screen
+- [ ] Customization screen (text, hue, flower, sound)
+- [ ] Live preview component
+- [ ] Accessory overlay system
+
+### Phase 4: Rendering & Export (3-4 days)
+- [ ] Set up Remotion Lambda (or local for testing)
+- [ ] Build render queue in Convex
+- [ ] Implement MP4 export
+- [ ] Add share functionality (WhatsApp, Instagram, save)
+- [ ] Progress indicators
+
+### Phase 5: Polish (2-3 days)
+- [ ] Add remaining 3 templates
+- [ ] Curate and add sounds
+- [ ] Error handling
+- [ ] Loading states
+- [ ] Beta testing with friends
+
+**Total: ~15-20 days for working prototype**
+
+---
+
+# PART 2: FULL VISION (Reference)
+
+The sections below describe the full vision for future development...
+
+---
+
 ## 1. Overview
 
 ### What is EidMemeMaker?
