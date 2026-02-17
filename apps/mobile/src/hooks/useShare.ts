@@ -1,5 +1,5 @@
 import * as Sharing from "expo-sharing";
-import { Paths, File } from "expo-file-system";
+import { Paths, File } from "expo-file-system/next";
 import * as MediaLibrary from "expo-media-library";
 
 export interface ShareResult {

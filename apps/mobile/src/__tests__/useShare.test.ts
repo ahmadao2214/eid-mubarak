@@ -5,7 +5,7 @@ import * as MediaLibrary from "expo-media-library";
 const mockDownloadFileAsync = jest.fn();
 const mockFileUri = "file:///tmp/cache/eid-card-123.mp4";
 
-jest.mock("expo-file-system", () => ({
+jest.mock("expo-file-system/next", () => ({
   Paths: { cache: { uri: "file:///tmp/cache/" } },
   File: {
     downloadFileAsync: (...args: any[]) => mockDownloadFileAsync(...args),
