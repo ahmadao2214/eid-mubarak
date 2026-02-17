@@ -1,7 +1,8 @@
-import { MMKV } from "react-native-mmkv";
+// In-memory storage — placeholder until Convex replaces this.
+// Data persists for the app session. No native dependencies needed.
 import type { CompositionProps } from "@/types";
 
-const storage = new MMKV({ id: "eid-meme-maker" });
+const store = new Map<string, string>();
 
 // ── Keys ─────────────────────────────────────────────────
 
@@ -20,7 +21,7 @@ export interface StoredProject {
 // ── Helpers ──────────────────────────────────────────────
 
 function getProjects(): StoredProject[] {
-  const raw = storage.getString(PROJECTS_KEY);
+  const raw = store.get(PROJECTS_KEY);
   if (!raw) return [];
   try {
     return JSON.parse(raw) as StoredProject[];
@@ -30,7 +31,7 @@ function getProjects(): StoredProject[] {
 }
 
 function setProjects(projects: StoredProject[]): void {
-  storage.set(PROJECTS_KEY, JSON.stringify(projects));
+  store.set(PROJECTS_KEY, JSON.stringify(projects));
 }
 
 // ── Public API ───────────────────────────────────────────
@@ -74,5 +75,5 @@ export function deleteProject(projectId: string): void {
 }
 
 export function clearAllProjects(): void {
-  storage.delete(PROJECTS_KEY);
+  store.delete(PROJECTS_KEY);
 }
