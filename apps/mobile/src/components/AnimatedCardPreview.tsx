@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
   withSpring,
   withDelay,
+  cancelAnimation,
 } from "react-native-reanimated";
 import type { CompositionProps } from "@/types";
 
@@ -29,6 +30,8 @@ function AnimatedTextSlot({ slot, index, scale, dimensionsHeight }: AnimatedText
   const translateY = useSharedValue(20);
 
   useEffect(() => {
+    opacity.value = 0;
+    translateY.value = 20;
     opacity.value = withDelay(index * 200, withTiming(1, { duration: 600 }));
     translateY.value = withDelay(index * 200, withTiming(0, { duration: 600 }));
   }, [index]);
@@ -87,7 +90,8 @@ export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewPr
         true,
       );
     } else {
-      hueOpacity.value = composition.hue.opacity;
+      cancelAnimation(hueOpacity);
+      hueOpacity.value = withTiming(composition.hue.opacity, { duration: 300 });
     }
   }, [composition.hue.enabled, composition.hue.animation, composition.hue.opacity]);
 

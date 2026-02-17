@@ -23,7 +23,11 @@ describe("import guard: no direct mock-api imports", () => {
     path.join(root, "src/hooks"),
     path.join(root, "src/components"),
     path.join(root, "src/context"),
+    path.join(root, "src/lib"),
   ];
+
+  // Files allowed to reference mock-api (the mock itself and its storage backing)
+  const allowedFiles = new Set(["src/lib/mock-api.ts", "src/lib/storage.ts"]);
 
   const offendingFiles: string[] = [];
 
@@ -31,9 +35,11 @@ describe("import guard: no direct mock-api imports", () => {
     for (const dir of dirsToScan) {
       const files = getAllFiles(dir, [".ts", ".tsx"]);
       for (const file of files) {
+        const relative = path.relative(root, file);
+        if (allowedFiles.has(relative)) continue;
         const content = fs.readFileSync(file, "utf-8");
         if (content.includes("mock-api")) {
-          offendingFiles.push(path.relative(root, file));
+          offendingFiles.push(relative);
         }
       }
     }

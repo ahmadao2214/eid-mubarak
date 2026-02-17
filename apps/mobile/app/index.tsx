@@ -32,14 +32,14 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
-  const loadProjects = useCallback(async () => {
+  const loadProjects = useCallback(async (isRefresh = false) => {
     try {
       const list = await listAllProjects();
       setProjects(list);
     } catch {
       showToast("Failed to load projects", "error");
     } finally {
-      setLoading(false);
+      if (!isRefresh) setLoading(false);
     }
   }, [showToast]);
 
@@ -52,7 +52,7 @@ export default function HomeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await loadProjects();
+      await loadProjects(true);
     } finally {
       setRefreshing(false);
     }

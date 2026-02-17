@@ -22,6 +22,7 @@ export default function Step3Screen() {
   const [shareError, setShareError] = useState<string | null>(null);
   const cancelledRef = useRef(false);
   const isSharingRef = useRef(false);
+  const isSavingDraftRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export default function Step3Screen() {
   const handleShare = async () => {
     if (isSharingRef.current || isSavingDraftRef.current) return;
     isSharingRef.current = true;
+    setSavedDraft(false);
     try {
       cancelledRef.current = false;
 
@@ -85,8 +87,6 @@ export default function Step3Screen() {
       isSharingRef.current = false;
     }
   };
-
-  const isSavingDraftRef = useRef(false);
 
   const handleSaveDraft = async () => {
     if (isSavingDraftRef.current) return;
