@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,9 +21,18 @@ export default function Step3Screen() {
   const [progress, setProgress] = useState(0);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [savedDraft, setSavedDraft] = useState(false);
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, []);
 
   const handleShare = async () => {
     try {
+      cancelledRef.current = false;
+
       // Step 1: Save project
       setShareState("saving");
       setProgress(0);
@@ -31,14 +40,18 @@ export default function Step3Screen() {
         `Eid Card ${Date.now()}`,
         composition,
       );
+      if (cancelledRef.current) return;
 
       // Step 2: Render video
       setShareState("rendering");
       const renderId = await mockRequestRender(projectId);
+      if (cancelledRef.current) return;
 
       // Step 3: Poll for completion
       const poll = async () => {
+        if (cancelledRef.current) return;
         const status = await mockGetRenderStatus(renderId);
+        if (cancelledRef.current) return;
         setProgress(status.progress);
 
         if (status.status === "completed") {
@@ -52,7 +65,9 @@ export default function Step3Screen() {
       };
       await poll();
     } catch {
-      setShareState("failed");
+      if (!cancelledRef.current) {
+        setShareState("failed");
+      }
     }
   };
 

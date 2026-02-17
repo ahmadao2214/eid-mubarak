@@ -42,8 +42,8 @@ export function createInitialState(
 ): CompositionState {
   const preset = presetId ? getPresetById(presetId) : PRESETS[PRESETS.length - 1]; // custom
   const defaultProps = preset
-    ? structuredClone(preset.defaultProps)
-    : structuredClone(PRESETS[PRESETS.length - 1].defaultProps);
+    ? JSON.parse(JSON.stringify(preset.defaultProps))
+    : JSON.parse(JSON.stringify(PRESETS[PRESETS.length - 1].defaultProps));
 
   if (initialHeadImage) {
     defaultProps.head.imageUrl = initialHeadImage;
@@ -65,7 +65,7 @@ export function compositionReducer(
     case "SELECT_PRESET": {
       const preset = getPresetById(action.presetId);
       if (!preset) return state;
-      const newProps = structuredClone(preset.defaultProps);
+      const newProps = JSON.parse(JSON.stringify(preset.defaultProps));
       // Preserve existing head image
       newProps.head.imageUrl = state.composition.head.imageUrl;
       return {
