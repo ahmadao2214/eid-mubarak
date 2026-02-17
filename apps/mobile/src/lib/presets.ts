@@ -29,7 +29,7 @@ const zohranClassic: PresetConfig = {
       animation: "pulse",
     },
     head: {
-      imageUrl: "",
+      imageUrl: "https://mock-s3.example.com/heads/zohran.png",
       position: { x: 50, y: 40 },
       scale: 0.45,
       enterAtFrame: 15,

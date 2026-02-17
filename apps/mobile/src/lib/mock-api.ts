@@ -166,6 +166,12 @@ export async function mockListCelebrityHeads(): Promise<CelebrityHead[]> {
   await delay(200);
   return [
     {
+      id: "zohran",
+      name: "Zohran",
+      imageUrl: "https://mock-s3.example.com/heads/zohran.png",
+      thumbnail: "https://mock-s3.example.com/heads/zohran-thumb.png",
+    },
+    {
       id: "drake",
       name: "Drake",
       imageUrl: "https://mock-s3.example.com/heads/drake.png",
