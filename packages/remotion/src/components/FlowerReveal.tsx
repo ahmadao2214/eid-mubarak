@@ -77,14 +77,16 @@ export const FlowerReveal: React.FC<Props> = ({ head }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
+  // All hooks must be called before any conditional returns
+  const lottieSource = head.flowerReveal?.enabled
+    ? `placeholder:flower-${head.flowerReveal.type}`
+    : "";
+  const lottieData = useLottieData(lottieSource);
+
   if (!head.flowerReveal?.enabled) return null;
 
   const localFrame = frame - head.enterAtFrame;
   if (localFrame < 0) return null;
-
-  // Attempt Lottie load — returns null for placeholder sources
-  const lottieSource = `placeholder:flower-${head.flowerReveal.type}`;
-  const lottieData = useLottieData(lottieSource);
 
   // Always use SVG fallback (Lottie assets not yet available)
   if (!lottieData) {
