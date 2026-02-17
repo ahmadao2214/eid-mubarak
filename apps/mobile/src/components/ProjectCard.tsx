@@ -35,7 +35,8 @@ export function ProjectCard({ project, onPress, onDelete }: ProjectCardProps) {
       </View>
       <Pressable
         testID={`delete-project-${project.id}`}
-        onPress={() => {
+        onPress={(e) => {
+          e?.stopPropagation?.();
           onDelete();
         }}
         style={{

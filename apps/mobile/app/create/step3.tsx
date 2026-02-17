@@ -7,11 +7,13 @@ import { AnimatedCardPreview } from "@/components/AnimatedCardPreview";
 import { createProject, updateProject } from "@/repositories/projects";
 import { requestRender, getRenderStatus } from "@/repositories/renders";
 import { downloadAndShare, saveToGallery } from "@/hooks/useShare";
+import { useToast } from "@/context/ToastContext";
 
 type ShareState = "idle" | "saving" | "rendering" | "ready" | "failed";
 
 export default function Step3Screen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { state, setProjectId } = useComposition();
   const { composition } = state;
 
@@ -100,7 +102,7 @@ export default function Step3Screen() {
       }
       setSavedDraft(true);
     } catch {
-      // Save failed silently — user can retry
+      showToast("Failed to save draft. Please try again.", "error");
     } finally {
       isSavingDraftRef.current = false;
     }

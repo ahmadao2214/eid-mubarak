@@ -10,6 +10,10 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush, back: mockBack }),
 }));
 
+jest.mock("@/context/ToastContext", () => ({
+  useToast: () => ({ showToast: jest.fn() }),
+}));
+
 const mockCreateProject = jest.fn();
 const mockUpdateProject = jest.fn();
 
