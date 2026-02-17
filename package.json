@@ -1,0 +1,22 @@
+{
+  "name": "eid-meme-maker",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "mobile": "cd apps/mobile && npx expo start",
+    "mobile:ios": "cd apps/mobile && npx expo start --ios",
+    "mobile:android": "cd apps/mobile && npx expo start --android"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "turbo": "^2"
+  },
+  "packageManager": "npm@11.4.2"
+}

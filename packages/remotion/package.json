@@ -1,0 +1,22 @@
+{
+  "name": "@eid-meme-maker/remotion",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render EidMemeVideo out/video.mp4",
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4",
+    "@remotion/lottie": "^4",
+    "lottie-web": "^5",
+    "react": "^19",
+    "react-dom": "^19",
+    "remotion": "^4"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "typescript": "~5.9"
+  }
+}
