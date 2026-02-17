@@ -133,13 +133,18 @@ describe("Step1Screen", () => {
     expect(screen.queryByTestId("my-photo-picker")).toBeNull();
   });
 
-  it("selecting celebrity head sets image and enables next with preset", async () => {
+  it("selecting celebrity head shows preview and enables next with preset", async () => {
     renderWithComposition(<Step1Screen />);
     fireEvent.press(screen.getByTestId("preset-card-zohran-classic"));
     await waitFor(() => {
       expect(screen.getByTestId("celeb-head-drake")).toBeTruthy();
     });
     fireEvent.press(screen.getByTestId("celeb-head-drake"));
+    // Shows large preview
+    expect(screen.getByTestId("celeb-preview")).toBeTruthy();
+    expect(screen.getByTestId("head-preview-image")).toBeTruthy();
+    expect(screen.getAllByText("Drake").length).toBeGreaterThanOrEqual(1);
+    // Enables next
     const nextBtn = screen.getByTestId("next-button");
     expect(nextBtn.props.accessibilityState?.disabled).toBeFalsy();
   });

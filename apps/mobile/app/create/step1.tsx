@@ -293,6 +293,33 @@ export default function Step1Screen() {
           })}
         </ScrollView>
 
+        {/* Celebrity head preview — visible when a celeb is selected */}
+        {selectedHeadId && selectedHeadId !== MY_PHOTO_ID && localImage && (
+          <View testID="celeb-preview" style={{ alignItems: "center", marginBottom: 16 }}>
+            <Image
+              testID="head-preview-image"
+              source={{ uri: localImage }}
+              style={{
+                width: 140,
+                height: 140,
+                borderRadius: 70,
+                borderWidth: 3,
+                borderColor: "#FFD700",
+              }}
+            />
+            <Text
+              style={{
+                color: "#FFD700",
+                fontSize: 14,
+                fontWeight: "600",
+                marginTop: 8,
+              }}
+            >
+              {celebHeads.find((c) => c.id === selectedHeadId)?.name}
+            </Text>
+          </View>
+        )}
+
         {/* My Photo upload UI — only visible when "My Photo" is selected */}
         {isMyPhoto && (
           <View testID="my-photo-picker">
