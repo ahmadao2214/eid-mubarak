@@ -29,7 +29,7 @@ export default function CreateLayout() {
   }
 
   return (
-    <CompositionProvider initialComposition={initialComposition}>
+    <CompositionProvider initialComposition={initialComposition} initialProjectId={projectId}>
       <Stack
         screenOptions={{
           headerShown: false,

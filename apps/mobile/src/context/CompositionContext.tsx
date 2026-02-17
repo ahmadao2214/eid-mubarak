@@ -48,10 +48,11 @@ export function createInitialState(
   presetId?: PresetId,
   initialHeadImage?: string,
   initialComposition?: CompositionProps,
+  initialProjectId?: string | null,
 ): CompositionState {
   if (initialComposition) {
     return {
-      projectId: null,
+      projectId: initialProjectId ?? null,
       selectedPresetId: presetId ?? null,
       composition: JSON.parse(JSON.stringify(initialComposition)),
     };
@@ -234,6 +235,7 @@ interface CompositionProviderProps {
   initialPresetId?: PresetId;
   initialHeadImage?: string;
   initialComposition?: CompositionProps;
+  initialProjectId?: string | null;
 }
 
 export function CompositionProvider({
@@ -241,11 +243,12 @@ export function CompositionProvider({
   initialPresetId,
   initialHeadImage,
   initialComposition,
+  initialProjectId,
 }: CompositionProviderProps) {
   const [state, dispatch] = useReducer(
     compositionReducer,
-    { presetId: initialPresetId, headImage: initialHeadImage, composition: initialComposition },
-    (init) => createInitialState(init.presetId, init.headImage, init.composition),
+    { presetId: initialPresetId, headImage: initialHeadImage, composition: initialComposition, projectId: initialProjectId },
+    (init) => createInitialState(init.presetId, init.headImage, init.composition, init.projectId),
   );
 
   const value: CompositionContextValue = {
