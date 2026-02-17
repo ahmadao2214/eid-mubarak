@@ -25,14 +25,15 @@ const HUE_DISPLAY: Record<HueColor, string> = {
   none: "#666666",
 };
 
+const MY_PHOTO_ID = "__my-photo__";
+
 export default function Step1Screen() {
   const router = useRouter();
   const { state, selectPreset, setHeadImage } = useComposition();
   const [localImage, setLocalImage] = useState<string | null>(null);
   const [removingBg, setRemovingBg] = useState(false);
   const [celebHeads, setCelebHeads] = useState<CelebrityHead[]>([]);
-  const [selectedCelebId, setSelectedCelebId] = useState<string | null>(null);
-  const [imageSource, setImageSource] = useState<"celeb" | "custom" | null>(null);
+  const [selectedHeadId, setSelectedHeadId] = useState<string | null>(null);
 
   useEffect(() => {
     mockListCelebrityHeads().then(setCelebHeads);
@@ -40,21 +41,28 @@ export default function Step1Screen() {
 
   const hasPreset = state.selectedPresetId !== null;
   const hasImage = localImage !== null;
+  const isMyPhoto = selectedHeadId === MY_PHOTO_ID;
   const canProceed = hasPreset && hasImage;
 
   const handleSelectCeleb = (celeb: CelebrityHead) => {
-    setSelectedCelebId(celeb.id);
-    setImageSource("celeb");
+    setSelectedHeadId(celeb.id);
     setLocalImage(celeb.imageUrl);
     setHeadImage(celeb.imageUrl);
+  };
+
+  const handleSelectMyPhoto = () => {
+    // Clear any celebrity image — user needs to upload their own
+    if (selectedHeadId !== MY_PHOTO_ID) {
+      setLocalImage(null);
+      setHeadImage("");
+    }
+    setSelectedHeadId(MY_PHOTO_ID);
   };
 
   const handlePickGallery = async () => {
     const result = await pickImageFromGallery();
     if (result) {
       const cropped = await cropToSquare(result.uri, result.width, result.height);
-      setSelectedCelebId(null);
-      setImageSource("custom");
       setLocalImage(cropped);
       setHeadImage(cropped);
     }
@@ -64,8 +72,6 @@ export default function Step1Screen() {
     const result = await pickImageFromCamera();
     if (result) {
       const cropped = await cropToSquare(result.uri, result.width, result.height);
-      setSelectedCelebId(null);
-      setImageSource("custom");
       setLocalImage(cropped);
       setHeadImage(cropped);
     }
@@ -100,7 +106,7 @@ export default function Step1Screen() {
           Step 1
         </Text>
         <Text style={{ fontSize: 16, color: "#e0e0e0", marginBottom: 20 }}>
-          Pick a preset and upload your head photo
+          Pick a preset and choose your head
         </Text>
 
         {/* Preset cards */}
@@ -173,7 +179,7 @@ export default function Step1Screen() {
           })}
         </ScrollView>
 
-        {/* Head selection section */}
+        {/* Head selection — unified row */}
         <Text
           style={{
             fontSize: 14,
@@ -188,176 +194,210 @@ export default function Step1Screen() {
           Choose a Head
         </Text>
 
-        {/* Celebrity heads */}
-        {celebHeads.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginBottom: 16 }}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginBottom: 16 }}
+        >
+          {/* "My Photo" option — first in the row */}
+          <Pressable
+            testID="head-option-my-photo"
+            onPress={handleSelectMyPhoto}
+            style={{
+              alignItems: "center",
+              marginRight: 14,
+              width: 80,
+            }}
           >
-            {celebHeads.map((celeb) => {
-              const isSelected = selectedCelebId === celeb.id;
-              return (
-                <Pressable
-                  key={celeb.id}
-                  testID={`celeb-head-${celeb.id}`}
-                  onPress={() => handleSelectCeleb(celeb)}
-                  style={{
-                    alignItems: "center",
-                    marginRight: 14,
-                    width: 80,
-                  }}
-                >
-                  <Image
-                    source={{ uri: celeb.thumbnail }}
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 32,
-                      borderWidth: 3,
-                      borderColor: isSelected ? "#FFD700" : "rgba(255,255,255,0.15)",
-                    }}
-                  />
-                  <Text
-                    style={{
-                      color: isSelected ? "#FFD700" : "#ccc",
-                      fontSize: 11,
-                      marginTop: 4,
-                      textAlign: "center",
-                      fontWeight: isSelected ? "bold" : "normal",
-                    }}
-                    numberOfLines={1}
-                  >
-                    {celeb.name}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        )}
-
-        {/* Divider */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-        >
-          <View
-            style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.1)" }}
-          />
-          <Text style={{ color: "#666", marginHorizontal: 12, fontSize: 12 }}>
-            or use your own photo
-          </Text>
-          <View
-            style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.1)" }}
-          />
-        </View>
-
-        {/* Image preview */}
-        <View
-          style={{
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-        >
-          {localImage ? (
-            <Image
-              testID="head-preview-image"
-              source={{ uri: localImage }}
-              style={{
-                width: 140,
-                height: 140,
-                borderRadius: 70,
-                borderWidth: 3,
-                borderColor: "#FFD700",
-              }}
-            />
-          ) : (
             <View
-              testID="head-preview-placeholder"
               style={{
-                width: 140,
-                height: 140,
-                borderRadius: 70,
-                borderWidth: 2,
-                borderColor: "#666",
-                borderStyle: "dashed",
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                borderWidth: 3,
+                borderColor: isMyPhoto ? "#FFD700" : "rgba(255,255,255,0.15)",
+                backgroundColor: isMyPhoto
+                  ? "rgba(255,215,0,0.15)"
+                  : "rgba(255,255,255,0.08)",
                 justifyContent: "center",
                 alignItems: "center",
-                backgroundColor: "rgba(255,255,255,0.05)",
               }}
             >
-              <Text style={{ color: "#999", fontSize: 14 }}>No Photo</Text>
+              {isMyPhoto && localImage ? (
+                <Image
+                  source={{ uri: localImage }}
+                  style={{
+                    width: 58,
+                    height: 58,
+                    borderRadius: 29,
+                  }}
+                />
+              ) : (
+                <Text style={{ fontSize: 24, color: isMyPhoto ? "#FFD700" : "#999" }}>
+                  +
+                </Text>
+              )}
             </View>
-          )}
-        </View>
-
-        {/* Pick buttons */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 12,
-            marginBottom: 16,
-          }}
-        >
-          <Pressable
-            testID="gallery-button"
-            onPress={handlePickGallery}
-            style={{
-              backgroundColor: "rgba(255,255,255,0.1)",
-              paddingHorizontal: 20,
-              paddingVertical: 12,
-              borderRadius: 10,
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "600" }}>Gallery</Text>
-          </Pressable>
-          <Pressable
-            testID="camera-button"
-            onPress={handlePickCamera}
-            style={{
-              backgroundColor: "rgba(255,255,255,0.1)",
-              paddingHorizontal: 20,
-              paddingVertical: 12,
-              borderRadius: 10,
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "600" }}>Camera</Text>
-          </Pressable>
-        </View>
-
-        {/* Remove BG button */}
-        {localImage && (
-          <Pressable
-            testID="remove-bg-button"
-            onPress={handleRemoveBg}
-            disabled={removingBg}
-            style={{
-              alignSelf: "center",
-              backgroundColor: "#FF69B4",
-              paddingHorizontal: 20,
-              paddingVertical: 10,
-              borderRadius: 10,
-              opacity: removingBg ? 0.6 : 1,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            {removingBg && (
-              <ActivityIndicator
-                testID="remove-bg-loading"
-                size="small"
-                color="#fff"
-              />
-            )}
-            <Text style={{ color: "#fff", fontWeight: "600" }}>
-              {removingBg ? "Removing..." : "Remove Background"}
+            <Text
+              style={{
+                color: isMyPhoto ? "#FFD700" : "#ccc",
+                fontSize: 11,
+                marginTop: 4,
+                textAlign: "center",
+                fontWeight: isMyPhoto ? "bold" : "normal",
+              }}
+              numberOfLines={1}
+            >
+              My Photo
             </Text>
           </Pressable>
+
+          {/* Celebrity heads */}
+          {celebHeads.map((celeb) => {
+            const isSelected = selectedHeadId === celeb.id;
+            return (
+              <Pressable
+                key={celeb.id}
+                testID={`celeb-head-${celeb.id}`}
+                onPress={() => handleSelectCeleb(celeb)}
+                style={{
+                  alignItems: "center",
+                  marginRight: 14,
+                  width: 80,
+                }}
+              >
+                <Image
+                  source={{ uri: celeb.thumbnail }}
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
+                    borderWidth: 3,
+                    borderColor: isSelected ? "#FFD700" : "rgba(255,255,255,0.15)",
+                  }}
+                />
+                <Text
+                  style={{
+                    color: isSelected ? "#FFD700" : "#ccc",
+                    fontSize: 11,
+                    marginTop: 4,
+                    textAlign: "center",
+                    fontWeight: isSelected ? "bold" : "normal",
+                  }}
+                  numberOfLines={1}
+                >
+                  {celeb.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {/* My Photo upload UI — only visible when "My Photo" is selected */}
+        {isMyPhoto && (
+          <View testID="my-photo-picker">
+            {/* Image preview */}
+            <View style={{ alignItems: "center", marginBottom: 16 }}>
+              {localImage ? (
+                <Image
+                  testID="head-preview-image"
+                  source={{ uri: localImage }}
+                  style={{
+                    width: 140,
+                    height: 140,
+                    borderRadius: 70,
+                    borderWidth: 3,
+                    borderColor: "#FFD700",
+                  }}
+                />
+              ) : (
+                <View
+                  testID="head-preview-placeholder"
+                  style={{
+                    width: 140,
+                    height: 140,
+                    borderRadius: 70,
+                    borderWidth: 2,
+                    borderColor: "#666",
+                    borderStyle: "dashed",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                  }}
+                >
+                  <Text style={{ color: "#999", fontSize: 14 }}>
+                    Upload a photo
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Pick buttons */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 12,
+                marginBottom: 16,
+              }}
+            >
+              <Pressable
+                testID="gallery-button"
+                onPress={handlePickGallery}
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                  paddingHorizontal: 20,
+                  paddingVertical: 12,
+                  borderRadius: 10,
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "600" }}>Gallery</Text>
+              </Pressable>
+              <Pressable
+                testID="camera-button"
+                onPress={handlePickCamera}
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                  paddingHorizontal: 20,
+                  paddingVertical: 12,
+                  borderRadius: 10,
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "600" }}>Camera</Text>
+              </Pressable>
+            </View>
+
+            {/* Remove BG button */}
+            {localImage && (
+              <Pressable
+                testID="remove-bg-button"
+                onPress={handleRemoveBg}
+                disabled={removingBg}
+                style={{
+                  alignSelf: "center",
+                  backgroundColor: "#FF69B4",
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 10,
+                  opacity: removingBg ? 0.6 : 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {removingBg && (
+                  <ActivityIndicator
+                    testID="remove-bg-loading"
+                    size="small"
+                    color="#fff"
+                  />
+                )}
+                <Text style={{ color: "#fff", fontWeight: "600" }}>
+                  {removingBg ? "Removing..." : "Remove Background"}
+                </Text>
+              </Pressable>
+            )}
+          </View>
         )}
       </ScrollView>
 

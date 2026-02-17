@@ -101,7 +101,50 @@ describe("Step1Screen", () => {
     expect(nextBtn.props.accessibilityState?.disabled ?? nextBtn.props.disabled).toBeTruthy();
   });
 
-  it("next button enabled when both preset and image present", async () => {
+  it("renders My Photo option and celebrity heads in same row", async () => {
+    renderWithComposition(<Step1Screen />);
+    expect(screen.getByTestId("head-option-my-photo")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByTestId("celeb-head-drake")).toBeTruthy();
+      expect(screen.getByTestId("celeb-head-shah-rukh-khan")).toBeTruthy();
+      expect(screen.getByTestId("celeb-head-aunty-stock")).toBeTruthy();
+    });
+  });
+
+  it("image picker is hidden until My Photo is selected", () => {
+    renderWithComposition(<Step1Screen />);
+    expect(screen.queryByTestId("my-photo-picker")).toBeNull();
+    fireEvent.press(screen.getByTestId("head-option-my-photo"));
+    expect(screen.getByTestId("my-photo-picker")).toBeTruthy();
+    expect(screen.getByTestId("gallery-button")).toBeTruthy();
+    expect(screen.getByTestId("camera-button")).toBeTruthy();
+  });
+
+  it("selecting celebrity head hides image picker", async () => {
+    renderWithComposition(<Step1Screen />);
+    // Open the picker first
+    fireEvent.press(screen.getByTestId("head-option-my-photo"));
+    expect(screen.getByTestId("my-photo-picker")).toBeTruthy();
+    // Select a celebrity
+    await waitFor(() => {
+      expect(screen.getByTestId("celeb-head-drake")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByTestId("celeb-head-drake"));
+    expect(screen.queryByTestId("my-photo-picker")).toBeNull();
+  });
+
+  it("selecting celebrity head sets image and enables next with preset", async () => {
+    renderWithComposition(<Step1Screen />);
+    fireEvent.press(screen.getByTestId("preset-card-zohran-classic"));
+    await waitFor(() => {
+      expect(screen.getByTestId("celeb-head-drake")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByTestId("celeb-head-drake"));
+    const nextBtn = screen.getByTestId("next-button");
+    expect(nextBtn.props.accessibilityState?.disabled).toBeFalsy();
+  });
+
+  it("My Photo flow: gallery pick enables next with preset", async () => {
     mockPickGallery.mockResolvedValueOnce({
       uri: "file://photo.jpg",
       width: 200,
@@ -109,25 +152,13 @@ describe("Step1Screen", () => {
     });
     renderWithComposition(<Step1Screen />);
     fireEvent.press(screen.getByTestId("preset-card-trucker-art"));
+    fireEvent.press(screen.getByTestId("head-option-my-photo"));
     fireEvent.press(screen.getByTestId("gallery-button"));
     await waitFor(() => {
       expect(screen.getByTestId("head-preview-image")).toBeTruthy();
     });
     const nextBtn = screen.getByTestId("next-button");
     expect(nextBtn.props.accessibilityState?.disabled).toBeFalsy();
-  });
-
-  it("shows image preview after gallery pick", async () => {
-    mockPickGallery.mockResolvedValueOnce({
-      uri: "file://photo.jpg",
-      width: 200,
-      height: 200,
-    });
-    renderWithComposition(<Step1Screen />);
-    fireEvent.press(screen.getByTestId("gallery-button"));
-    await waitFor(() => {
-      expect(screen.getByTestId("head-preview-image")).toBeTruthy();
-    });
   });
 
   it("shows loading state during bg removal", async () => {
@@ -140,6 +171,7 @@ describe("Step1Screen", () => {
       () => new Promise(() => {}), // never resolves
     );
     renderWithComposition(<Step1Screen />);
+    fireEvent.press(screen.getByTestId("head-option-my-photo"));
     fireEvent.press(screen.getByTestId("gallery-button"));
     await waitFor(() => {
       expect(screen.getByTestId("head-preview-image")).toBeTruthy();
@@ -150,49 +182,16 @@ describe("Step1Screen", () => {
     });
   });
 
-  it("renders celebrity head options", async () => {
+  it("switching from celebrity to My Photo clears celebrity image", async () => {
     renderWithComposition(<Step1Screen />);
-    await waitFor(() => {
-      expect(screen.getByTestId("celeb-head-drake")).toBeTruthy();
-      expect(screen.getByTestId("celeb-head-shah-rukh-khan")).toBeTruthy();
-      expect(screen.getByTestId("celeb-head-aunty-stock")).toBeTruthy();
-    });
-  });
-
-  it("selecting celebrity head sets image and enables next with preset", async () => {
-    renderWithComposition(<Step1Screen />);
-    fireEvent.press(screen.getByTestId("preset-card-zohran-classic"));
     await waitFor(() => {
       expect(screen.getByTestId("celeb-head-drake")).toBeTruthy();
     });
     fireEvent.press(screen.getByTestId("celeb-head-drake"));
-    await waitFor(() => {
-      expect(screen.getByTestId("head-preview-image")).toBeTruthy();
-    });
-    const nextBtn = screen.getByTestId("next-button");
-    expect(nextBtn.props.accessibilityState?.disabled).toBeFalsy();
-  });
-
-  it("gallery pick overrides celebrity selection", async () => {
-    mockPickGallery.mockResolvedValueOnce({
-      uri: "file://my-photo.jpg",
-      width: 200,
-      height: 200,
-    });
-    renderWithComposition(<Step1Screen />);
-    // Select celebrity first
-    await waitFor(() => {
-      expect(screen.getByTestId("celeb-head-drake")).toBeTruthy();
-    });
-    fireEvent.press(screen.getByTestId("celeb-head-drake"));
-    await waitFor(() => {
-      expect(screen.getByTestId("head-preview-image")).toBeTruthy();
-    });
-    // Now pick from gallery — should override
-    fireEvent.press(screen.getByTestId("gallery-button"));
-    await waitFor(() => {
-      const img = screen.getByTestId("head-preview-image");
-      expect(img.props.source.uri).toBe("file://my-photo.jpg");
-    });
+    // Now switch to My Photo
+    fireEvent.press(screen.getByTestId("head-option-my-photo"));
+    expect(screen.getByTestId("my-photo-picker")).toBeTruthy();
+    // Should show placeholder, not Drake's image
+    expect(screen.getByTestId("head-preview-placeholder")).toBeTruthy();
   });
 });
