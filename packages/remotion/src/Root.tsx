@@ -1,51 +1,32 @@
 import { Composition } from "remotion";
 import { EidMemeVideo } from "./EidMemeVideo";
-import type { CompositionProps } from "./types";
-
-const defaultProps: CompositionProps = {
-  width: 1080,
-  height: 1920,
-  fps: 30,
-  durationInFrames: 300, // 10 seconds at 30fps
-  background: {
-    type: "solid",
-    source: "#1a1a2e",
-  },
-  hue: {
-    enabled: true,
-    color: "#FFD700",
-    opacity: 0.3,
-    animation: "pulse",
-  },
-  head: {
-    imageUrl: "",
-    position: { x: 50, y: 45 },
-    scale: 0.4,
-    enterAtFrame: 15,
-    animation: "zoom-pulse",
-  },
-  decorativeElements: [],
-  textSlots: [
-    {
-      id: "main",
-      text: "Eid Mubarak!",
-      position: { x: 50, y: 75 },
-      fontFamily: "psychedelic",
-      fontSize: 64,
-      color: "#FFFFFF",
-      animation: "rise-up",
-      enterAtFrame: 45,
-    },
-  ],
-  audio: {
-    trackUrl: "",
-    volume: 0.8,
-  },
-};
+import { PRESET_REGISTRY } from "./templates";
+import { getPreset } from "./templates";
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Per-preset compositions */}
+      {(Object.keys(PRESET_REGISTRY) as Array<keyof typeof PRESET_REGISTRY>).map(
+        (id) => {
+          const preset = getPreset(id);
+          const { defaultProps } = preset;
+          return (
+            <Composition
+              key={id}
+              id={`EidMemeVideo-${id}`}
+              component={EidMemeVideo as React.FC}
+              durationInFrames={defaultProps.durationInFrames}
+              fps={defaultProps.fps}
+              width={defaultProps.width}
+              height={defaultProps.height}
+              defaultProps={defaultProps}
+            />
+          );
+        }
+      )}
+
+      {/* Generic composition with custom preset defaults */}
       <Composition
         id="EidMemeVideo"
         component={EidMemeVideo as React.FC}
@@ -53,7 +34,7 @@ export const RemotionRoot: React.FC = () => {
         fps={30}
         width={1080}
         height={1920}
-        defaultProps={defaultProps}
+        defaultProps={getPreset("custom").defaultProps}
       />
     </>
   );
