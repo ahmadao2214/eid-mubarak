@@ -44,7 +44,7 @@ const PlaceholderDecor: React.FC<{
         opacity: entrance,
       }}
     >
-      <img
+      <Img
         src={src}
         style={{ width: 200, height: 200, objectFit: "contain" }}
       />
