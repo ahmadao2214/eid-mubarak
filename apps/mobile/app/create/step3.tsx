@@ -1,24 +1,271 @@
-import { View, Text } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import { View, Text, ScrollView, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useComposition } from "@/context/CompositionContext";
+import { CardPreview } from "@/components/CardPreview";
+import {
+  mockCreateProject,
+  mockRequestRender,
+  mockGetRenderStatus,
+} from "@/lib/mock-api";
+
+type ShareState = "idle" | "saving" | "rendering" | "ready" | "failed";
 
 export default function Step3Screen() {
+  const router = useRouter();
+  const { state } = useComposition();
+  const { composition } = state;
+
+  const [shareState, setShareState] = useState<ShareState>("idle");
+  const [progress, setProgress] = useState(0);
+  const [outputUrl, setOutputUrl] = useState<string | null>(null);
+  const [savedDraft, setSavedDraft] = useState(false);
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, []);
+
+  const handleShare = async () => {
+    try {
+      cancelledRef.current = false;
+
+      // Step 1: Save project
+      setShareState("saving");
+      setProgress(0);
+      const projectId = await mockCreateProject(
+        `Eid Card ${Date.now()}`,
+        composition,
+      );
+      if (cancelledRef.current) return;
+
+      // Step 2: Render video
+      setShareState("rendering");
+      const renderId = await mockRequestRender(projectId);
+      if (cancelledRef.current) return;
+
+      // Step 3: Poll for completion
+      const poll = async () => {
+        if (cancelledRef.current) return;
+        const status = await mockGetRenderStatus(renderId);
+        if (cancelledRef.current) return;
+        setProgress(status.progress);
+
+        if (status.status === "completed") {
+          setShareState("ready");
+          setOutputUrl(status.outputUrl ?? null);
+        } else if (status.status === "failed") {
+          setShareState("failed");
+        } else {
+          setTimeout(poll, 500);
+        }
+      };
+      await poll();
+    } catch {
+      if (!cancelledRef.current) {
+        setShareState("failed");
+      }
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    await mockCreateProject(`Draft ${Date.now()}`, composition);
+    setSavedDraft(true);
+  };
+
+  const isProcessing = shareState === "saving" || shareState === "rendering";
+
+  const shareLabel = {
+    idle: "Share",
+    saving: "Preparing...",
+    rendering: "Rendering...",
+    ready: "Share Again",
+    failed: "Retry",
+  }[shareState];
+
+  const statusMessage = {
+    idle: null,
+    saving: "Saving your card...",
+    rendering: `Rendering video... ${progress}%`,
+    ready: "Your video is ready!",
+    failed: "Something went wrong. Try again.",
+  }[shareState];
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+      >
+        {/* Header */}
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "bold",
+            color: "#FFD700",
+            marginBottom: 4,
+          }}
+        >
+          Preview
+        </Text>
+        <Text style={{ fontSize: 16, color: "#e0e0e0", marginBottom: 20 }}>
+          Here's your card — share it with the world!
+        </Text>
+
+        {/* Preview */}
+        <View style={{ alignItems: "center", marginBottom: 24 }}>
+          <CardPreview composition={composition} size="large" />
+        </View>
+
+        {/* Status message */}
+        {statusMessage && (
+          <View testID="share-status" style={{ marginBottom: 16 }}>
+            <Text
+              style={{
+                color:
+                  shareState === "ready"
+                    ? "#00C853"
+                    : shareState === "failed"
+                      ? "#FF5252"
+                      : "#e0e0e0",
+                fontSize: 14,
+                textAlign: "center",
+                fontWeight: "600",
+              }}
+            >
+              {statusMessage}
+            </Text>
+          </View>
+        )}
+
+        {/* Progress bar */}
+        {isProcessing && (
+          <View testID="share-progress" style={{ marginBottom: 20 }}>
+            <View
+              style={{
+                height: 6,
+                borderRadius: 3,
+                backgroundColor: "rgba(255,255,255,0.1)",
+                overflow: "hidden",
+              }}
+            >
+              <View
+                style={{
+                  height: "100%",
+                  width: `${shareState === "saving" ? 20 : progress}%`,
+                  backgroundColor: "#FFD700",
+                  borderRadius: 3,
+                }}
+              />
+            </View>
+          </View>
+        )}
+
+        {/* Ready state */}
+        {shareState === "ready" && (
+          <View testID="share-ready" style={{ marginBottom: 16 }}>
+            <Text
+              style={{
+                color: "#00C853",
+                fontSize: 14,
+                textAlign: "center",
+                fontWeight: "600",
+              }}
+            >
+              Tap Share Again to send to another app
+            </Text>
+          </View>
+        )}
+
+        {/* Share button (primary action) */}
+        <Pressable
+          testID="share-button"
+          onPress={handleShare}
+          disabled={isProcessing}
+          accessibilityState={{ disabled: isProcessing }}
+          style={{
+            backgroundColor: isProcessing
+              ? "#555"
+              : shareState === "ready"
+                ? "#00C853"
+                : "#FFD700",
+            paddingVertical: 16,
+            borderRadius: 12,
+            alignItems: "center",
+            marginBottom: 12,
+            opacity: isProcessing ? 0.7 : 1,
+          }}
+        >
+          <Text
+            style={{
+              color: isProcessing ? "#999" : "#1a1a2e",
+              fontSize: 18,
+              fontWeight: "bold",
+            }}
+          >
+            {shareLabel}
+          </Text>
+        </Pressable>
+
+        {/* Save draft (secondary, subtle) */}
+        <Pressable
+          testID="save-draft-button"
+          onPress={handleSaveDraft}
+          disabled={savedDraft || isProcessing}
+          accessibilityState={{ disabled: savedDraft || isProcessing }}
+          style={{
+            paddingVertical: 12,
+            borderRadius: 12,
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
+          <Text
+            style={{
+              color: savedDraft ? "#00C853" : "#999",
+              fontSize: 14,
+              fontWeight: "600",
+            }}
+          >
+            {savedDraft ? "Draft saved" : "Save as draft"}
+          </Text>
+        </Pressable>
+      </ScrollView>
+
+      {/* Bottom back button */}
       <View
         style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 24,
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: 20,
+          paddingBottom: 36,
+          backgroundColor: "#1a1a2e",
+          borderTopWidth: 1,
+          borderTopColor: "rgba(255,255,255,0.1)",
         }}
       >
-        <Text style={{ fontSize: 24, fontWeight: "bold", color: "#FFD700" }}>
-          Step 3: Export & Share
-        </Text>
-        <Text style={{ fontSize: 16, color: "#e0e0e0", marginTop: 12 }}>
-          Render your video and share it on WhatsApp, Instagram, or save to
-          camera roll.
-        </Text>
+        <Pressable
+          testID="back-button"
+          onPress={() => router.back()}
+          style={{
+            paddingVertical: 14,
+            borderRadius: 12,
+            alignItems: "center",
+            borderWidth: 1,
+            borderColor: "#FFD700",
+          }}
+        >
+          <Text
+            style={{ color: "#FFD700", fontSize: 16, fontWeight: "bold" }}
+          >
+            Back
+          </Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );

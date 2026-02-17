@@ -54,6 +54,7 @@ export interface CompositionProps {
     fontSize: number;
     color: string;
     stroke?: string;
+    shadow?: boolean;
     animation: TextAnimation;
     enterAtFrame: number;
   }>;
