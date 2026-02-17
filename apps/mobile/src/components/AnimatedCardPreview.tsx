@@ -10,9 +10,55 @@ import Animated, {
 } from "react-native-reanimated";
 import type { CompositionProps } from "@/types";
 
+type TextSlot = CompositionProps["textSlots"][number];
+
 interface AnimatedCardPreviewProps {
   composition: CompositionProps;
   size: "small" | "large";
+}
+
+interface AnimatedTextSlotProps {
+  slot: TextSlot;
+  index: number;
+  scale: number;
+  dimensionsHeight: number;
+}
+
+function AnimatedTextSlot({ slot, index, scale, dimensionsHeight }: AnimatedTextSlotProps) {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(20);
+
+  useEffect(() => {
+    opacity.value = withDelay(index * 200, withTiming(1, { duration: 600 }));
+    translateY.value = withDelay(index * 200, withTiming(0, { duration: 600 }));
+  }, []);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return (
+    <Animated.Text
+      testID={`text-slot-${slot.id}`}
+      style={[
+        {
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: (slot.position.y / 100) * dimensionsHeight,
+          textAlign: "center",
+          color: slot.color,
+          fontSize: slot.fontSize * scale,
+          fontWeight: "bold",
+        },
+        animStyle,
+      ]}
+      numberOfLines={1}
+    >
+      {slot.text}
+    </Animated.Text>
+  );
 }
 
 const SIZES = {
@@ -58,17 +104,6 @@ export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewPr
   const headAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: headScale.value }],
   }));
-
-  // Text slot animations
-  const textOpacities = composition.textSlots.map((_, index) => {
-    const opacity = useSharedValue(0);
-    const translateY = useSharedValue(20);
-    useEffect(() => {
-      opacity.value = withDelay(index * 200, withTiming(1, { duration: 600 }));
-      translateY.value = withDelay(index * 200, withTiming(0, { duration: 600 }));
-    }, []);
-    return { opacity, translateY };
-  });
 
   return (
     <View
@@ -144,36 +179,15 @@ export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewPr
       </Animated.View>
 
       {/* Text slots */}
-      {composition.textSlots.map((slot, index) => {
-        const anim = textOpacities[index];
-        const animStyle = useAnimatedStyle(() => ({
-          opacity: anim.opacity.value,
-          transform: [{ translateY: anim.translateY.value }],
-        }));
-
-        return (
-          <Animated.Text
-            key={slot.id}
-            testID={`text-slot-${slot.id}`}
-            style={[
-              {
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: (slot.position.y / 100) * dimensions.height,
-                textAlign: "center",
-                color: slot.color,
-                fontSize: slot.fontSize * scale,
-                fontWeight: "bold",
-              },
-              animStyle,
-            ]}
-            numberOfLines={1}
-          >
-            {slot.text}
-          </Animated.Text>
-        );
-      })}
+      {composition.textSlots.map((slot, index) => (
+        <AnimatedTextSlot
+          key={slot.id}
+          slot={slot}
+          index={index}
+          scale={scale}
+          dimensionsHeight={dimensions.height}
+        />
+      ))}
     </View>
   );
 }

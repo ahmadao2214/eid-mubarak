@@ -10,7 +10,6 @@ jest.mock("expo-file-system", () => ({
   File: {
     downloadFileAsync: (...args: any[]) => mockDownloadFileAsync(...args),
   },
-  Directory: jest.fn(),
 }));
 
 jest.mock("expo-sharing");

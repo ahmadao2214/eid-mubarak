@@ -34,5 +34,5 @@ export async function listAllProjects(): Promise<Project[]> {
 }
 
 export async function removeProject(projectId: string): Promise<void> {
-  storageDeleteProject(projectId);
+  return storageDeleteProject(projectId);
 }
