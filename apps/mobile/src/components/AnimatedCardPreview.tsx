@@ -83,14 +83,15 @@ export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewPr
   // Hue pulse animation
   const hueOpacity = useSharedValue(composition.hue.opacity);
   useEffect(() => {
+    cancelAnimation(hueOpacity);
     if (composition.hue.enabled && composition.hue.animation === "pulse") {
+      hueOpacity.value = composition.hue.opacity;
       hueOpacity.value = withRepeat(
         withTiming(composition.hue.opacity * 0.3, { duration: 1500 }),
         -1,
         true,
       );
     } else {
-      cancelAnimation(hueOpacity);
       hueOpacity.value = withTiming(composition.hue.opacity, { duration: 300 });
     }
   }, [composition.hue.enabled, composition.hue.animation, composition.hue.opacity]);

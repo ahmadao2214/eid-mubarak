@@ -25,6 +25,7 @@ export default function Step3Screen() {
   const cancelledRef = useRef(false);
   const isSharingRef = useRef(false);
   const isSavingDraftRef = useRef(false);
+  const isShareActionRef = useRef(false);
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -228,10 +229,15 @@ export default function Step3Screen() {
             <Pressable
               testID="share-video-button"
               onPress={async () => {
-                if (!outputUrl) return;
+                if (!outputUrl || isShareActionRef.current) return;
+                isShareActionRef.current = true;
                 setShareError(null);
-                const result = await downloadAndShare(outputUrl);
-                if (!result.success) setShareError(result.error ?? "Share failed");
+                try {
+                  const result = await downloadAndShare(outputUrl);
+                  if (!result.success) setShareError(result.error ?? "Share failed");
+                } finally {
+                  isShareActionRef.current = false;
+                }
               }}
               style={{
                 backgroundColor: "#00C853",
@@ -249,10 +255,15 @@ export default function Step3Screen() {
             <Pressable
               testID="save-gallery-button"
               onPress={async () => {
-                if (!outputUrl) return;
+                if (!outputUrl || isShareActionRef.current) return;
+                isShareActionRef.current = true;
                 setShareError(null);
-                const result = await saveToGallery(outputUrl);
-                if (!result.success) setShareError(result.error ?? "Save failed");
+                try {
+                  const result = await saveToGallery(outputUrl);
+                  if (!result.success) setShareError(result.error ?? "Save failed");
+                } finally {
+                  isShareActionRef.current = false;
+                }
               }}
               style={{
                 backgroundColor: "rgba(255,255,255,0.1)",
