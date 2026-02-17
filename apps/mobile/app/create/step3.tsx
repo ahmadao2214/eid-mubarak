@@ -100,7 +100,7 @@ export default function Step3Screen() {
     idle: null,
     saving: "Saving your card...",
     rendering: `Rendering video... ${progress}%`,
-    ready: "Your video is ready!",
+    ready: null,
     failed: "Something went wrong. Try again.",
   }[shareState];
 

@@ -17,6 +17,8 @@ export default function CreateLayout() {
         setInitialComposition(project.composition);
       }
       setLoading(false);
+    }).catch(() => {
+      setLoading(false);
     });
   }, [projectId]);
 
@@ -29,7 +31,7 @@ export default function CreateLayout() {
   }
 
   return (
-    <CompositionProvider initialComposition={initialComposition} initialProjectId={projectId}>
+    <CompositionProvider initialComposition={initialComposition} initialProjectId={initialComposition ? projectId : undefined}>
       <Stack
         screenOptions={{
           headerShown: false,

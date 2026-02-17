@@ -22,6 +22,7 @@ describe("import guard: no direct mock-api imports", () => {
     path.join(root, "app"),
     path.join(root, "src/hooks"),
     path.join(root, "src/components"),
+    path.join(root, "src/context"),
   ];
 
   const offendingFiles: string[] = [];
