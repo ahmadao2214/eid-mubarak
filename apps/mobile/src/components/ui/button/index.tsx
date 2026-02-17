@@ -20,7 +20,7 @@ const buttonStyle = tva({
     },
     variant: {
       solid: "",
-      outline: "bg-transparent border-2 border-eid-gold",
+      outline: "bg-transparent border-2",
       link: "bg-transparent",
     },
     size: {
@@ -32,6 +32,11 @@ const buttonStyle = tva({
       true: "opacity-50",
     },
   },
+  compoundVariants: [
+    { variant: "outline", action: "primary", class: "border-eid-gold" },
+    { variant: "outline", action: "secondary", class: "border-eid-green" },
+    { variant: "outline", action: "negative", class: "border-red-500" },
+  ],
   defaultVariants: {
     action: "primary",
     variant: "solid",
