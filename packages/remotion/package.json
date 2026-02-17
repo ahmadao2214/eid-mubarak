@@ -5,7 +5,8 @@
   "scripts": {
     "studio": "remotion studio",
     "render": "remotion render EidMemeVideo out/video.mp4",
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "test": "jest"
   },
   "dependencies": {
     "@remotion/cli": "^4",
@@ -16,7 +17,12 @@
     "remotion": "^4"
   },
   "devDependencies": {
+    "@testing-library/react": "^16",
+    "@types/jest": "^29",
     "@types/react": "^19",
+    "jest": "^29",
+    "jest-environment-jsdom": "^29",
+    "ts-jest": "^29",
     "typescript": "~5.9"
   }
 }
