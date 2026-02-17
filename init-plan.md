@@ -78,64 +78,69 @@ The viral Zohran Eid video contains these distinct elements:
 
 ## 2. Template Approach (How It Works)
 
-### The Core Concept: "Slot Machine" Templates
+### The Core Concept: Custom Builder with Presets
 
-Users do NOT build from scratch. They pick a **predefined template** that has a fixed visual structure (layer arrangement, timing, transitions). Within that template, certain **element slots** are swappable.
+Users build their own video card by selecting options across every layer. They have full control over what goes into their card. **Presets** (like "Zohran Classic" or "Celebrity Greeting") exist as one-tap starting points that pre-fill all the options — but users can change anything after loading a preset.
 
-Think of it like CapCut templates — the template defines the choreography (when things appear, how they move, the overall vibe), and the user just swaps in their own head photo, picks a color, and types their message.
+Think of it like a character creator in a video game: you can pick a preset face and then tweak everything, or start from defaults and build your own.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│              HOW TEMPLATES WORK                                  │
+│              HOW THE BUILDER WORKS                               │
 │                                                                 │
-│   TEMPLATE = Fixed choreography + Swappable element slots       │
+│   BUILDER = Full customization of every layer                   │
+│   PRESETS = Pre-filled starting points (optional shortcut)      │
 │                                                                 │
-│   What the TEMPLATE controls (not user-changeable):             │
-│   ├── Layer order and z-index                                   │
-│   ├── Animation timing (when things enter/exit)                 │
-│   ├── Element positions (x, y coordinates)                      │
-│   ├── Transition types between scenes                           │
-│   └── Overall duration and pacing                               │
+│   What the USER controls (everything):                          │
+│   ├── Background (video loop, trucker art, solid color)         │
+│   ├── Head image (their photo or a celebrity/meme face)         │
+│   ├── Head animation style (pop, zoom-pulse, spiral, float)    │
+│   ├── Hue overlay color (gold, pink, green, blue, none)        │
+│   ├── Decorative elements (roses, kites, trucker art, etc.)    │
+│   ├── Text content (2 lines — custom or pick from sayings)     │
+│   ├── Font style (psychedelic, classic, bollywood, clean,      │
+│   │               trucker art)                                  │
+│   └── Sound track (deferred — default only for MVP)            │
 │                                                                 │
-│   What the USER can swap (element slots):                       │
-│   ├── Head image (their photo or a celebrity)                   │
-│   ├── Hue overlay color (gold, pink, green, blue)               │
-│   ├── Decorative element style (rose heart, sunflower, etc.)    │
-│   ├── Text content (2 lines)                                    │
-│   ├── Font style                                                │
-│   └── Sound track                                               │
-│                                                                 │
-│   EXAMPLE: "Zohran Classic" template                            │
+│   PRESETS just pre-fill these options as a starting point:      │
 │   ┌───────────────────────────────────────────────┐             │
-│   │ Frame 0-15: BG slow zoom + hue pulse          │             │
-│   │ Frame 15-30: Flower bloom reveals head         │             │
-│   │ Frame 30-60: Head zoom-pulse with sparkles     │             │
-│   │ Frame 45-75: Text rises up from bottom         │             │
-│   │ Frame 60-90: Everything pulses together        │             │
+│   │ "Zohran Classic" preset pre-fills:            │             │
+│   │  BG=mountain road, Hue=gold, Head=zoom-pulse, │             │
+│   │  Decor=rose heart, Font=psychedelic,           │             │
+│   │  Text="Eid Mubarak!"                          │             │
 │   │                                                │             │
-│   │ User swaps: head photo, hue=pink, text="Hi!"  │             │
-│   │ Everything else stays choreographed.           │             │
+│   │ User can then change ANY of these.            │             │
+│   │ Or start from scratch with no preset.         │             │
 │   └───────────────────────────────────────────────┘             │
+│                                                                 │
+│   PRESETS AVAILABLE:                                             │
+│   ├── Zohran Classic (politician greeting card energy)          │
+│   ├── Trucker Art (jingle truck + truck sayings energy)         │
+│   ├── Celebrity Greeting (Drake, SRK, Onija, etc.)             │
+│   ├── 6-Head Spiral (maximum chaos energy)                      │
+│   └── Custom (blank — user picks everything)                    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Element Slot Options
+### Element Options
 
-Each slot has a fixed set of options the user can pick from:
+Every option is available to every user regardless of preset. Presets just pre-select a combination.
 
 | Slot | Options Available | Default | Notes |
 |------|-------------------|---------|-------|
-| **Head Image** | User's photo (auto-cropped) OR celebrity | Required | remove.bg extracts head |
-| **Celebrity Heads** | Drake, Shah Rukh Khan, Aunty Stock | N/A | Pre-cropped PNG heads bundled in app |
-| **Hue Overlay** | Gold, Pink/Magenta, Green, Blue, None | Gold | CSS filter overlay with animation |
-| **Decorative Element** | Rose heart, Sunflower, Lotus, Crescent moon, None | Per template | Lottie animations |
-| **Flower for Head Reveal** | Rose bloom, Sunflower open, Lotus open, None | Per template | Lottie that "opens" to show head |
-| **Head Animation** | Single pop, 6-head spiral, Zoom pulse, Float | Per template | Remotion spring/interpolate |
-| **Text Line 1** | Any custom text | "Eid Mubarak!" | User types whatever they want |
-| **Text Line 2** | Any custom text (optional) | "" | Secondary message |
-| **Font Style** | Psychedelic, Classic, Bollywood, Clean | Per template | Bundled font files |
-| **Sound** | Default nasheed (single track for initial MVP) | Default nasheed | Expand to library after first working copy |
+| **Head Image** | User's photo (auto-cropped) OR celebrity/meme face | Required | remove.bg extracts head |
+| **Celebrity/Meme Heads** | Drake, Shah Rukh Khan, Aunty Stock, Onija Robinson, Wow Grape Teacher (Sehar Kamran) | N/A | Pre-cropped transparent PNG heads bundled in app |
+| **Hue Overlay** | Gold, Pink/Magenta, Green, Blue, Trucker Art Yellow, None | Gold | CSS filter overlay with animation |
+| **Background** | Mountain road psychedelic, Desert highway, Solid dark gradient, Trucker art panel, Basant sky (kites) | Per preset | Video loops or stylized images |
+| **Decorative Element** | Rose heart, Sunflower, Lotus, Crescent moon, Kites (Basant), Trucker art borders/chains, None | Per preset | Lottie animations or styled overlays |
+| **Flower for Head Reveal** | Rose bloom, Sunflower open, Lotus open, None | Per preset | Lottie that "opens" to show head |
+| **Head Animation** | Single pop, 6-head spiral, Zoom pulse, Float | Per preset | Remotion spring/interpolate |
+| **Text Line 1** | Any custom text OR pick from preset sayings | "Eid Mubarak!" | User types or selects a trucker saying / quote |
+| **Text Line 2** | Any custom text (optional) OR pick from preset sayings | "" | Secondary message |
+| **Text Presets** | Trucker sayings, Onija Robinson quotes, Wow Grape quotes, Central Cee lyrics, Classic greetings | N/A | See "Text Preset Library" section below |
+| **Font Style** | Psychedelic, Classic, Bollywood, Clean, Trucker Art (Nastaliq-style) | Per preset | Bundled font files |
+| **Sound** | Default nasheed (single track for initial MVP) | Default nasheed | Sound is last priority — expand after MVP |
 
 ### How Elements Map to the Remotion Composition
 
@@ -143,7 +148,8 @@ Each slot has a fixed set of options the user can pick from:
 ┌─────────────────────────────────────────────────────────────────┐
 │           ELEMENT → REMOTION LAYER MAPPING                      │
 │                                                                 │
-│  User picks "Zohran Classic" + swaps elements:                  │
+│  User builds their card (or starts from "Zohran Classic"        │
+│  preset and customizes):                                        │
 │                                                                 │
 │  ┌─────────────────┐     ┌──────────────────────────────┐       │
 │  │ ELEMENT SLOT    │     │ REMOTION COMPONENT           │       │
@@ -177,8 +183,9 @@ Each slot has a fixed set of options the user can pick from:
 │  │                 │     │   volume={0.8} />              │       │
 │  └─────────────────┘     └──────────────────────────────┘       │
 │                                                                 │
-│  The template's choreography (timing, positions, transitions)   │
-│  is FIXED. Only the content within each slot changes.           │
+│  The choreography (timing, positions, transitions) is           │
+│  determined by the combination of options the user picks.       │
+│  Presets pre-fill these options but everything is changeable.   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -544,7 +551,7 @@ const drakeCelebrity: MemeTemplate = {
 };
 ```
 
-### Celebrity Head Images
+### Celebrity / Meme Head Images
 
 Pre-cropped transparent PNG heads bundled with the app:
 
@@ -553,8 +560,186 @@ Pre-cropped transparent PNG heads bundled with the app:
 | **Drake** | `drake-head.png` | Desi meme icon — "mashAllah" energy, Toronto connection |
 | **Shah Rukh Khan** | `srk-head.png` | Bollywood king, Asoka trend, universal desi appeal |
 | **Aunty Stock** | `aunty-stock-head.png` | Stock photo aunty — WhatsApp forward energy |
+| **Onija Robinson** | `onija-head.png` | Viral "Queen of Pakistan" — lime green hijab + red lipstick signature look. Went viral in early 2025 after traveling to Karachi. Known for dramatic demands and quotable one-liners. |
+| **Wow Grape Teacher (Sehar Kamran)** | `wow-grape-head.png` | The iconic PISJ school principal from the viral "I sacrifice my life for Pakistan" video. Her "Wow, grape!" pronunciation of "great" became one of Pakistan's most beloved memes (63M+ views on TikTok). She later became a Pakistani senator. |
+| **Central Cee** | `central-cee-head.png` | British rapper who took his Shahada in Feb 2026. Known for Islamic references in music ("Doja", "Daily Duppy"). Changed his name to Akil. Resonates with Muslim youth globally. |
 
 These are pre-extracted heads (transparent PNGs) that skip the remove.bg step entirely.
+
+---
+
+### Text Preset Library
+
+Users can type custom text OR pick from these preset sayings/quotes organized by category. These appear as tappable options in the text input area.
+
+#### Pakistani Trucker Sayings (Truck Poetry)
+
+Classic sayings painted on Pakistani trucks — witty, philosophical, and deeply cultural:
+
+| Saying (Urdu Transliteration) | English Translation | Vibe |
+|-------------------------------|---------------------|------|
+| "Dekh magar pyaar se" | "Look, but with love" | Flirty classic |
+| "Fasla rakhen warna pyar ho jaega" | "Keep your distance, or you'll fall in love" | Warning/flirty |
+| "Buri nazar wale, tera moonh kala" | "Evil-eyed one, may your face be blackened" | Protective / evil eye |
+| "Maa ki dua, jannat ki hawa" | "A mother's prayer is the breeze of paradise" | Wholesome |
+| "Chalti hai gaari, urhti hai dhool / Jalte hain dushman, khelte hain phool" | "The truck moves, dust flies / Enemies burn, flowers play" | Swagger |
+| "Jalne wale jalte raho" | "Let the jealous keep burning" | Savage |
+| "Horn aahista bajaen, qoum sou rahi hai" | "Honk softly, the nation is sleeping" | Political satire |
+| "Jiyo aur jeenay do" | "Live and let live" | Philosophical |
+| "Maalik ki gaadi, driver ka paseena / Chalti hai road par ban kar haseena" | "Owner's vehicle, driver's sweat / She rides the road like a beauty queen" | Trucker humor |
+| "Overtake mat karo, ghar mein maa intezaar karti hai" | "Don't overtake, your mother waits at home" | Road safety/wholesome |
+| "Namaz parho is se pehlay tumhari namaz parhi jaye" | "Pray before prayers are said for you" | Deep/mortality |
+
+#### Onija Robinson Quotes
+
+Viral sound bites from the "Queen of Pakistan" (2025):
+
+| Quote | Context |
+|-------|---------|
+| "Listen, you talk too much" | Said to Ramzan Chhipa who was trying to help her — instant meme |
+| "I need my check" | One of her most viral one-liners |
+| "My plan is to rebuild this entire country" | Her grand vision for Pakistan |
+| "What's my plan? It's private." | Mysterious response to reporters |
+| "I'm not talkin' unless y'all giving me land" | Classic demand |
+| "Pakistan needs new buses!" | Infrastructure critique |
+| "It's against my religion" | Catchall deflection |
+
+#### Wow Grape / "I Sacrifice My Life for Pakistan" Quotes
+
+From the viral PISJ school independence day celebration video:
+
+| Quote | Who Said It |
+|-------|------------|
+| "I will sacrifice my own life for Pakistan" | Student (the most quoted line) |
+| "Wow, grape!" | Sehar Kamran (meant to say "great") |
+| "That's the spirit, grape!" | Sehar Kamran |
+| "Strong army! Wow! Grape!" | Sehar Kamran (responding to army kid) |
+| "When I grow up I will be a army and save Pakistan and destroy India" | Student |
+| "I proud to be a Pakistani" | Student |
+
+#### Central Cee Islamic Lyrics
+
+References from the British rapper who took his Shahada in 2026:
+
+| Lyric | Song | Notes |
+|-------|------|-------|
+| "The mandem celebrate Eid, the trap still runnin' on Christmas Day" | Doja (2022) | His breakout hit |
+| "Why you saying wallahi for, you ain't been on your deen" | On the Radar Freestyle (2023) | With Drake — calling out fake faith |
+| "We don't eat pork, it's haram" | Daily Duppy (2021) | Islamic dietary reference |
+| "Inshallah" | Band4Band ft. Lil Baby (2024) | God willing |
+
+#### Classic Eid Greetings (Default)
+
+| Greeting | Vibe |
+|----------|------|
+| "Eid Mubarak!" | Standard |
+| "Khair Mubarak!" | Response greeting |
+| "Chand Raat Mubarak!" | Moon night |
+| "Eid ka chand mera yaar" | "My friend is the Eid moon" |
+| "MashAllah, kitna bada ho gaya!" | Aunty classic |
+| "Beta, Eidi dena mat bhoolna" | "Don't forget to give Eidi money" |
+
+---
+
+---
+
+### Pakistani Trucker Art Visual Theme
+
+Pakistani truck art ("Phool Patti" / jingle trucks) is one of the most visually striking folk art traditions — perfect for a bold, colorful Eid card aesthetic.
+
+**Visual elements we can extract for templates:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              TRUCKER ART ELEMENTS FOR TEMPLATES                  │
+│                                                                 │
+│  BORDERS & FRAMES:                                              │
+│  ├── Floral garland borders (roses, marigolds)                 │
+│  ├── Geometric tessellation frames                              │
+│  ├── Chain-with-bell bottom borders (iconic jingle skirt)      │
+│  └── Arch-topped panel frames (like truck side panels)         │
+│                                                                 │
+│  DECORATIVE MOTIFS:                                             │
+│  ├── Peacock (most iconic bird motif)                          │
+│  ├── Rose clusters and lotus flowers                           │
+│  ├── Islamic calligraphy flourishes                            │
+│  ├── Mirror mosaic patterns (Rawalpindi "disco" style)         │
+│  └── Hearts and peepal leaf shapes                             │
+│                                                                 │
+│  BACKGROUNDS:                                                   │
+│  ├── Mountain/landscape scene panels (driver nostalgia art)    │
+│  ├── Embossed metal plate texture                              │
+│  └── Mirror mosaic pattern (reflective, glittery)              │
+│                                                                 │
+│  COLOR PALETTE:                                                 │
+│  ├── Vibrant red (#CC0000)                                     │
+│  ├── Royal blue (#0033CC)                                      │
+│  ├── Emerald green (#009933)                                   │
+│  ├── Golden yellow (#FFD700)                                   │
+│  ├── Orange (#FF6600)                                          │
+│  └── Deep maroon (#660033) backgrounds                         │
+│                                                                 │
+│  TYPOGRAPHY:                                                    │
+│  └── Urdu nastaliq calligraphy style with decorative           │
+│      flourishes — great for trucker saying text overlays        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**How it maps to the builder:**
+- **Background option**: Trucker art panel (stylized, colorful painted truck panel scene)
+- **Decorative elements**: Trucker art borders, chain borders, peacock motif, floral garlands
+- **Hue overlay color**: Trucker art palette options (deep red, royal blue, emerald green)
+- **Font**: Nastaliq-style decorative font for text
+- **Text presets**: Trucker sayings (see Text Preset Library above)
+
+**Preset**: "Trucker Art" preset pre-fills these as a cohesive theme.
+
+---
+
+### Kite / Basant Decorative Elements
+
+Basant (the Lahore kite flying festival) provides beautiful, vibrant decorative elements — recently revived in Pakistan in Feb 2026.
+
+**Visual elements for templates:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              BASANT / KITE ELEMENTS FOR TEMPLATES                │
+│                                                                 │
+│  DECORATIVE ELEMENTS:                                           │
+│  ├── Diamond-shaped kites (patang) scattered in frame          │
+│  ├── Kite string (dor) lines as dividers or connecting         │
+│  │   elements across the composition                            │
+│  ├── Rooftop silhouette as a scene framing element             │
+│  └── Marigold/flower garlands (Basant tradition)               │
+│                                                                 │
+│  BACKGROUNDS:                                                   │
+│  ├── Bright blue sky filled with colorful kites                │
+│  └── Mustard field gradient as bottom border                   │
+│                                                                 │
+│  COLOR PALETTE:                                                 │
+│  ├── Mustard yellow (#DAA520) — signature Basant color         │
+│  ├── Scarlet (#FF2400)                                         │
+│  ├── Emerald (#50C878)                                         │
+│  ├── Indigo (#4B0082)                                          │
+│  └── Amber (#FFBF00)                                           │
+│                                                                 │
+│  ANIMATIONS:                                                    │
+│  ├── Kites swaying/floating in wind (Lottie)                   │
+│  ├── Kite string cutting effect (dramatic moment)              │
+│  └── Kites rising into sky (reveals head in center)            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**How it maps to the builder:**
+- **Background option**: Basant sky (bright blue with scattered kites)
+- **Decorative elements**: Floating kites, kite string lines, marigold garlands
+- **Hue overlay**: Mustard yellow, amber
+- **Head reveal animation**: Kites part to reveal head in center (stretch goal)
+
+These are decorative elements available in the builder — users can mix kite elements with any background or head option.
 
 ---
 
@@ -1264,16 +1449,28 @@ export default defineSchema({
 ┌─────────────────────────────────────────────────────────────────┐
 │                     MVP USER FLOW                               │
 │                     (3 Steps)                                   │
+│                                                                 │
+│   Key change: No rigid "pick a template" gate. Users get a     │
+│   full custom builder. Presets are optional one-tap shortcuts   │
+│   that pre-fill options — user can change anything after.       │
 └─────────────────────────────────────────────────────────────────┘
 
-STEP 1: PICK TEMPLATE + ADD HEAD
+STEP 1: START BUILDING + ADD HEAD
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
-│   Pick a vibe:                                                  │
-│   ┌──────────┐ ┌──────────┐ ┌──────────┐                       │
-│   │ Zohran   │ │ 6-Head   │ │ Celebrity│                       │
-│   │ Classic  │ │ Spiral   │ │ Greeting │                       │
-│   └──────────┘ └──────────┘ └──────────┘                       │
+│   Quick start from a vibe (optional):                          │
+│   ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐         │
+│   │ Zohran   │ │ Trucker  │ │ Celebrity│ │ 6-Head   │         │
+│   │ Classic  │ │ Art      │ │ Greeting │ │ Spiral   │         │
+│   └──────────┘ └──────────┘ └──────────┘ └──────────┘         │
+│   ┌──────────┐                                                  │
+│   │ Custom   │  ← start blank, pick everything yourself        │
+│   │ (blank)  │                                                  │
+│   └──────────┘                                                  │
+│                                                                 │
+│   Tapping a preset pre-fills all options below.                │
+│   Tapping "Custom" starts with defaults. Either way,           │
+│   you can change everything in Step 2.                         │
 │                                                                 │
 │   ┌─────────────────────────────────────────────────────────┐  │
 │   │                                                         │  │
@@ -1283,54 +1480,103 @@ STEP 1: PICK TEMPLATE + ADD HEAD
 │   │                                                         │  │
 │   └─────────────────────────────────────────────────────────┘  │
 │                                                                 │
-│   [Use Celebrity Instead]  (Drake, SRK, Aunty Stock)           │
+│   [Use a Meme Face Instead]                                    │
+│   Drake | SRK | Aunty Stock | Onija Robinson |                 │
+│   Wow Grape Teacher | Central Cee                              │
 │                                                                 │
 │                              [ NEXT ]                           │
 └─────────────────────────────────────────────────────────────────┘
 
-STEP 2: CUSTOMIZE
+STEP 2: CUSTOMIZE (with LIVE PREVIEW)
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
 │   ┌─────────────────────────────────────────┐                  │
 │   │                                         │                  │
-│   │           LIVE PREVIEW                  │                  │
-│   │           (animated)                    │                  │
+│   │         LIVE ANIMATED PREVIEW           │                  │
+│   │    (lightweight — shows your card       │                  │
+│   │     playing in real time as you         │                  │
+│   │     change options below)               │                  │
+│   │                                         │                  │
+│   │    ⚡ This is NOT the final render.     │                  │
+│   │    It's a fast in-app preview using     │                  │
+│   │    Remotion Player so you can see       │                  │
+│   │    exactly what your card will look     │                  │
+│   │    like before committing to export.    │                  │
 │   │                                         │                  │
 │   └─────────────────────────────────────────┘                  │
 │                                                                 │
-│   TEXT LINE 1:                                                  │
+│   TEXT LINE 1: [type or pick a preset ▼]                       │
 │   ┌─────────────────────────────────────────────────────────┐  │
 │   │  Eid Mubarak!                                           │  │
 │   └─────────────────────────────────────────────────────────┘  │
+│   Preset sayings: Trucker | Onija | Wow Grape | Central Cee   │
 │                                                                 │
-│   TEXT LINE 2 (optional):                                       │
+│   TEXT LINE 2 (optional): [type or pick a preset ▼]            │
 │   ┌─────────────────────────────────────────────────────────┐  │
-│   │  From your favorite aunty                               │  │
+│   │  Dekh magar pyaar se                                    │  │
 │   └─────────────────────────────────────────────────────────┘  │
 │                                                                 │
 │   CUSTOMIZE:                                                    │
-│   [Hue: Gold] [Flower: Rose] [Font: Psychedelic]               │
+│   Background:  [Mountain Road ▼]                               │
+│   Hue Color:   🟡 🩷 🟢 🔵 🟠                                   │
+│   Decorative:  [Rose Heart ▼] [Kites ▼] [Trucker Border ▼]   │
+│   Head Anim:   [Zoom Pulse ▼]                                 │
+│   Font:        [Psychedelic ▼]                                 │
 │                                                                 │
-│                    [ BACK ]  [ NEXT ]                           │
+│                    [ BACK ]  [ EXPORT → ]                      │
 └─────────────────────────────────────────────────────────────────┘
 
-STEP 3: EXPORT & SHARE
+STEP 3: RENDER & SHARE
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
+│   Your video is being rendered!                                │
 │   ┌─────────────────────────────────────────┐                  │
 │   │                                         │                  │
-│   │           FINAL PREVIEW                 │                  │
-│   │           (full quality)                │                  │
+│   │      Rendering... ████████████░░░░ 75% │                  │
+│   │                                         │                  │
+│   │   (Remotion Lambda is creating your     │                  │
+│   │    full quality MP4 video)              │                  │
 │   │                                         │                  │
 │   └─────────────────────────────────────────┘                  │
 │                                                                 │
+│   Once complete:                                                │
 │   ┌─────────────────────────────────────────────────────────┐  │
+│   │  ▶ [Play Final Video]                                   │  │
 │   │  [ Share to WhatsApp ]                                  │  │
 │   │  [ Share to Instagram ]                                 │  │
 │   │  [ Save to Camera Roll ]                                │  │
+│   │  [ ← Go Back & Edit ]                                  │  │
 │   └─────────────────────────────────────────────────────────┘  │
 │                                                                 │
-│   Rendering... ████████████░░░░ 75%                            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Preview vs Render — How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│           PREVIEW vs RENDER PIPELINE                            │
+│                                                                 │
+│  STEP 2 - LIVE PREVIEW (instant, free, in-app):                │
+│  ├── Uses Remotion Player component running locally             │
+│  ├── Renders in real-time in the app as user customizes        │
+│  ├── Lower resolution but shows exact timing, animations,      │
+│  │   text placement, colors — what you see is what you get     │
+│  ├── No server cost — runs on device                           │
+│  ├── User can tweak options and see changes immediately        │
+│  └── This IS the preview — no need to render first             │
+│                                                                 │
+│  STEP 3 - FULL RENDER (server-side, costs ~$0.01-0.05):       │
+│  ├── Triggered only when user clicks "Export"                  │
+│  ├── Remotion Lambda renders full 1080x1920 MP4                │
+│  ├── Takes 10-60 seconds (progress bar shown)                  │
+│  ├── Output is the final shareable video file                  │
+│  └── User can go back to Step 2 and re-edit if needed         │
+│                                                                 │
+│  So YES — users see a full video preview BEFORE rendering.     │
+│  The live preview in Step 2 shows them exactly what their      │
+│  card will look like. They only trigger the expensive render   │
+│  when they're happy with what they see.                        │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -1343,71 +1589,95 @@ STEP 3: EXPORT & SHARE
 
 | Feature | Why |
 |---------|-----|
-| 3 pre-built templates (Zohran Classic, 6-Head Spiral, Celebrity Greeting) | Core product |
+| Custom builder with preset starting points (Zohran, Trucker Art, Celebrity, 6-Head, Custom) | Core product — user controls everything, presets are shortcuts |
 | Head extraction via remove.bg | Core feature |
-| Celebrity head options (Drake, SRK, Aunty Stock) | Meme appeal |
-| 2 editable text slots per template | Custom text (PR comment #3) |
-| 4 hue overlay color options | Quick customization |
-| 3 decorative element options | Template variety |
-| 1 default sound (expand after working copy) | Audio essential |
-| 4 font styles | Text personalization |
-| Export to MP4 | Primary output |
+| Celebrity/meme head options (Drake, SRK, Aunty Stock, Onija Robinson, Wow Grape Teacher, Central Cee) | Meme appeal — expanded roster |
+| 2 editable text slots with preset saying library | Custom text + trucker sayings, Onija quotes, Wow Grape quotes, Central Cee lyrics |
+| Pakistani trucker art visual elements (borders, panels, color palette) | Cultural authenticity — iconic South Asian folk art |
+| Kite/Basant decorative elements (floating kites, string lines) | Festive decorative option |
+| Multiple background options (mountain road, desert, solid, trucker art, Basant sky) | Builder variety |
+| Hue overlay color options (6+ colors including trucker palette) | Quick customization |
+| Decorative element options (roses, kites, trucker borders, crescent, etc.) | Builder variety |
+| Live animated preview in Step 2 (Remotion Player) | Users see exactly what they'll get BEFORE rendering |
+| 5 font styles (incl. trucker art Nastaliq-style) | Text personalization |
+| Export to MP4 via Remotion Lambda | Primary output |
 | Share to WhatsApp/Instagram/Save | Distribution |
 | AWS S3 blob storage | Proper architecture (PR comment #5) |
 | Remotion Lambda rendering | Serverless, pay-per-use (PR comment #4) |
 | Render queue with progress | UX requirement |
+| 1 default sound (LAST priority — simplest add) | Audio essential but lowest effort to add |
 
 ### OUT (Later)
 
 | Feature | Why Defer |
 |---------|-----------|
 | AI image generation | Cost, complexity, not needed for MVP |
-| Custom template builder | Predefined only for MVP |
 | Head accessories on user photos | Hijab wrapping doesn't work with CSS overlay |
 | User accounts / auth | Anonymous for MVP, test at iftar |
 | GIF export | MP4 first |
 | Sound upload | Moderation concerns |
+| Sound library (multiple tracks) | Single default first — sound is last priority |
 | Web version | Mobile first, web later |
 | Monetization / premium tiers | Get working copy first |
 | Community / social features | Testing at party, not needed |
 | RTL / Arabic text | Not in initial scope |
 | Eid al-Adha support | Ramadan / Eid al-Fitr only |
-| Multiple sound options | Single default first, expand after |
+| Onija Robinson sound bites (audio clips) | Need to source/license — add after MVP with sound library |
 
 ---
 
 ## 12. Asset Checklist
 
-### Backgrounds Needed (3)
-- [ ] Mountain road (psychedelic color graded) — for Zohran Classic
-- [ ] Desert highway (golden hour) — for 6-Head Spiral
-- [ ] Solid dark gradient — for Celebrity Greeting
+### Backgrounds Needed (5)
+- [ ] Mountain road (psychedelic color graded) — Zohran preset
+- [ ] Desert highway (golden hour) — 6-Head Spiral preset
+- [ ] Solid dark gradient — Celebrity Greeting preset
+- [ ] **Pakistani trucker art panel** (stylized painted truck panel scene) — Trucker Art preset
+- [ ] **Basant sky** (bright blue sky with scattered colorful kites) — Kite decorative option
 
-### Lottie Animations Needed (6)
+### Lottie Animations Needed (10)
 - [ ] Rose heart pumping
 - [ ] Rose bloom (reveals head)
 - [ ] Sunflower bloom (reveals head)
 - [ ] Sparkle overlay
 - [ ] Floating petals
 - [ ] Gold particles + crescent moon
+- [ ] **Floating kites** (diamond-shaped patang kites swaying in wind)
+- [ ] **Trucker art floral border** (animated garland/border frame)
+- [ ] **Trucker art chain border** (jingling chain skirt animation)
+- [ ] **Peacock motif** (trucker art style decorative peacock)
 
-### Celebrity Head PNGs Needed (3)
+### Celebrity / Meme Head PNGs Needed (6)
 - [ ] Drake head (transparent PNG, pre-cropped)
 - [ ] Shah Rukh Khan head (transparent PNG, pre-cropped)
 - [ ] Aunty Stock head (transparent PNG, pre-cropped)
+- [ ] **Onija Robinson head** (transparent PNG — signature lime green hijab + red lipstick look)
+- [ ] **Wow Grape Teacher / Sehar Kamran head** (transparent PNG — from the viral PISJ video)
+- [ ] **Central Cee head** (transparent PNG — post-Shahada era)
 
-### Sounds Needed (1 for initial, 5 target)
+### Sounds Needed (LAST PRIORITY — 1 for initial, expand later)
 - [ ] Default nasheed (upbeat, 15-20 seconds)
-- [ ] (After working copy) Nasheed 2 (peaceful)
-- [ ] (After working copy) Bollywood clip
-- [ ] (After working copy) Funny voiceover
-- [ ] (After working copy) Dramatic sting
+- [ ] (Post-MVP) Nasheed 2 (peaceful)
+- [ ] (Post-MVP) Bollywood clip
+- [ ] (Post-MVP) Funny voiceover
+- [ ] (Post-MVP) Dramatic sting
+- [ ] (Post-MVP) Onija Robinson sound bites (need licensing)
+- [ ] (Post-MVP) Wow Grape teacher sound bites (need licensing)
 
-### Fonts Needed (4)
+### Fonts Needed (5)
 - [ ] Psychedelic/groovy font (free/open source)
 - [ ] Classic Arabic-friendly font (e.g., Amiri)
 - [ ] Bollywood style font
 - [ ] Clean sans-serif (e.g., Inter)
+- [ ] **Trucker art / Nastaliq-style** decorative font (for truck poetry text overlays)
+
+### Trucker Art Static Assets Needed
+- [ ] Floral garland border PNG/SVG (for frame overlays)
+- [ ] Geometric tessellation pattern (tileable background texture)
+- [ ] Mirror mosaic texture (Rawalpindi "disco" style)
+- [ ] Peacock motif PNG/SVG
+- [ ] Chain-with-bell border PNG/SVG (truck jingle skirt)
+- [ ] Arch-topped panel frame (truck side panel shape)
 
 ---
 
@@ -1482,7 +1752,7 @@ eid-meme-maker/
 
 ## 14. Development Phases
 
-### Phase 1: Foundation (3-4 days)
+### Phase 1: Foundation
 - [ ] Set up Expo project with TypeScript + Expo Router
 - [ ] Set up Convex backend with schema
 - [ ] Set up AWS S3 bucket
@@ -1490,37 +1760,51 @@ eid-meme-maker/
 - [ ] Integrate remove.bg API for background removal
 - [ ] S3 upload flow for user photos
 
-### Phase 2: Template Engine (4-5 days)
+### Phase 2: Builder Engine (Remotion)
 - [ ] Set up Remotion project in packages/remotion
 - [ ] Create base EidMemeVideo composition
-- [ ] Implement layer system (Background, HueOverlay, HeadAnimation, AnimatedText)
-- [ ] Build Zohran Classic template with all animations
+- [ ] Implement layer system (Background, HueOverlay, HeadAnimation, AnimatedText, DecorativeElements)
+- [ ] Build Zohran Classic preset with all animations
+- [ ] Add trucker art visual elements (borders, panels, color palette)
+- [ ] Add kite/Basant decorative elements (floating kites, string lines)
 - [ ] Test head placement and animation with sample images
 
-### Phase 3: Customization UI (3-4 days)
+### Phase 3: Customization UI + Live Preview
 - [ ] Build 3-step wizard navigation
-- [ ] Template selection screen with previews
-- [ ] Customization screen (text input, hue picker, font picker)
-- [ ] Celebrity head selection (Drake, SRK, Aunty Stock)
-- [ ] Live preview component
+- [ ] Step 1: Preset selection + custom blank option + head upload
+- [ ] Step 2: Full customization screen (background, head anim, hue, decorative, text, font)
+- [ ] Text preset picker (trucker sayings, Onija quotes, Wow Grape quotes, Central Cee lyrics, classic greetings)
+- [ ] Celebrity/meme head selection (Drake, SRK, Aunty Stock, Onija, Wow Grape Teacher, Central Cee)
+- [ ] **Live preview component** (Remotion Player — real-time animated preview as user customizes)
+- [ ] Ensure preview accurately reflects what the final render will look like
 
-### Phase 4: Rendering & Export (3-4 days)
+### Phase 4: Rendering & Export
 - [ ] Deploy Remotion Lambda to AWS
 - [ ] Build render queue in Convex
 - [ ] Implement MP4 export flow
 - [ ] Add share functionality (WhatsApp, Instagram, save to camera roll)
 - [ ] Progress indicators during rendering
+- [ ] "Go back & edit" flow from Step 3 back to Step 2
 
-### Phase 5: Polish (2-3 days)
-- [ ] Add remaining 2 templates (6-Head Spiral, Celebrity Greeting)
-- [ ] Add default sound track
+### Phase 5: Content & Polish
+- [ ] Add all preset configurations (Trucker Art, 6-Head Spiral, Celebrity Greeting presets)
+- [ ] Source and add all celebrity/meme head PNGs (6 total)
+- [ ] Source trucker art static assets (borders, panels, textures)
+- [ ] Source kite/Basant Lottie animations
 - [ ] Error handling + loading states
 - [ ] Test on real devices
 - [ ] Beta testing with friends at iftar
 
-**Total: ~15-20 days for working prototype**
+### Phase 6: Sound (LAST — simplest add)
+- [ ] Add default nasheed sound track
+- [ ] Wire up audio layer in Remotion composition
+- [ ] Basic sound toggle (on/off) in customization UI
+- [ ] (Post-MVP) Expand to sound library with categories
+- [ ] (Post-MVP) Add Onija Robinson / Wow Grape sound bites if licensed
 
 **Note (PR comment #6):** Between two developers, we can parallelize — one on frontend (Phases 1+3), one on Remotion + Lambda (Phases 2+4). Discuss task split.
+
+**Sound is intentionally last** — it's the simplest layer to add (single audio file piped through Remotion's `<Audio>` component) and doesn't block any other functionality.
 
 ---
 
@@ -1536,6 +1820,20 @@ Previously open questions, now resolved:
 | Web version priority? | **Mobile first.** React Native via Expo. Web can come later for free via Expo Web. |
 | Monetization? | **Not for MVP.** Focus on working copy. Consider after iftar test. |
 | Head accessories on user photos? | **Deferred.** CSS overlay doesn't work for hijab. Celebrity pre-composed images only. Test crown/sunglasses as stretch goal. |
-| Custom template builder? | **No.** Predefined templates with swappable element slots only. |
-| Multiple sounds? | **Single default for first working copy.** Expand to curated library after. |
-| CapCut-style templates? | **Yes, similar concept.** Fixed choreography, user swaps elements. We're building our own Remotion-based version, not reusing CapCut directly. |
+| ~~Custom template builder?~~ | ~~**No.** Predefined templates with swappable element slots only.~~ **UPDATED — see below.** |
+| Multiple sounds? | **Single default for first working copy.** Sound is LAST priority. Expand to curated library after. |
+| CapCut-style templates? | **Yes, similar concept** but evolved — see below. |
+
+### New Decisions (Latest Round)
+
+| Question | Decision |
+|----------|----------|
+| Rigid templates vs custom builder? | **Custom builder with presets.** Users can customize everything (background, head anim, hue, decorative elements, text, font). Presets (Zohran Classic, Trucker Art, Celebrity Greeting, 6-Head Spiral) are one-tap shortcuts that pre-fill all options — but nothing is locked. Users can load a Drake preset and then change the background to trucker art and the text to a truck saying. Maximum flexibility. |
+| Preview before rendering? | **Yes — live animated preview in Step 2.** Uses Remotion Player component running locally on device. Shows the card playing in real-time as user customizes. No server cost. The expensive Lambda render only happens when user clicks "Export" in Step 3. Users see exactly what they'll get before committing. |
+| Pakistani trucker art? | **IN for MVP.** Added as background option, decorative element set, color palette, font style, and text presets (truck poetry/sayings). Trucker Art is also a preset. |
+| Kite/Basant elements? | **IN for MVP** as decorative elements. Floating kites, kite string lines, Basant sky background option. |
+| Onija Robinson? | **IN for MVP.** Head cutout (lime green hijab + red lipstick look), quotes as text presets. Sound bites deferred to post-MVP (need licensing). |
+| Wow Grape Teacher (Sehar Kamran)? | **IN for MVP.** Head cutout, quotes as text presets ("Wow, grape!", "I will sacrifice my own life for Pakistan", etc.). Sound bites deferred to post-MVP. |
+| Central Cee? | **IN for MVP.** Head cutout, Islamic lyrics as text presets ("The mandem celebrate Eid", wallahi line, etc.). |
+| Trucker sign sayings? | **IN for MVP.** 11+ authentic Pakistani truck sayings as text presets. Includes classics like "Dekh magar pyaar se", "Maa ki dua jannat ki hawa", "Buri nazar wale tera moonh kala", etc. |
+| Sound priority? | **LAST.** Sound is Phase 6. It's the simplest add — one audio file through Remotion's `<Audio>` component. Everything else is built and tested before sound is wired up. |
