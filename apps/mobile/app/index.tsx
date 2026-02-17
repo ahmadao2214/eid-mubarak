@@ -21,10 +21,12 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { ProjectCard } from "@/components/ProjectCard";
 import { EmptyState } from "@/components/EmptyState";
 import { listAllProjects, removeProject } from "@/repositories/projects";
+import { useToast } from "@/context/ToastContext";
 import type { Project } from "@/types";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,10 +36,12 @@ export default function HomeScreen() {
     try {
       const list = await listAllProjects();
       setProjects(list);
+    } catch {
+      showToast("Failed to load projects", "error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useFocusEffect(
     useCallback(() => {
@@ -59,6 +63,8 @@ export default function HomeScreen() {
     try {
       await removeProject(deleteTarget.id);
       setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+    } catch {
+      showToast("Failed to delete project. Please try again.", "error");
     } finally {
       setDeleteTarget(null);
     }

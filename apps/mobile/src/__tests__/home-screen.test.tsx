@@ -15,6 +15,10 @@ jest.mock("expo-router", () => ({
   },
 }));
 
+jest.mock("@/context/ToastContext", () => ({
+  useToast: () => ({ showToast: jest.fn() }),
+}));
+
 jest.mock("react-native-safe-area-context", () => ({
   SafeAreaView: ({ children, ...props }: any) => {
     const { View } = require("react-native");

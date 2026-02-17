@@ -35,7 +35,7 @@ export default function Step3Screen() {
   }, []);
 
   const handleShare = async () => {
-    if (isSharingRef.current) return;
+    if (isSharingRef.current || isSavingDraftRef.current) return;
     isSharingRef.current = true;
     try {
       cancelledRef.current = false;
