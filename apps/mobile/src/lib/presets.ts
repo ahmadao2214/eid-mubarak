@@ -266,8 +266,8 @@ const sixHeadSpiral: PresetConfig = {
 
 const customPreset: PresetConfig = {
   id: "custom",
-  name: "Custom",
-  description: "Blank slate with minimal defaults — customize everything",
+  name: "Start from Scratch",
+  description: "Build your own card from a blank canvas",
   defaultProps: {
     width: 1080,
     height: 1920,

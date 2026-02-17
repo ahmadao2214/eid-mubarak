@@ -21,13 +21,31 @@ describe("Step2Screen", () => {
       initialHeadImage: "https://example.com/head.png",
     });
 
-  it("renders text input for each text slot", () => {
+  it("renders greeting options for main text slot", () => {
     renderStep2();
+    expect(screen.getByTestId("greeting-main-eid-mubarak!")).toBeTruthy();
+    expect(screen.getByTestId("greeting-main-khair-mubarak")).toBeTruthy();
+    expect(screen.getByTestId("greeting-main-custom")).toBeTruthy();
+  });
+
+  it("selecting a greeting option updates text", () => {
+    renderStep2();
+    fireEvent.press(screen.getByTestId("greeting-main-khair-mubarak"));
+    // The preview text slot should update
+    expect(screen.getByTestId("text-slot-main")).toHaveTextContent(
+      "Khair Mubarak",
+    );
+  });
+
+  it("shows text input when 'Type your own' is selected", () => {
+    renderStep2();
+    fireEvent.press(screen.getByTestId("greeting-main-custom"));
     expect(screen.getByTestId("text-input-main")).toBeTruthy();
   });
 
-  it("text input change updates composition", () => {
+  it("custom text input updates composition", () => {
     renderStep2();
+    fireEvent.press(screen.getByTestId("greeting-main-custom"));
     const input = screen.getByTestId("text-input-main");
     fireEvent.changeText(input, "Happy Eid!");
     expect(input.props.value).toBe("Happy Eid!");

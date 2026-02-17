@@ -10,62 +10,80 @@ import {
   mockGetRenderStatus,
 } from "@/lib/mock-api";
 
-type RenderState = "idle" | "rendering" | "completed" | "failed";
+type ShareState = "idle" | "saving" | "rendering" | "ready" | "failed";
 
 export default function Step3Screen() {
   const router = useRouter();
   const { state } = useComposition();
   const { composition } = state;
 
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [projectId, setProjectId] = useState<string | null>(null);
-  const [renderState, setRenderState] = useState<RenderState>("idle");
-  const [renderProgress, setRenderProgress] = useState(0);
+  const [shareState, setShareState] = useState<ShareState>("idle");
+  const [progress, setProgress] = useState(0);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
+  const [savedDraft, setSavedDraft] = useState(false);
 
-  const handleSave = async () => {
-    setSaving(true);
-    const id = await mockCreateProject(
-      `Eid Card ${Date.now()}`,
-      composition,
-    );
-    setProjectId(id);
-    setSaved(true);
-    setSaving(false);
+  const handleShare = async () => {
+    try {
+      // Step 1: Save project
+      setShareState("saving");
+      setProgress(0);
+      const projectId = await mockCreateProject(
+        `Eid Card ${Date.now()}`,
+        composition,
+      );
+
+      // Step 2: Render video
+      setShareState("rendering");
+      const renderId = await mockRequestRender(projectId);
+
+      // Step 3: Poll for completion
+      const poll = async () => {
+        const status = await mockGetRenderStatus(renderId);
+        setProgress(status.progress);
+
+        if (status.status === "completed") {
+          setShareState("ready");
+          setOutputUrl(status.outputUrl ?? null);
+        } else if (status.status === "failed") {
+          setShareState("failed");
+        } else {
+          setTimeout(poll, 500);
+        }
+      };
+      await poll();
+    } catch {
+      setShareState("failed");
+    }
   };
 
-  const handleRender = async () => {
-    const pid = projectId ?? "unsaved";
-    setRenderState("rendering");
-    setRenderProgress(0);
-
-    const renderId = await mockRequestRender(pid);
-
-    // Poll for status
-    const poll = async () => {
-      const status = await mockGetRenderStatus(renderId);
-      setRenderProgress(status.progress);
-
-      if (status.status === "completed") {
-        setRenderState("completed");
-        setOutputUrl(status.outputUrl ?? null);
-      } else if (status.status === "failed") {
-        setRenderState("failed");
-      } else {
-        // Continue polling
-        setTimeout(poll, 500);
-      }
-    };
-
-    await poll();
+  const handleSaveDraft = async () => {
+    await mockCreateProject(`Draft ${Date.now()}`, composition);
+    setSavedDraft(true);
   };
+
+  const isProcessing = shareState === "saving" || shareState === "rendering";
+
+  const shareLabel = {
+    idle: "Share",
+    saving: "Preparing...",
+    rendering: "Rendering...",
+    ready: "Share Again",
+    failed: "Retry",
+  }[shareState];
+
+  const statusMessage = {
+    idle: null,
+    saving: "Saving your card...",
+    rendering: `Rendering video... ${progress}%`,
+    ready: "Your video is ready!",
+    failed: "Something went wrong. Try again.",
+  }[shareState];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
       >
         {/* Header */}
         <Text
@@ -76,10 +94,10 @@ export default function Step3Screen() {
             marginBottom: 4,
           }}
         >
-          Step 3
+          Preview
         </Text>
         <Text style={{ fontSize: 16, color: "#e0e0e0", marginBottom: 20 }}>
-          Preview, save & render your card
+          Here's your card — share it with the world!
         </Text>
 
         {/* Preview */}
@@ -87,64 +105,34 @@ export default function Step3Screen() {
           <CardPreview composition={composition} size="large" />
         </View>
 
-        {/* Save button */}
-        <Pressable
-          testID="save-button"
-          onPress={handleSave}
-          disabled={saving || saved}
-          accessibilityState={{ disabled: saving || saved }}
-          style={{
-            backgroundColor: saved ? "#00C853" : "#FFD700",
-            paddingVertical: 14,
-            borderRadius: 12,
-            alignItems: "center",
-            marginBottom: 12,
-            opacity: saving ? 0.6 : 1,
-          }}
-        >
-          <Text
-            style={{ color: "#1a1a2e", fontSize: 16, fontWeight: "bold" }}
-          >
-            {saving ? "Saving..." : saved ? "Saved!" : "Save Project"}
-          </Text>
-        </Pressable>
-
-        {/* Render button */}
-        <Pressable
-          testID="render-button"
-          onPress={handleRender}
-          disabled={renderState === "rendering" || renderState === "completed"}
-          accessibilityState={{
-            disabled:
-              renderState === "rendering" || renderState === "completed",
-          }}
-          style={{
-            backgroundColor:
-              renderState === "completed" ? "#00C853" : "#FF69B4",
-            paddingVertical: 14,
-            borderRadius: 12,
-            alignItems: "center",
-            marginBottom: 12,
-            opacity: renderState === "rendering" ? 0.6 : 1,
-          }}
-        >
-          <Text
-            style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}
-          >
-            {renderState === "idle" && "Render Video"}
-            {renderState === "rendering" && "Rendering..."}
-            {renderState === "completed" && "Render Complete!"}
-            {renderState === "failed" && "Render Failed — Retry"}
-          </Text>
-        </Pressable>
+        {/* Status message */}
+        {statusMessage && (
+          <View testID="share-status" style={{ marginBottom: 16 }}>
+            <Text
+              style={{
+                color:
+                  shareState === "ready"
+                    ? "#00C853"
+                    : shareState === "failed"
+                      ? "#FF5252"
+                      : "#e0e0e0",
+                fontSize: 14,
+                textAlign: "center",
+                fontWeight: "600",
+              }}
+            >
+              {statusMessage}
+            </Text>
+          </View>
+        )}
 
         {/* Progress bar */}
-        {(renderState === "rendering" || renderState === "completed") && (
-          <View testID="render-progress" style={{ marginBottom: 16 }}>
+        {isProcessing && (
+          <View testID="share-progress" style={{ marginBottom: 20 }}>
             <View
               style={{
-                height: 8,
-                borderRadius: 4,
+                height: 6,
+                borderRadius: 3,
                 backgroundColor: "rgba(255,255,255,0.1)",
                 overflow: "hidden",
               }}
@@ -152,29 +140,18 @@ export default function Step3Screen() {
               <View
                 style={{
                   height: "100%",
-                  width: `${renderProgress}%`,
-                  backgroundColor:
-                    renderState === "completed" ? "#00C853" : "#FF69B4",
-                  borderRadius: 4,
+                  width: `${shareState === "saving" ? 20 : progress}%`,
+                  backgroundColor: "#FFD700",
+                  borderRadius: 3,
                 }}
               />
             </View>
-            <Text
-              style={{
-                color: "#aaa",
-                fontSize: 12,
-                marginTop: 4,
-                textAlign: "center",
-              }}
-            >
-              {renderProgress}%
-            </Text>
           </View>
         )}
 
-        {/* Completion */}
-        {renderState === "completed" && (
-          <View testID="render-complete" style={{ marginBottom: 16 }}>
+        {/* Ready state */}
+        {shareState === "ready" && (
+          <View testID="share-ready" style={{ marginBottom: 16 }}>
             <Text
               style={{
                 color: "#00C853",
@@ -183,23 +160,49 @@ export default function Step3Screen() {
                 fontWeight: "600",
               }}
             >
-              Your video is ready!
+              Tap Share Again to send to another app
             </Text>
           </View>
         )}
 
-        {/* Share button */}
+        {/* Share button (primary action) */}
         <Pressable
           testID="share-button"
-          disabled={renderState !== "completed"}
-          accessibilityState={{ disabled: renderState !== "completed" }}
-          onPress={() => {
-            // In production: Share.share({ url: outputUrl })
-          }}
+          onPress={handleShare}
+          disabled={isProcessing}
+          accessibilityState={{ disabled: isProcessing }}
           style={{
-            backgroundColor:
-              renderState === "completed" ? "#2196F3" : "#555",
-            paddingVertical: 14,
+            backgroundColor: isProcessing
+              ? "#555"
+              : shareState === "ready"
+                ? "#00C853"
+                : "#FFD700",
+            paddingVertical: 16,
+            borderRadius: 12,
+            alignItems: "center",
+            marginBottom: 12,
+            opacity: isProcessing ? 0.7 : 1,
+          }}
+        >
+          <Text
+            style={{
+              color: isProcessing ? "#999" : "#1a1a2e",
+              fontSize: 18,
+              fontWeight: "bold",
+            }}
+          >
+            {shareLabel}
+          </Text>
+        </Pressable>
+
+        {/* Save draft (secondary, subtle) */}
+        <Pressable
+          testID="save-draft-button"
+          onPress={handleSaveDraft}
+          disabled={savedDraft || isProcessing}
+          accessibilityState={{ disabled: savedDraft || isProcessing }}
+          style={{
+            paddingVertical: 12,
             borderRadius: 12,
             alignItems: "center",
             marginBottom: 12,
@@ -207,12 +210,12 @@ export default function Step3Screen() {
         >
           <Text
             style={{
-              color: renderState === "completed" ? "#fff" : "#999",
-              fontSize: 16,
-              fontWeight: "bold",
+              color: savedDraft ? "#00C853" : "#999",
+              fontSize: 14,
+              fontWeight: "600",
             }}
           >
-            Share
+            {savedDraft ? "Draft saved" : "Save as draft"}
           </Text>
         </Pressable>
       </ScrollView>

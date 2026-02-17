@@ -46,6 +46,24 @@ const FONTS: { id: FontStyle; label: string }[] = [
 
 const FLOWER_TYPES: FlowerType[] = ["rose", "sunflower", "lotus"];
 
+const GREETING_OPTIONS: { label: string; text: string }[] = [
+  { label: "Eid Mubarak!", text: "Eid Mubarak!" },
+  { label: "Eid ul-Fitr Mubarak", text: "Eid ul-Fitr Mubarak" },
+  { label: "Khair Mubarak", text: "Khair Mubarak" },
+  { label: "Chand Raat Mubarak", text: "Chand Raat Mubarak" },
+  { label: "May Allah bless you", text: "May Allah bless you" },
+  { label: "Wishing you joy", text: "Wishing you joy and blessings" },
+  { label: "From our family", text: "From our family to yours" },
+];
+
+const SUBTITLE_OPTIONS: { label: string; text: string }[] = [
+  { label: "Joy & blessings", text: "Wishing you joy and blessings" },
+  { label: "Peace & love", text: "Peace, love, and happiness" },
+  { label: "Family to yours", text: "From our family to yours" },
+  { label: "Blessed Eid", text: "Have a blessed Eid" },
+  { label: "Celebrate together", text: "Let's celebrate together!" },
+];
+
 const TEXT_ANIMATIONS: { id: TextAnimation; label: string }[] = [
   { id: "fade-in", label: "Fade In" },
   { id: "rise-up", label: "Rise Up" },
@@ -66,6 +84,7 @@ export default function Step2Screen() {
     setTextAnimation,
   } = useComposition();
   const [activeTab, setActiveTab] = useState<Tab>("text");
+  const [customMode, setCustomMode] = useState<Record<string, boolean>>({});
   const { composition } = state;
 
   return (
@@ -135,37 +154,130 @@ export default function Step2Screen() {
         {/* Text Tab */}
         {activeTab === "text" && (
           <View>
-            {/* Text inputs */}
-            {composition.textSlots.map((slot) => (
-              <View key={slot.id} style={{ marginBottom: 16 }}>
-                <Text
-                  style={{
-                    color: "#aaa",
-                    fontSize: 12,
-                    marginBottom: 6,
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                  }}
-                >
-                  {slot.id}
-                </Text>
-                <TextInput
-                  testID={`text-input-${slot.id}`}
-                  value={slot.text}
-                  onChangeText={(text) => updateTextSlot(slot.id, text)}
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                    borderRadius: 10,
-                    padding: 12,
-                    color: "#fff",
-                    fontSize: 16,
-                    borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.15)",
-                  }}
-                  placeholderTextColor="#666"
-                />
-              </View>
-            ))}
+            {/* Text slot pickers */}
+            {composition.textSlots.map((slot) => {
+              const isMain = slot.id === "main" || slot.id === "greeting";
+              const options = isMain ? GREETING_OPTIONS : SUBTITLE_OPTIONS;
+              const isCustom = customMode[slot.id] ?? false;
+              const isPresetMatch = options.some((o) => o.text === slot.text);
+
+              return (
+                <View key={slot.id} style={{ marginBottom: 20 }}>
+                  <Text
+                    style={{
+                      color: "#aaa",
+                      fontSize: 12,
+                      marginBottom: 8,
+                      textTransform: "uppercase",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    {isMain ? "Greeting" : slot.id}
+                  </Text>
+
+                  {/* Preset text options */}
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ marginBottom: 8 }}
+                  >
+                    {options.map((option) => {
+                      const isActive = !isCustom && slot.text === option.text;
+                      return (
+                        <Pressable
+                          key={option.text}
+                          testID={`greeting-${slot.id}-${option.label.toLowerCase().replace(/\s+/g, "-")}`}
+                          onPress={() => {
+                            updateTextSlot(slot.id, option.text);
+                            setCustomMode((prev) => ({
+                              ...prev,
+                              [slot.id]: false,
+                            }));
+                          }}
+                          style={{
+                            paddingHorizontal: 14,
+                            paddingVertical: 10,
+                            borderRadius: 20,
+                            marginRight: 8,
+                            backgroundColor: isActive
+                              ? "rgba(255,215,0,0.2)"
+                              : "rgba(255,255,255,0.05)",
+                            borderWidth: 1,
+                            borderColor: isActive ? "#FFD700" : "transparent",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: isActive ? "#FFD700" : "#ccc",
+                              fontWeight: "600",
+                              fontSize: 13,
+                            }}
+                          >
+                            {option.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                    {/* Type your own pill */}
+                    <Pressable
+                      testID={`greeting-${slot.id}-custom`}
+                      onPress={() =>
+                        setCustomMode((prev) => ({
+                          ...prev,
+                          [slot.id]: true,
+                        }))
+                      }
+                      style={{
+                        paddingHorizontal: 14,
+                        paddingVertical: 10,
+                        borderRadius: 20,
+                        marginRight: 8,
+                        backgroundColor:
+                          isCustom || !isPresetMatch
+                            ? "rgba(255,215,0,0.2)"
+                            : "rgba(255,255,255,0.05)",
+                        borderWidth: 1,
+                        borderColor:
+                          isCustom || !isPresetMatch
+                            ? "#FFD700"
+                            : "transparent",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color:
+                            isCustom || !isPresetMatch ? "#FFD700" : "#ccc",
+                          fontWeight: "600",
+                          fontSize: 13,
+                        }}
+                      >
+                        Type your own
+                      </Text>
+                    </Pressable>
+                  </ScrollView>
+
+                  {/* Custom text input (shown when "Type your own" selected) */}
+                  {(isCustom || !isPresetMatch) && (
+                    <TextInput
+                      testID={`text-input-${slot.id}`}
+                      value={slot.text}
+                      onChangeText={(text) => updateTextSlot(slot.id, text)}
+                      style={{
+                        backgroundColor: "rgba(255,255,255,0.1)",
+                        borderRadius: 10,
+                        padding: 12,
+                        color: "#fff",
+                        fontSize: 16,
+                        borderWidth: 1,
+                        borderColor: "rgba(255,255,255,0.15)",
+                      }}
+                      placeholderTextColor="#666"
+                      placeholder="Type your message..."
+                    />
+                  )}
+                </View>
+              );
+            })}
 
             {/* Font picker */}
             <Text
