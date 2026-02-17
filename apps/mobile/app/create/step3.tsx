@@ -76,7 +76,11 @@ export default function Step3Screen() {
     }
   };
 
+  const isSavingDraftRef = useRef(false);
+
   const handleSaveDraft = async () => {
+    if (isSavingDraftRef.current) return;
+    isSavingDraftRef.current = true;
     try {
       if (state.projectId) {
         await updateProject(state.projectId, composition);
@@ -87,6 +91,8 @@ export default function Step3Screen() {
       setSavedDraft(true);
     } catch {
       // Save failed silently — user can retry
+    } finally {
+      isSavingDraftRef.current = false;
     }
   };
 

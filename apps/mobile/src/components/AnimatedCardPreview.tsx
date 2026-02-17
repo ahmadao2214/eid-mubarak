@@ -31,7 +31,7 @@ function AnimatedTextSlot({ slot, index, scale, dimensionsHeight }: AnimatedText
   useEffect(() => {
     opacity.value = withDelay(index * 200, withTiming(1, { duration: 600 }));
     translateY.value = withDelay(index * 200, withTiming(0, { duration: 600 }));
-  }, []);
+  }, [index]);
 
   const animStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
