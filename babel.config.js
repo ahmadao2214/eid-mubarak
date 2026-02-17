@@ -1,6 +1,4 @@
 // Root babel config for monorepo jest compatibility
-const path = require("path");
-
 module.exports = function (api) {
   api.cache(true);
   return {
@@ -9,10 +7,7 @@ module.exports = function (api) {
       "nativewind/babel",
     ],
     plugins: [
-      path.resolve(
-        __dirname,
-        "apps/mobile/node_modules/react-native-reanimated/plugin"
-      ),
+      "react-native-reanimated/plugin",
     ],
   };
 };

@@ -8,7 +8,7 @@ export type HeadAnimationType =
   | "spiral-in"
   | "pop-bounce"
   | "float";
-export type FlowerType = "rose" | "jasmine" | "lotus" | "marigold";
+export type FlowerType = "rose" | "sunflower" | "lotus";
 export type TextAnimation =
   | "rise-up"
   | "typewriter"
