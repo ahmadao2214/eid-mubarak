@@ -1750,59 +1750,267 @@ eid-meme-maker/
 
 ---
 
-## 14. Development Phases
+## 14. Development Phases & Developer Task Split
 
-### Phase 1: Foundation
-- [ ] Set up Expo project with TypeScript + Expo Router
-- [ ] Set up Convex backend with schema
-- [ ] Set up AWS S3 bucket
-- [ ] Implement image picker (expo-image-picker)
-- [ ] Integrate remove.bg API for background removal
-- [ ] S3 upload flow for user photos
+### Team Roles
 
-### Phase 2: Builder Engine (Remotion)
-- [ ] Set up Remotion project in packages/remotion
-- [ ] Create base EidMemeVideo composition
-- [ ] Implement layer system (Background, HueOverlay, HeadAnimation, AnimatedText, DecorativeElements)
-- [ ] Build Zohran Classic preset with all animations
-- [ ] Add trucker art visual elements (borders, panels, color palette)
-- [ ] Add kite/Basant decorative elements (floating kites, string lines)
-- [ ] Test head placement and animation with sample images
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    DEVELOPER SPLIT                               │
+│                                                                 │
+│  DEV A (Frontend) — @ahmadao2214                                 │
+│  ├── Expo / React Native app (screens, navigation, UI)         │
+│  ├── Remotion compositions (EidMemeVideo, all layer components) │
+│  ├── Remotion Player (live preview in Step 2)                  │
+│  ├── NativeWind / CSS / styling                                │
+│  ├── Convex client-side (hooks, queries, mutations from app)   │
+│  ├── remove.bg API integration (call from app)                 │
+│  ├── EAS build & deploy                                        │
+│  ├── Asset integration (fonts, Lottie, head PNGs into app)     │
+│  └── Share functionality (WhatsApp, Instagram, camera roll)    │
+│                                                                 │
+│  DEV B (Backend / Infra) — @iismail19                          │
+│  ├── AWS S3 bucket setup + IAM policies + CORS                 │
+│  ├── S3 presigned URL generation (upload + download)           │
+│  ├── Remotion Lambda deployment (function + site bundle)       │
+│  ├── Convex schema + server-side functions                     │
+│  │   ├── schema.ts (data models)                               │
+│  │   ├── projects.ts (CRUD mutations/queries)                  │
+│  │   ├── renders.ts (render queue + Lambda trigger)            │
+│  │   ├── sounds.ts (sound library queries)                     │
+│  │   └── assets.ts (asset queries + S3 URL helpers)            │
+│  ├── Render pipeline (Convex action → Lambda → S3 → status)   │
+│  ├── remove.bg API key management / server proxy (if needed)   │
+│  └── Monitoring / error handling on infra side                 │
+│                                                                 │
+│  SHARED / HANDOFF POINTS:                                       │
+│  ├── Convex schema (Dev B defines, Dev A consumes via hooks)   │
+│  ├── S3 upload flow (Dev B provides presigned URLs,            │
+│  │   Dev A calls them from the app)                            │
+│  ├── Render trigger (Dev A calls Convex mutation,              │
+│  │   Dev B handles the Lambda orchestration behind it)         │
+│  ├── Remotion compositions (Dev A builds them,                 │
+│  │   Dev B deploys them to Lambda as site bundle)              │
+│  └── Asset URLs (Dev B uploads assets to S3,                   │
+│      Dev A references them in Remotion compositions)           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### Phase 3: Customization UI + Live Preview
-- [ ] Build 3-step wizard navigation
-- [ ] Step 1: Preset selection + custom blank option + head upload
-- [ ] Step 2: Full customization screen (background, head anim, hue, decorative, text, font)
-- [ ] Text preset picker (trucker sayings, Onija quotes, Wow Grape quotes, Central Cee lyrics, classic greetings)
-- [ ] Celebrity/meme head selection (Drake, SRK, Aunty Stock, Onija, Wow Grape Teacher, Central Cee)
-- [ ] **Live preview component** (Remotion Player — real-time animated preview as user customizes)
-- [ ] Ensure preview accurately reflects what the final render will look like
+### Integration Contract (How the Two Sides Talk)
 
-### Phase 4: Rendering & Export
-- [ ] Deploy Remotion Lambda to AWS
-- [ ] Build render queue in Convex
-- [ ] Implement MP4 export flow
-- [ ] Add share functionality (WhatsApp, Instagram, save to camera roll)
-- [ ] Progress indicators during rendering
-- [ ] "Go back & edit" flow from Step 3 back to Step 2
+The key boundary is: **Dev A builds everything the user sees and touches. Dev B builds everything that runs on AWS/Convex servers.** They connect through Convex functions and S3 URLs.
 
-### Phase 5: Content & Polish
-- [ ] Add all preset configurations (Trucker Art, 6-Head Spiral, Celebrity Greeting presets)
-- [ ] Source and add all celebrity/meme head PNGs (6 total)
-- [ ] Source trucker art static assets (borders, panels, textures)
-- [ ] Source kite/Basant Lottie animations
-- [ ] Error handling + loading states
-- [ ] Test on real devices
-- [ ] Beta testing with friends at iftar
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                INTEGRATION POINTS                                │
+│                                                                 │
+│  1. PHOTO UPLOAD FLOW                                           │
+│     Dev A: User picks photo → calls Convex action              │
+│     Dev B: Convex action → generates presigned S3 URL          │
+│     Dev A: Uploads directly to S3 using presigned URL          │
+│     Dev B: Convex stores S3 key/URL in DB                      │
+│                                                                 │
+│  2. REMOVE.BG FLOW                                              │
+│     Dev A: Sends photo to remove.bg API (or Convex action)     │
+│     Dev B: (If proxied) Convex action calls remove.bg,         │
+│            uploads result to S3, returns S3 URL                 │
+│     Dev A: Receives transparent PNG URL, shows in preview      │
+│                                                                 │
+│  3. RENDER FLOW                                                 │
+│     Dev A: User clicks "Export" → calls requestRender mutation │
+│     Dev B: Convex mutation creates job → action calls Lambda   │
+│     Dev B: Lambda renders MP4 → stores in S3                   │
+│     Dev B: Convex updates render status + progress (real-time) │
+│     Dev A: Polls render status via Convex query, shows progress│
+│     Dev A: Gets S3 URL of MP4 → shows share/download options  │
+│                                                                 │
+│  4. REMOTION DEPLOY FLOW                                        │
+│     Dev A: Builds Remotion compositions in packages/remotion/  │
+│     Dev B: Deploys site bundle to Lambda:                      │
+│            npx remotion lambda sites create ...                 │
+│     Dev B: Provides serve URL that Convex action uses          │
+│                                                                 │
+│  5. ASSET MANAGEMENT                                            │
+│     Dev B: Uploads static assets (backgrounds, Lottie, heads)  │
+│            to S3, seeds Convex `assets` table with URLs         │
+│     Dev A: Queries assets from Convex, uses URLs in Remotion   │
+│            compositions and in the app UI                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### Phase 6: Sound (LAST — simplest add)
-- [ ] Add default nasheed sound track
-- [ ] Wire up audio layer in Remotion composition
-- [ ] Basic sound toggle (on/off) in customization UI
-- [ ] (Post-MVP) Expand to sound library with categories
-- [ ] (Post-MVP) Add Onija Robinson / Wow Grape sound bites if licensed
+### Agreed Interfaces (Define These Early)
 
-**Note (PR comment #6):** Between two developers, we can parallelize — one on frontend (Phases 1+3), one on Remotion + Lambda (Phases 2+4). Discuss task split.
+Dev B should expose these Convex functions for Dev A to consume:
+
+```typescript
+// ── WHAT DEV A CALLS (client-side) ──────────────────────────
+
+// Photo upload
+api.storage.getUploadUrl()         // → presigned S3 URL
+api.storage.confirmUpload({ s3Key, type })  // → stores metadata
+
+// Remove.bg (if server-proxied)
+api.photos.removeBackground({ s3Key })  // → { resultS3Url }
+
+// Projects
+api.projects.create({ name, composition })      // → projectId
+api.projects.get({ projectId })                  // → project
+api.projects.update({ projectId, composition })  // → void
+
+// Render
+api.renders.request({ projectId })       // → renderId
+api.renders.getStatus({ renderId })      // → { status, progress, outputUrl }
+
+// Assets
+api.assets.listByType({ type })          // → Asset[]
+api.sounds.listByCategory({ category })  // → Sound[]
+```
+
+Dev A doesn't need to know about Lambda, S3 internals, or IAM policies. Dev A just calls Convex mutations/queries and gets back URLs.
+
+---
+
+### Phase-by-Phase Breakdown (Who Does What)
+
+#### Phase 1: Foundation
+
+| Task | Dev A (Frontend) | Dev B (Backend) |
+|------|-----------------|-----------------|
+| **Expo project init** | Set up Expo + TypeScript + Expo Router + NativeWind | — |
+| **Convex project init** | — | Set up Convex project, define schema.ts, deploy |
+| **AWS S3** | — | Create S3 bucket, configure CORS, set up IAM user/policies |
+| **Image picker** | Implement expo-image-picker with crop | — |
+| **S3 upload flow** | Call presigned URL from app, upload photo | Build Convex action that generates presigned S3 upload URLs |
+| **remove.bg integration** | Call remove.bg API from app (or call Convex action) | (If proxied) Build Convex action that calls remove.bg + stores result in S3 |
+| **Convex client setup** | Install convex, set up provider, connect to backend | Provide deployment URL + project config |
+
+**Handoff**: Dev B provides the Convex deployment URL and the presigned upload function. Dev A connects the app to it.
+
+**Can start in parallel**: Dev A starts Expo scaffolding and UI while Dev B sets up S3 + Convex infra. They connect when both are ready.
+
+#### Phase 2: Builder Engine (Remotion)
+
+| Task | Dev A (Frontend) | Dev B (Backend) |
+|------|-----------------|-----------------|
+| **Remotion project setup** | Create packages/remotion, set up composition, Root.tsx | — |
+| **EidMemeVideo composition** | Build main composition + all 6 layer components (Background, HueOverlay, HeadAnimation, AnimatedText, FlowerReveal, DecorativeElement) | — |
+| **Zohran Classic preset** | Define preset config + build all animations (spring, interpolate, Lottie) | — |
+| **Trucker art elements** | Build DecorativeElement variants for trucker borders, chains, peacock | — |
+| **Kite/Basant elements** | Build DecorativeElement variants for floating kites, string lines | — |
+| **Preset definitions** | Define all preset JSON configs (zohran, trucker, celebrity, spiral, blank) | — |
+| **Asset upload to S3** | — | Upload background videos, Lottie JSON, head PNGs, fonts to S3 |
+| **Asset seeding** | — | Seed Convex `assets` table with S3 URLs |
+| **Test renders** | Provide compositions to Dev B for test | Test Remotion compositions via `npx remotion render` locally |
+
+**Handoff**: Dev A builds compositions, Dev B provides asset S3 URLs. Dev A uses those URLs in the compositions. Dev B can test-render locally.
+
+**Can start in parallel**: Dev A builds Remotion compositions using placeholder/local assets. Dev B uploads real assets to S3. They swap in real URLs when ready.
+
+#### Phase 3: Customization UI + Live Preview
+
+| Task | Dev A (Frontend) | Dev B (Backend) |
+|------|-----------------|-----------------|
+| **3-step wizard navigation** | Build step1.tsx, step2.tsx, step3.tsx with Expo Router | — |
+| **Step 1: Preset picker + head upload** | Build preset card grid, photo upload flow, celebrity head picker | — |
+| **Step 2: Full customization screen** | Build all customization controls (background, hue, decorative, head anim, text, font) | — |
+| **Text preset picker** | Build category-tabbed text picker (trucker, Onija, Wow Grape, Central Cee, classic) | — |
+| **Celebrity/meme head selection** | Build head grid with 6 options + user photo | — |
+| **Live preview (Remotion Player)** | Integrate Remotion Player component, wire up to composition props, ensure real-time updates | — |
+| **Project state management** | Build useProject hook, call Convex mutations to save/load | — |
+| **Convex project CRUD** | — | Build projects.ts mutations/queries (create, get, update) |
+| **Convex asset queries** | — | Build assets.ts + sounds.ts queries (listByType, listByCategory) |
+
+**Handoff**: Dev B provides working Convex functions. Dev A calls them from hooks.
+
+**Can start in parallel**: Dev A builds all UI with local state first. Dev B builds Convex functions. Dev A swaps in Convex calls when functions are ready.
+
+#### Phase 4: Rendering & Export
+
+| Task | Dev A (Frontend) | Dev B (Backend) |
+|------|-----------------|-----------------|
+| **Remotion Lambda deployment** | — | Deploy Lambda function + site bundle to AWS |
+| **Render queue (Convex)** | — | Build renders.ts: requestRender mutation, executeRender action (calls Lambda), updateProgress, polling logic |
+| **Render trigger from app** | Call api.renders.request, poll status via api.renders.getStatus | — |
+| **Progress UI** | Build progress bar, status text, loading states in step3.tsx | — |
+| **MP4 playback** | Play rendered MP4 from S3 URL in the app | — |
+| **Share functionality** | Implement WhatsApp/Instagram/camera roll share using expo-sharing | — |
+| **"Go back & edit" flow** | Navigate from Step 3 back to Step 2, preserve state | — |
+| **Error handling (infra)** | — | Handle Lambda failures, timeouts, retry logic in Convex action |
+| **Error handling (UI)** | Show user-friendly error messages, retry button | — |
+
+**Handoff**: Dev B deploys Lambda and provides the render Convex functions. Dev A calls them and displays the results.
+
+**Critical dependency**: Dev A needs Dev B's render pipeline working before this phase is fully testable. Dev A can stub with a fake delay + test MP4 URL while Dev B builds the real pipeline.
+
+#### Phase 5: Content & Polish
+
+| Task | Dev A (Frontend) | Dev B (Backend) |
+|------|-----------------|-----------------|
+| **All preset configs** | Finalize JSON configs for all 5 presets | — |
+| **Head PNG sourcing** | Source/crop the 6 celebrity head PNGs | Upload to S3, seed assets table |
+| **Trucker art assets** | Source/create border SVGs, panel frames, textures | Upload to S3, seed assets table |
+| **Kite/Basant assets** | Source kite Lottie, kite SVGs | Upload to S3, seed assets table |
+| **Error handling + loading** | Polish all loading states, skeleton screens, error messages | Add monitoring/alerting on Lambda failures |
+| **Device testing** | Test on real iOS + Android devices | — |
+| **EAS build** | Set up EAS Build for distribution | — |
+| **Iftar beta test** | Run the iftar party test | — |
+
+**Can work in parallel**: Dev A polishes UI while Dev B handles asset uploads + infra monitoring.
+
+#### Phase 6: Sound (LAST — simplest add)
+
+| Task | Dev A (Frontend) | Dev B (Backend) |
+|------|-----------------|-----------------|
+| **Default nasheed** | Source the track | Upload to S3, seed sounds table |
+| **Audio in Remotion** | Wire `<Audio>` component into EidMemeVideo composition | — |
+| **Sound toggle UI** | Add on/off toggle in Step 2 customization | — |
+| **(Post-MVP) Sound library** | Build sound picker UI with categories | Build sounds.ts queries, upload more tracks to S3 |
+
+---
+
+### Suggested Start Order
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                 PARALLEL DEVELOPMENT TIMELINE                    │
+│                                                                 │
+│  WEEK 1:                                                        │
+│  Dev A: Expo scaffolding + image picker + Remotion setup       │
+│  Dev B: AWS S3 bucket + Convex schema + presigned URLs         │
+│  End of week: Connect — app can upload photos to S3            │
+│                                                                 │
+│  WEEK 2:                                                        │
+│  Dev A: EidMemeVideo composition + all layer components        │
+│  Dev B: Upload assets to S3 + seed Convex + remove.bg proxy   │
+│  End of week: Connect — compositions use real S3 asset URLs    │
+│                                                                 │
+│  WEEK 3:                                                        │
+│  Dev A: 3-step wizard UI + customization + live preview        │
+│  Dev B: Convex project CRUD + asset queries + Lambda deploy    │
+│  End of week: Connect — full builder flow works with live      │
+│  preview, projects save to Convex                              │
+│                                                                 │
+│  WEEK 4:                                                        │
+│  Dev A: Step 3 render UI + share + progress bar                │
+│  Dev B: Render pipeline (Convex → Lambda → S3 → status)       │
+│  End of week: Connect — full export pipeline works end-to-end  │
+│                                                                 │
+│  WEEK 5:                                                        │
+│  Both: Polish, content, device testing, sound, iftar beta      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Key Rules for Clean Separation
+
+1. **Dev A never touches AWS console.** All S3/Lambda infra is Dev B's domain.
+2. **Dev B never touches UI code.** All screens, components, styling is Dev A's domain.
+3. **Convex is the boundary.** Dev B owns the `convex/` directory (schema, mutations, actions). Dev A consumes via hooks in the app. If Dev A needs a new query/mutation, they ask Dev B to add it.
+4. **Remotion compositions are Dev A's domain** but Dev B deploys them. Dev A pushes composition code, Dev B runs `npx remotion lambda sites create` to deploy.
+5. **Assets go through S3.** Dev B manages the S3 bucket. Dev A never uploads assets manually — Dev B does it and provides URLs via Convex.
+6. **When in doubt, define the interface first.** Before building, agree on the Convex function signature (args + return type). Both devs can then build against that contract independently.
 
 **Sound is intentionally last** — it's the simplest layer to add (single audio file piped through Remotion's `<Audio>` component) and doesn't block any other functionality.
 
@@ -1837,3 +2045,4 @@ Previously open questions, now resolved:
 | Central Cee? | **IN for MVP.** Head cutout, Islamic lyrics as text presets ("The mandem celebrate Eid", wallahi line, etc.). |
 | Trucker sign sayings? | **IN for MVP.** 11+ authentic Pakistani truck sayings as text presets. Includes classics like "Dekh magar pyaar se", "Maa ki dua jannat ki hawa", "Buri nazar wale tera moonh kala", etc. |
 | Sound priority? | **LAST.** Sound is Phase 6. It's the simplest add — one audio file through Remotion's `<Audio>` component. Everything else is built and tested before sound is wired up. |
+| Developer task split? | **Frontend (Dev A / @ahmadao2214):** Expo, React Native, Remotion compositions, Remotion Player, NativeWind/CSS, EAS, remove.bg API, share functionality, Convex client-side hooks. **Backend (Dev B / @iismail19):** AWS S3, Remotion Lambda deployment, Convex server-side functions (schema, mutations, actions), render pipeline, asset management, IAM policies. **Boundary:** Convex functions are the API contract. Dev A calls them, Dev B builds them. |
