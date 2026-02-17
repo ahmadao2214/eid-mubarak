@@ -47,8 +47,11 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadProjects();
-    setRefreshing(false);
+    try {
+      await loadProjects();
+    } finally {
+      setRefreshing(false);
+    }
   }, [loadProjects]);
 
   const handleDelete = async () => {

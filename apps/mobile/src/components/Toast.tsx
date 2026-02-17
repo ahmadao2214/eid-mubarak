@@ -38,7 +38,7 @@ export function Toast({ message, type, visible, onHide, duration = 3000 }: Toast
     } else {
       translateY.value = 100;
     }
-  }, [visible]);
+  }, [visible, duration, onHide]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],

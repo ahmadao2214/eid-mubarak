@@ -77,13 +77,17 @@ export default function Step3Screen() {
   };
 
   const handleSaveDraft = async () => {
-    if (state.projectId) {
-      await updateProject(state.projectId, composition);
-    } else {
-      const newId = await createProject(`Draft ${Date.now()}`, composition);
-      setProjectId(newId);
+    try {
+      if (state.projectId) {
+        await updateProject(state.projectId, composition);
+      } else {
+        const newId = await createProject(`Draft ${Date.now()}`, composition);
+        setProjectId(newId);
+      }
+      setSavedDraft(true);
+    } catch {
+      // Save failed silently — user can retry
     }
-    setSavedDraft(true);
   };
 
   const isProcessing = shareState === "saving" || shareState === "rendering";
