@@ -1758,7 +1758,7 @@ eid-meme-maker/
 ┌─────────────────────────────────────────────────────────────────┐
 │                    DEVELOPER SPLIT                               │
 │                                                                 │
-│  DEV A (Frontend) — @iismail19                                  │
+│  DEV A (Frontend) — @ahmadao2214                                 │
 │  ├── Expo / React Native app (screens, navigation, UI)         │
 │  ├── Remotion compositions (EidMemeVideo, all layer components) │
 │  ├── Remotion Player (live preview in Step 2)                  │
@@ -1769,7 +1769,7 @@ eid-meme-maker/
 │  ├── Asset integration (fonts, Lottie, head PNGs into app)     │
 │  └── Share functionality (WhatsApp, Instagram, camera roll)    │
 │                                                                 │
-│  DEV B (Backend / Infra) — cofounder                           │
+│  DEV B (Backend / Infra) — @iismail19                          │
 │  ├── AWS S3 bucket setup + IAM policies + CORS                 │
 │  ├── S3 presigned URL generation (upload + download)           │
 │  ├── Remotion Lambda deployment (function + site bundle)       │
@@ -2045,4 +2045,4 @@ Previously open questions, now resolved:
 | Central Cee? | **IN for MVP.** Head cutout, Islamic lyrics as text presets ("The mandem celebrate Eid", wallahi line, etc.). |
 | Trucker sign sayings? | **IN for MVP.** 11+ authentic Pakistani truck sayings as text presets. Includes classics like "Dekh magar pyaar se", "Maa ki dua jannat ki hawa", "Buri nazar wale tera moonh kala", etc. |
 | Sound priority? | **LAST.** Sound is Phase 6. It's the simplest add — one audio file through Remotion's `<Audio>` component. Everything else is built and tested before sound is wired up. |
-| Developer task split? | **Frontend (Dev A / @iismail19):** Expo, React Native, Remotion compositions, Remotion Player, NativeWind/CSS, EAS, remove.bg API, share functionality, Convex client-side hooks. **Backend (Dev B / cofounder):** AWS S3, Remotion Lambda deployment, Convex server-side functions (schema, mutations, actions), render pipeline, asset management, IAM policies. **Boundary:** Convex functions are the API contract. Dev A calls them, Dev B builds them. |
+| Developer task split? | **Frontend (Dev A / @ahmadao2214):** Expo, React Native, Remotion compositions, Remotion Player, NativeWind/CSS, EAS, remove.bg API, share functionality, Convex client-side hooks. **Backend (Dev B / @iismail19):** AWS S3, Remotion Lambda deployment, Convex server-side functions (schema, mutations, actions), render pipeline, asset management, IAM policies. **Boundary:** Convex functions are the API contract. Dev A calls them, Dev B builds them. |
