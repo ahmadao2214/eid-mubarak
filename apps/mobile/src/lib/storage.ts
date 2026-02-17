@@ -1,7 +1,7 @@
-import { createMMKV } from "react-native-mmkv";
+import { MMKV } from "react-native-mmkv";
 import type { CompositionProps } from "@/types";
 
-const storage = createMMKV({ id: "eid-meme-maker" });
+const storage = new MMKV({ id: "eid-meme-maker" });
 
 // ── Keys ─────────────────────────────────────────────────
 
@@ -74,5 +74,5 @@ export function deleteProject(projectId: string): void {
 }
 
 export function clearAllProjects(): void {
-  storage.remove(PROJECTS_KEY);
+  storage.delete(PROJECTS_KEY);
 }
