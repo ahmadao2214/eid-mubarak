@@ -13,7 +13,8 @@ import { useComposition } from "@/context/CompositionContext";
 import { PRESETS } from "@/lib/presets";
 import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
 import { removeBackground } from "@/hooks/useRemoveBg";
-import { mockListCelebrityHeads } from "@/lib/mock-api";
+import { listCelebrityHeads } from "@/repositories/assets";
+import { lightTap } from "@/lib/haptics";
 import type { PresetId, HueColor, CelebrityHead } from "@/types";
 
 const HUE_DISPLAY: Record<HueColor, string> = {
@@ -36,7 +37,7 @@ export default function Step1Screen() {
   const [selectedHeadId, setSelectedHeadId] = useState<string | null>(null);
 
   useEffect(() => {
-    mockListCelebrityHeads().then(setCelebHeads);
+    listCelebrityHeads().then(setCelebHeads);
   }, []);
 
   const hasPreset = state.selectedPresetId !== null;
@@ -45,6 +46,7 @@ export default function Step1Screen() {
   const canProceed = hasPreset && hasImage;
 
   const handleSelectCeleb = (celeb: CelebrityHead) => {
+    lightTap();
     setSelectedHeadId(celeb.id);
     setLocalImage(celeb.imageUrl);
     setHeadImage(celeb.imageUrl);
@@ -134,7 +136,7 @@ export default function Step1Screen() {
                     ? `preset-card-${preset.id}-selected`
                     : `preset-card-${preset.id}`
                 }
-                onPress={() => selectPreset(preset.id)}
+                onPress={() => { lightTap(); selectPreset(preset.id); }}
                 style={{
                   width: 120,
                   marginRight: 12,

@@ -59,10 +59,17 @@ const mockCelebHeads = [
 
 const mockListCelebrityHeads = jest.fn();
 
-jest.mock("@/lib/mock-api", () => ({
-  get mockListCelebrityHeads() {
+jest.mock("@/repositories/assets", () => ({
+  get listCelebrityHeads() {
     return mockListCelebrityHeads;
   },
+}));
+
+jest.mock("@/lib/haptics", () => ({
+  lightTap: jest.fn(),
+  mediumTap: jest.fn(),
+  successNotification: jest.fn(),
+  errorNotification: jest.fn(),
 }));
 
 beforeEach(() => {

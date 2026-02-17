@@ -9,7 +9,8 @@ import {
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useComposition } from "@/context/CompositionContext";
-import { CardPreview } from "@/components/CardPreview";
+import { AnimatedCardPreview } from "@/components/AnimatedCardPreview";
+import { lightTap } from "@/lib/haptics";
 import type {
   HueColor,
   HeadAnimationType,
@@ -110,7 +111,7 @@ export default function Step2Screen() {
 
         {/* Preview */}
         <View style={{ alignItems: "center", marginBottom: 20 }}>
-          <CardPreview composition={composition} size="small" />
+          <AnimatedCardPreview composition={composition} size="small" />
         </View>
 
         {/* Tabs */}
@@ -127,7 +128,7 @@ export default function Step2Screen() {
             <Pressable
               key={tab}
               testID={`tab-${tab}`}
-              onPress={() => setActiveTab(tab)}
+              onPress={() => { lightTap(); setActiveTab(tab); }}
               style={{
                 flex: 1,
                 paddingVertical: 10,

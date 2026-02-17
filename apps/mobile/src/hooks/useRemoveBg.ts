@@ -1,4 +1,4 @@
-import { mockRemoveBackground } from "../lib/mock-api";
+import { removeBackground as repoRemoveBackground } from "../repositories/uploads";
 
 export interface RemoveBgResult {
   transparentUrl: string | null;
@@ -13,7 +13,7 @@ export async function removeBackground(
     // TODO: Replace mockRemoveBackground with real API call:
     // Option A: Direct remove.bg API call from app
     // Option B: Convex action api.photos.removeBackground({ s3Key })
-    const { resultS3Url } = await mockRemoveBackground(imageUri);
+    const { resultS3Url } = await repoRemoveBackground(imageUri);
 
     return {
       transparentUrl: resultS3Url,

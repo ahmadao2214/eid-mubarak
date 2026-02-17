@@ -3,24 +3,23 @@ import { View, Text, ScrollView, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useComposition } from "@/context/CompositionContext";
-import { CardPreview } from "@/components/CardPreview";
-import {
-  mockCreateProject,
-  mockRequestRender,
-  mockGetRenderStatus,
-} from "@/lib/mock-api";
+import { AnimatedCardPreview } from "@/components/AnimatedCardPreview";
+import { createProject, updateProject } from "@/repositories/projects";
+import { requestRender, getRenderStatus } from "@/repositories/renders";
+import { downloadAndShare, saveToGallery } from "@/hooks/useShare";
 
 type ShareState = "idle" | "saving" | "rendering" | "ready" | "failed";
 
 export default function Step3Screen() {
   const router = useRouter();
-  const { state } = useComposition();
+  const { state, setProjectId } = useComposition();
   const { composition } = state;
 
   const [shareState, setShareState] = useState<ShareState>("idle");
   const [progress, setProgress] = useState(0);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [savedDraft, setSavedDraft] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
   const cancelledRef = useRef(false);
 
   useEffect(() => {
@@ -33,24 +32,30 @@ export default function Step3Screen() {
     try {
       cancelledRef.current = false;
 
-      // Step 1: Save project
+      // Step 1: Save or update project
       setShareState("saving");
       setProgress(0);
-      const projectId = await mockCreateProject(
-        `Eid Card ${Date.now()}`,
-        composition,
-      );
+      let projectId = state.projectId;
+      if (projectId) {
+        await updateProject(projectId, composition);
+      } else {
+        projectId = await createProject(
+          `Eid Card ${Date.now()}`,
+          composition,
+        );
+        setProjectId(projectId);
+      }
       if (cancelledRef.current) return;
 
       // Step 2: Render video
       setShareState("rendering");
-      const renderId = await mockRequestRender(projectId);
+      const renderId = await requestRender(projectId);
       if (cancelledRef.current) return;
 
       // Step 3: Poll for completion
       const poll = async () => {
         if (cancelledRef.current) return;
-        const status = await mockGetRenderStatus(renderId);
+        const status = await getRenderStatus(renderId);
         if (cancelledRef.current) return;
         setProgress(status.progress);
 
@@ -72,7 +77,12 @@ export default function Step3Screen() {
   };
 
   const handleSaveDraft = async () => {
-    await mockCreateProject(`Draft ${Date.now()}`, composition);
+    if (state.projectId) {
+      await updateProject(state.projectId, composition);
+    } else {
+      const newId = await createProject(`Draft ${Date.now()}`, composition);
+      setProjectId(newId);
+    }
     setSavedDraft(true);
   };
 
@@ -117,7 +127,7 @@ export default function Step3Screen() {
 
         {/* Preview */}
         <View style={{ alignItems: "center", marginBottom: 24 }}>
-          <CardPreview composition={composition} size="large" />
+          <AnimatedCardPreview composition={composition} size="large" />
         </View>
 
         {/* Status message */}
@@ -164,7 +174,7 @@ export default function Step3Screen() {
           </View>
         )}
 
-        {/* Ready state */}
+        {/* Ready state with share actions */}
         {shareState === "ready" && (
           <View testID="share-ready" style={{ marginBottom: 16 }}>
             <Text
@@ -173,42 +183,97 @@ export default function Step3Screen() {
                 fontSize: 14,
                 textAlign: "center",
                 fontWeight: "600",
+                marginBottom: 16,
               }}
             >
-              Tap Share Again to send to another app
+              Your video is ready!
             </Text>
+
+            {shareError && (
+              <Text
+                testID="share-error"
+                style={{
+                  color: "#FF5252",
+                  fontSize: 13,
+                  textAlign: "center",
+                  marginBottom: 12,
+                }}
+              >
+                {shareError}
+              </Text>
+            )}
+
+            <Pressable
+              testID="share-video-button"
+              onPress={async () => {
+                if (!outputUrl) return;
+                setShareError(null);
+                const result = await downloadAndShare(outputUrl);
+                if (!result.success) setShareError(result.error ?? "Share failed");
+              }}
+              style={{
+                backgroundColor: "#00C853",
+                paddingVertical: 14,
+                borderRadius: 12,
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                Share Video
+              </Text>
+            </Pressable>
+
+            <Pressable
+              testID="save-gallery-button"
+              onPress={async () => {
+                if (!outputUrl) return;
+                setShareError(null);
+                const result = await saveToGallery(outputUrl);
+                if (!result.success) setShareError(result.error ?? "Save failed");
+              }}
+              style={{
+                backgroundColor: "rgba(255,255,255,0.1)",
+                paddingVertical: 14,
+                borderRadius: 12,
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                Save to Camera Roll
+              </Text>
+            </Pressable>
           </View>
         )}
 
-        {/* Share button (primary action) */}
-        <Pressable
-          testID="share-button"
-          onPress={handleShare}
-          disabled={isProcessing}
-          accessibilityState={{ disabled: isProcessing }}
-          style={{
-            backgroundColor: isProcessing
-              ? "#555"
-              : shareState === "ready"
-                ? "#00C853"
-                : "#FFD700",
-            paddingVertical: 16,
-            borderRadius: 12,
-            alignItems: "center",
-            marginBottom: 12,
-            opacity: isProcessing ? 0.7 : 1,
-          }}
-        >
-          <Text
+        {/* Render button (primary action, before ready) */}
+        {shareState !== "ready" && (
+          <Pressable
+            testID="share-button"
+            onPress={handleShare}
+            disabled={isProcessing}
+            accessibilityState={{ disabled: isProcessing }}
             style={{
-              color: isProcessing ? "#999" : "#1a1a2e",
-              fontSize: 18,
-              fontWeight: "bold",
+              backgroundColor: isProcessing ? "#555" : "#FFD700",
+              paddingVertical: 16,
+              borderRadius: 12,
+              alignItems: "center",
+              marginBottom: 12,
+              opacity: isProcessing ? 0.7 : 1,
             }}
           >
-            {shareLabel}
-          </Text>
-        </Pressable>
+            <Text
+              style={{
+                color: isProcessing ? "#999" : "#1a1a2e",
+                fontSize: 18,
+                fontWeight: "bold",
+              }}
+            >
+              {shareLabel}
+            </Text>
+          </Pressable>
+        )}
 
         {/* Save draft (secondary, subtle) */}
         <Pressable

@@ -1,9 +1,9 @@
 import { removeBackground } from "../hooks/useRemoveBg";
-import * as mockApi from "../lib/mock-api";
+import * as uploads from "../repositories/uploads";
 
-jest.mock("../lib/mock-api");
+jest.mock("../repositories/uploads");
 
-const mockedApi = mockApi as jest.Mocked<typeof mockApi>;
+const mockedUploads = uploads as jest.Mocked<typeof uploads>;
 
 describe("useRemoveBg", () => {
   beforeEach(() => {
@@ -12,14 +12,14 @@ describe("useRemoveBg", () => {
 
   describe("removeBackground", () => {
     it("returns the processed image URL on success", async () => {
-      mockedApi.mockRemoveBackground.mockResolvedValue({
+      mockedUploads.removeBackground.mockResolvedValue({
         resultS3Url:
           "https://s3.example.com/processed/transparent.png",
       });
 
       const result = await removeBackground("file:///photo.jpg");
 
-      expect(mockedApi.mockRemoveBackground).toHaveBeenCalledWith(
+      expect(mockedUploads.removeBackground).toHaveBeenCalledWith(
         "file:///photo.jpg"
       );
       expect(result).toEqual({
@@ -30,7 +30,7 @@ describe("useRemoveBg", () => {
     });
 
     it("returns failure when remove.bg fails", async () => {
-      mockedApi.mockRemoveBackground.mockRejectedValue(
+      mockedUploads.removeBackground.mockRejectedValue(
         new Error("API rate limit exceeded")
       );
 

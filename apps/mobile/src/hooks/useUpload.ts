@@ -1,4 +1,4 @@
-import { mockGetUploadUrl, mockUploadToS3 } from "../lib/mock-api";
+import { getUploadUrl, uploadToS3 } from "../repositories/uploads";
 
 export interface UploadResult {
   s3Key: string | null;
@@ -11,12 +11,12 @@ export async function uploadPhoto(localUri: string): Promise<UploadResult> {
     // Step 1: Get a presigned upload URL from the backend
     // TODO: Replace mockGetUploadUrl with real Convex call:
     // api.storage.getUploadUrl()
-    const { url } = await mockGetUploadUrl();
+    const { url } = await getUploadUrl();
 
     // Step 2: Upload to S3 using presigned URL
     // In production, this will fetch the local file and PUT to S3
     // TODO: Replace mockUploadToS3 with real S3 upload
-    const s3Key = await mockUploadToS3(url, localUri as unknown as Blob);
+    const s3Key = await uploadToS3(url, localUri as unknown as Blob);
 
     return { s3Key, success: true };
   } catch (error) {

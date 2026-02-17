@@ -13,6 +13,7 @@ import { getPresetById, PRESETS } from "@/lib/presets";
 // ── State ────────────────────────────────────────────────
 
 export interface CompositionState {
+  projectId: string | null;
   selectedPresetId: PresetId | null;
   composition: CompositionProps;
 }
@@ -32,14 +33,30 @@ export type CompositionAction =
       flowerType: FlowerType;
     }
   | { type: "SET_TEXT_FONT"; slotId: string; fontFamily: FontStyle }
-  | { type: "SET_TEXT_ANIMATION"; slotId: string; animation: TextAnimation };
+  | { type: "SET_TEXT_ANIMATION"; slotId: string; animation: TextAnimation }
+  | {
+      type: "LOAD_PROJECT";
+      projectId: string | null;
+      presetId: PresetId | null;
+      composition: CompositionProps;
+    }
+  | { type: "SET_PROJECT_ID"; projectId: string };
 
 // ── Initial state factory ────────────────────────────────
 
 export function createInitialState(
   presetId?: PresetId,
   initialHeadImage?: string,
+  initialComposition?: CompositionProps,
 ): CompositionState {
+  if (initialComposition) {
+    return {
+      projectId: null,
+      selectedPresetId: presetId ?? null,
+      composition: JSON.parse(JSON.stringify(initialComposition)),
+    };
+  }
+
   const preset = presetId ? getPresetById(presetId) : PRESETS[PRESETS.length - 1]; // custom
   const defaultProps = preset
     ? JSON.parse(JSON.stringify(preset.defaultProps))
@@ -50,6 +67,7 @@ export function createInitialState(
   }
 
   return {
+    projectId: null,
     selectedPresetId: presetId ?? null,
     composition: defaultProps,
   };
@@ -69,6 +87,7 @@ export function compositionReducer(
       // Preserve existing head image
       newProps.head.imageUrl = state.composition.head.imageUrl;
       return {
+        ...state,
         selectedPresetId: action.presetId,
         composition: newProps,
       };
@@ -166,6 +185,19 @@ export function compositionReducer(
         },
       };
 
+    case "LOAD_PROJECT":
+      return {
+        projectId: action.projectId,
+        selectedPresetId: action.presetId,
+        composition: JSON.parse(JSON.stringify(action.composition)),
+      };
+
+    case "SET_PROJECT_ID":
+      return {
+        ...state,
+        projectId: action.projectId,
+      };
+
     default:
       return state;
   }
@@ -185,6 +217,12 @@ interface CompositionContextValue {
   toggleFlowerReveal: (enabled: boolean, flowerType: FlowerType) => void;
   setTextFont: (slotId: string, fontFamily: FontStyle) => void;
   setTextAnimation: (slotId: string, animation: TextAnimation) => void;
+  loadProject: (
+    projectId: string | null,
+    presetId: PresetId | null,
+    composition: CompositionProps,
+  ) => void;
+  setProjectId: (projectId: string) => void;
 }
 
 const CompositionContext = createContext<CompositionContextValue | null>(null);
@@ -195,17 +233,19 @@ interface CompositionProviderProps {
   children: React.ReactNode;
   initialPresetId?: PresetId;
   initialHeadImage?: string;
+  initialComposition?: CompositionProps;
 }
 
 export function CompositionProvider({
   children,
   initialPresetId,
   initialHeadImage,
+  initialComposition,
 }: CompositionProviderProps) {
   const [state, dispatch] = useReducer(
     compositionReducer,
-    { presetId: initialPresetId, headImage: initialHeadImage },
-    (init) => createInitialState(init.presetId, init.headImage),
+    { presetId: initialPresetId, headImage: initialHeadImage, composition: initialComposition },
+    (init) => createInitialState(init.presetId, init.headImage, init.composition),
   );
 
   const value: CompositionContextValue = {
@@ -226,6 +266,10 @@ export function CompositionProvider({
       dispatch({ type: "SET_TEXT_FONT", slotId, fontFamily }),
     setTextAnimation: (slotId, animation) =>
       dispatch({ type: "SET_TEXT_ANIMATION", slotId, animation }),
+    loadProject: (projectId, presetId, composition) =>
+      dispatch({ type: "LOAD_PROJECT", projectId, presetId, composition }),
+    setProjectId: (projectId) =>
+      dispatch({ type: "SET_PROJECT_ID", projectId }),
   };
 
   return (

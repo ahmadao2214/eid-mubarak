@@ -1,9 +1,9 @@
 import { uploadPhoto } from "../hooks/useUpload";
-import * as mockApi from "../lib/mock-api";
+import * as uploads from "../repositories/uploads";
 
-jest.mock("../lib/mock-api");
+jest.mock("../repositories/uploads");
 
-const mockedApi = mockApi as jest.Mocked<typeof mockApi>;
+const mockedUploads = uploads as jest.Mocked<typeof uploads>;
 
 describe("useUpload", () => {
   beforeEach(() => {
@@ -12,17 +12,17 @@ describe("useUpload", () => {
 
   describe("uploadPhoto", () => {
     it("gets a presigned URL and uploads the photo", async () => {
-      mockedApi.mockGetUploadUrl.mockResolvedValue({
+      mockedUploads.getUploadUrl.mockResolvedValue({
         url: "https://s3.example.com/presigned-upload",
       });
-      mockedApi.mockUploadToS3.mockResolvedValue(
+      mockedUploads.uploadToS3.mockResolvedValue(
         "user-photos/test/123.png"
       );
 
       const result = await uploadPhoto("file:///my-photo.jpg");
 
-      expect(mockedApi.mockGetUploadUrl).toHaveBeenCalled();
-      expect(mockedApi.mockUploadToS3).toHaveBeenCalledWith(
+      expect(mockedUploads.getUploadUrl).toHaveBeenCalled();
+      expect(mockedUploads.uploadToS3).toHaveBeenCalledWith(
         "https://s3.example.com/presigned-upload",
         expect.anything()
       );
@@ -33,7 +33,7 @@ describe("useUpload", () => {
     });
 
     it("returns failure when presigned URL fetch fails", async () => {
-      mockedApi.mockGetUploadUrl.mockRejectedValue(
+      mockedUploads.getUploadUrl.mockRejectedValue(
         new Error("Network error")
       );
 
@@ -47,10 +47,10 @@ describe("useUpload", () => {
     });
 
     it("returns failure when upload fails", async () => {
-      mockedApi.mockGetUploadUrl.mockResolvedValue({
+      mockedUploads.getUploadUrl.mockResolvedValue({
         url: "https://s3.example.com/presigned",
       });
-      mockedApi.mockUploadToS3.mockRejectedValue(
+      mockedUploads.uploadToS3.mockRejectedValue(
         new Error("Upload failed")
       );
 
