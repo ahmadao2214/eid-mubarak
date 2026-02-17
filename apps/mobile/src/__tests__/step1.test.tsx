@@ -36,8 +36,38 @@ jest.mock("@/hooks/useRemoveBg", () => ({
   },
 }));
 
+const mockCelebHeads = [
+  {
+    id: "drake",
+    name: "Drake",
+    imageUrl: "https://mock-s3.example.com/heads/drake.png",
+    thumbnail: "https://mock-s3.example.com/heads/drake-thumb.png",
+  },
+  {
+    id: "shah-rukh-khan",
+    name: "Shah Rukh Khan",
+    imageUrl: "https://mock-s3.example.com/heads/srk.png",
+    thumbnail: "https://mock-s3.example.com/heads/srk-thumb.png",
+  },
+  {
+    id: "aunty-stock",
+    name: "Aunty Stock",
+    imageUrl: "https://mock-s3.example.com/heads/aunty.png",
+    thumbnail: "https://mock-s3.example.com/heads/aunty-thumb.png",
+  },
+];
+
+const mockListCelebrityHeads = jest.fn();
+
+jest.mock("@/lib/mock-api", () => ({
+  get mockListCelebrityHeads() {
+    return mockListCelebrityHeads;
+  },
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
+  mockListCelebrityHeads.mockResolvedValue(mockCelebHeads);
 });
 
 describe("Step1Screen", () => {
@@ -117,6 +147,52 @@ describe("Step1Screen", () => {
     fireEvent.press(screen.getByTestId("remove-bg-button"));
     await waitFor(() => {
       expect(screen.getByTestId("remove-bg-loading")).toBeTruthy();
+    });
+  });
+
+  it("renders celebrity head options", async () => {
+    renderWithComposition(<Step1Screen />);
+    await waitFor(() => {
+      expect(screen.getByTestId("celeb-head-drake")).toBeTruthy();
+      expect(screen.getByTestId("celeb-head-shah-rukh-khan")).toBeTruthy();
+      expect(screen.getByTestId("celeb-head-aunty-stock")).toBeTruthy();
+    });
+  });
+
+  it("selecting celebrity head sets image and enables next with preset", async () => {
+    renderWithComposition(<Step1Screen />);
+    fireEvent.press(screen.getByTestId("preset-card-zohran-classic"));
+    await waitFor(() => {
+      expect(screen.getByTestId("celeb-head-drake")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByTestId("celeb-head-drake"));
+    await waitFor(() => {
+      expect(screen.getByTestId("head-preview-image")).toBeTruthy();
+    });
+    const nextBtn = screen.getByTestId("next-button");
+    expect(nextBtn.props.accessibilityState?.disabled).toBeFalsy();
+  });
+
+  it("gallery pick overrides celebrity selection", async () => {
+    mockPickGallery.mockResolvedValueOnce({
+      uri: "file://my-photo.jpg",
+      width: 200,
+      height: 200,
+    });
+    renderWithComposition(<Step1Screen />);
+    // Select celebrity first
+    await waitFor(() => {
+      expect(screen.getByTestId("celeb-head-drake")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByTestId("celeb-head-drake"));
+    await waitFor(() => {
+      expect(screen.getByTestId("head-preview-image")).toBeTruthy();
+    });
+    // Now pick from gallery — should override
+    fireEvent.press(screen.getByTestId("gallery-button"));
+    await waitFor(() => {
+      const img = screen.getByTestId("head-preview-image");
+      expect(img.props.source.uri).toBe("file://my-photo.jpg");
     });
   });
 });

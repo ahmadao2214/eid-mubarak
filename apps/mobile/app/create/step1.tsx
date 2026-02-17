@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import { useComposition } from "@/context/CompositionContext";
 import { PRESETS } from "@/lib/presets";
 import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
 import { removeBackground } from "@/hooks/useRemoveBg";
-import type { PresetId, HueColor } from "@/types";
+import { mockListCelebrityHeads } from "@/lib/mock-api";
+import type { PresetId, HueColor, CelebrityHead } from "@/types";
 
 const HUE_DISPLAY: Record<HueColor, string> = {
   "#FFD700": "#FFD700",
@@ -29,15 +30,31 @@ export default function Step1Screen() {
   const { state, selectPreset, setHeadImage } = useComposition();
   const [localImage, setLocalImage] = useState<string | null>(null);
   const [removingBg, setRemovingBg] = useState(false);
+  const [celebHeads, setCelebHeads] = useState<CelebrityHead[]>([]);
+  const [selectedCelebId, setSelectedCelebId] = useState<string | null>(null);
+  const [imageSource, setImageSource] = useState<"celeb" | "custom" | null>(null);
+
+  useEffect(() => {
+    mockListCelebrityHeads().then(setCelebHeads);
+  }, []);
 
   const hasPreset = state.selectedPresetId !== null;
   const hasImage = localImage !== null;
   const canProceed = hasPreset && hasImage;
 
+  const handleSelectCeleb = (celeb: CelebrityHead) => {
+    setSelectedCelebId(celeb.id);
+    setImageSource("celeb");
+    setLocalImage(celeb.imageUrl);
+    setHeadImage(celeb.imageUrl);
+  };
+
   const handlePickGallery = async () => {
     const result = await pickImageFromGallery();
     if (result) {
       const cropped = await cropToSquare(result.uri, result.width, result.height);
+      setSelectedCelebId(null);
+      setImageSource("custom");
       setLocalImage(cropped);
       setHeadImage(cropped);
     }
@@ -47,6 +64,8 @@ export default function Step1Screen() {
     const result = await pickImageFromCamera();
     if (result) {
       const cropped = await cropToSquare(result.uri, result.width, result.height);
+      setSelectedCelebId(null);
+      setImageSource("custom");
       setLocalImage(cropped);
       setHeadImage(cropped);
     }
@@ -154,7 +173,7 @@ export default function Step1Screen() {
           })}
         </ScrollView>
 
-        {/* Upload section */}
+        {/* Head selection section */}
         <Text
           style={{
             fontSize: 14,
@@ -166,8 +185,75 @@ export default function Step1Screen() {
             letterSpacing: 1,
           }}
         >
-          Your Photo
+          Choose a Head
         </Text>
+
+        {/* Celebrity heads */}
+        {celebHeads.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: 16 }}
+          >
+            {celebHeads.map((celeb) => {
+              const isSelected = selectedCelebId === celeb.id;
+              return (
+                <Pressable
+                  key={celeb.id}
+                  testID={`celeb-head-${celeb.id}`}
+                  onPress={() => handleSelectCeleb(celeb)}
+                  style={{
+                    alignItems: "center",
+                    marginRight: 14,
+                    width: 80,
+                  }}
+                >
+                  <Image
+                    source={{ uri: celeb.thumbnail }}
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: 32,
+                      borderWidth: 3,
+                      borderColor: isSelected ? "#FFD700" : "rgba(255,255,255,0.15)",
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: isSelected ? "#FFD700" : "#ccc",
+                      fontSize: 11,
+                      marginTop: 4,
+                      textAlign: "center",
+                      fontWeight: isSelected ? "bold" : "normal",
+                    }}
+                    numberOfLines={1}
+                  >
+                    {celeb.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        {/* Divider */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <View
+            style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.1)" }}
+          />
+          <Text style={{ color: "#666", marginHorizontal: 12, fontSize: 12 }}>
+            or use your own photo
+          </Text>
+          <View
+            style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.1)" }}
+          />
+        </View>
 
         {/* Image preview */}
         <View

@@ -47,31 +47,35 @@ export async function mockRemoveBackground(
   };
 }
 
-// ── Projects ──────────────────────────────────────────────
+// ── Projects (MMKV-backed) ───────────────────────────────
 
-const mockProjects = new Map<string, Project>();
+import {
+  saveProject,
+  getProject as storageGetProject,
+  updateProject as storageUpdateProject,
+} from "./storage";
 
 export async function mockCreateProject(
   name: string,
   composition: CompositionProps
 ): Promise<string> {
   await delay(200);
-  const id = `proj-${Date.now()}`;
-  mockProjects.set(id, {
-    id,
-    name,
-    composition,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  });
-  return id;
+  return saveProject(name, composition);
 }
 
 export async function mockGetProject(
   projectId: string
 ): Promise<Project | null> {
   await delay(100);
-  return mockProjects.get(projectId) ?? null;
+  const stored = storageGetProject(projectId);
+  if (!stored) return null;
+  return {
+    id: stored.id,
+    name: stored.name,
+    composition: stored.composition,
+    createdAt: stored.createdAt,
+    updatedAt: stored.updatedAt,
+  };
 }
 
 export async function mockUpdateProject(
@@ -79,11 +83,7 @@ export async function mockUpdateProject(
   composition: CompositionProps
 ): Promise<void> {
   await delay(200);
-  const project = mockProjects.get(projectId);
-  if (project) {
-    project.composition = composition;
-    project.updatedAt = Date.now();
-  }
+  storageUpdateProject(projectId, composition);
 }
 
 // ── Renders ───────────────────────────────────────────────
