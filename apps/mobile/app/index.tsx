@@ -31,9 +31,12 @@ export default function HomeScreen() {
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
   const loadProjects = useCallback(async () => {
-    const list = await listAllProjects();
-    setProjects(list);
-    setLoading(false);
+    try {
+      const list = await listAllProjects();
+      setProjects(list);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useFocusEffect(
@@ -50,9 +53,12 @@ export default function HomeScreen() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await removeProject(deleteTarget.id);
-    setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    try {
+      await removeProject(deleteTarget.id);
+      setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   return (
