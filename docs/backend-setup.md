@@ -53,6 +53,6 @@ After Phase 1, from the repo root:
 
 2. **Add environment variables** in the Convex dashboard (Settings → Environment Variables): `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_BUCKET` (from Phase 1 script output).
 
-3. **Deployment URL:** After the first deploy, copy the Convex URL from the dashboard or terminal and set `EXPO_PUBLIC_CONVEX_URL` in the mobile app (e.g. in `.env` and [apps/mobile/src/lib/convex.ts](../apps/mobile/src/lib/convex.ts)).
+3. **Deployment URL:** After the first deploy, copy the Convex URL from the dashboard or terminal and set `EXPO_PUBLIC_CONVEX_URL` in the mobile app. Copy [apps/mobile/.env.example](../apps/mobile/.env.example) to `apps/mobile/.env` and fill in the URL.
 
-The schema is in `convex/schema.ts` (projects, renders, sounds, assets, uploads).
+4. **Convex functions:** Write queries, mutations, and actions in `convex/` (e.g. `convex/storage.ts`, `convex/projects.ts`). The schema is in `convex/schema.ts`. See [Convex functions docs](https://docs.convex.dev/functions) for how to define and deploy them.
