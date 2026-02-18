@@ -127,6 +127,9 @@ export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewPr
     } else {
       hueOpacity.value = withTiming(composition.hue.opacity, { duration: 300 });
     }
+    return () => {
+      cancelAnimation(hueOpacity);
+    };
   }, [composition.hue.enabled, composition.hue.animation, composition.hue.opacity]);
 
   const hueAnimatedStyle = useAnimatedStyle(() => ({

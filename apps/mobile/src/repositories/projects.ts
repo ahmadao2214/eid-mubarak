@@ -9,6 +9,10 @@ import {
 } from "@/lib/storage";
 import type { CompositionProps, Project } from "@/types";
 
+// Note: create/get/update route through mock-api (simulated network latency) while
+// list/delete call storage directly. Both share the same in-memory store.
+// When migrating to a real backend, unify all operations behind a single API client.
+
 export async function createProject(
   name: string,
   composition: CompositionProps,
