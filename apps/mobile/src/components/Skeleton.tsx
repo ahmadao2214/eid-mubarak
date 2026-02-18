@@ -4,6 +4,7 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
+  cancelAnimation,
 } from "react-native-reanimated";
 
 interface SkeletonProps {
@@ -17,6 +18,9 @@ export function Skeleton({ width, height, borderRadius = 8 }: SkeletonProps) {
 
   useEffect(() => {
     opacity.value = withRepeat(withTiming(0.7, { duration: 800 }), -1, true);
+    return () => {
+      cancelAnimation(opacity);
+    };
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({

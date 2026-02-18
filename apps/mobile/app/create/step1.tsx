@@ -37,7 +37,7 @@ export default function Step1Screen() {
   const [selectedHeadId, setSelectedHeadId] = useState<string | null>(null);
 
   useEffect(() => {
-    listCelebrityHeads().then(setCelebHeads);
+    listCelebrityHeads().then(setCelebHeads).catch(() => {});
   }, []);
 
   const hasPreset = state.selectedPresetId !== null;
