@@ -1,17 +1,17 @@
 import * as Haptics from "expo-haptics";
 
 export function lightTap() {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
 }
 
 export function mediumTap() {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 }
 
 export function successNotification() {
-  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 }
 
 export function errorNotification() {
-  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
 }

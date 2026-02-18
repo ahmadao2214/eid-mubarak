@@ -42,6 +42,7 @@ export default function Step3Screen() {
     if (isSharingRef.current || isSavingDraftRef.current) return;
     isSharingRef.current = true;
     setSavedDraft(false);
+    setShareError(null);
     try {
       cancelledRef.current = false;
 
@@ -82,9 +83,10 @@ export default function Step3Screen() {
         }
       };
       await poll();
-    } catch {
+    } catch (error) {
       if (!cancelledRef.current) {
         setShareState("failed");
+        setShareError(error instanceof Error ? error.message : "Something went wrong");
       }
     } finally {
       isSharingRef.current = false;

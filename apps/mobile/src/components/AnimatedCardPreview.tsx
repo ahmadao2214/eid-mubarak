@@ -61,6 +61,11 @@ function AnimatedTextSlot({ slot, index, scale, dimensionsHeight }: AnimatedText
         -1,
       ),
     );
+    return () => {
+      cancelAnimation(opacity);
+      cancelAnimation(translateY);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- shared values are stable refs
   }, [index]);
 
   const animStyle = useAnimatedStyle(() => ({
@@ -142,6 +147,9 @@ export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewPr
         true,
       ),
     );
+    return () => {
+      cancelAnimation(headScale);
+    };
   }, []);
 
   const headAnimatedStyle = useAnimatedStyle(() => ({
