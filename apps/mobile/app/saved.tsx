@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -31,6 +31,7 @@ export default function SavedScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const isDeletingRef = useRef(false);
 
   const loadProjects = useCallback(async (isRefresh = false) => {
     try {
@@ -59,7 +60,8 @@ export default function SavedScreen() {
   }, [loadProjects]);
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || isDeletingRef.current) return;
+    isDeletingRef.current = true;
     try {
       await removeProject(deleteTarget.id);
       setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
@@ -67,6 +69,7 @@ export default function SavedScreen() {
       showToast("Failed to delete project. Please try again.", "error");
     } finally {
       setDeleteTarget(null);
+      isDeletingRef.current = false;
     }
   };
 
@@ -120,7 +123,7 @@ export default function SavedScreen() {
               key={project.id}
               project={project}
               onPress={() =>
-                router.push({
+                router.replace({
                   pathname: "/create/step1",
                   params: { projectId: project.id },
                 })

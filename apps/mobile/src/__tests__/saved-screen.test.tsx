@@ -3,8 +3,9 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react-nativ
 import SavedScreen from "../../app/saved";
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 const mockBack = jest.fn();
-const mockRouter = { push: mockPush, back: mockBack };
+const mockRouter = { push: mockPush, replace: mockReplace, back: mockBack };
 
 jest.mock("expo-router", () => ({
   useRouter: () => mockRouter,
@@ -145,7 +146,7 @@ describe("SavedScreen", () => {
       expect(screen.getByTestId("project-card-proj-1")).toBeTruthy();
     });
     fireEvent.press(screen.getByTestId("project-card-proj-1"));
-    expect(mockPush).toHaveBeenCalledWith({
+    expect(mockReplace).toHaveBeenCalledWith({
       pathname: "/create/step1",
       params: { projectId: "proj-1" },
     });

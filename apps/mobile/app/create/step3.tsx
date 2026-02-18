@@ -78,7 +78,7 @@ export default function Step3Screen() {
           setOutputUrl(status.outputUrl ?? null);
         } else if (status.status === "failed") {
           setShareState("failed");
-        } else {
+        } else if (!cancelledRef.current) {
           pollTimerRef.current = setTimeout(poll, 500);
         }
       };

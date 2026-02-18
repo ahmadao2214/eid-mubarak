@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { Toast } from "@/components/Toast";
 
 type ToastType = "success" | "error" | "info";
@@ -14,10 +14,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     message: string;
     type: ToastType;
     visible: boolean;
-  }>({ message: "", type: "info", visible: false });
+    key: number;
+  }>({ message: "", type: "info", visible: false, key: 0 });
+  const keyRef = useRef(0);
 
   const showToast = useCallback((message: string, type: ToastType = "info") => {
-    setState({ message, type, visible: true });
+    keyRef.current += 1;
+    setState({ message, type, visible: true, key: keyRef.current });
   }, []);
 
   const hideToast = useCallback(() => {
@@ -28,6 +31,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       <Toast
+        key={state.key}
         message={state.message}
         type={state.type}
         visible={state.visible}
