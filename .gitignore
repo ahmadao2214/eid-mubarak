@@ -42,3 +42,6 @@ yarn-error.*
 
 # TypeScript
 *.tsbuildinfo
+
+# Convex (boilerplate README; docs in docs/backend-setup.md)
+convex/README.md
