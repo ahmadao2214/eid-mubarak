@@ -1,10 +1,13 @@
 import React from "react";
 import { View, Text, Image } from "react-native";
 import type { CompositionProps } from "@/types";
+import { RN_FONT_MAP } from "@/lib/font-map";
+
+type SizeProp = "small" | "large" | { width: number; height: number };
 
 interface CardPreviewProps {
   composition: CompositionProps;
-  size: "small" | "large";
+  size: SizeProp;
 }
 
 const SIZES = {
@@ -13,7 +16,7 @@ const SIZES = {
 };
 
 export function CardPreview({ composition, size }: CardPreviewProps) {
-  const dimensions = SIZES[size];
+  const dimensions = typeof size === "string" ? SIZES[size] : size;
   const scale = dimensions.width / composition.width;
 
   const bgColor =
@@ -84,7 +87,7 @@ export function CardPreview({ composition, size }: CardPreviewProps) {
               backgroundColor: "rgba(255,255,255,0.1)",
             }}
           >
-            <Text style={{ color: "#999", fontSize: 10 * (size === "large" ? 2 : 1) }}>
+            <Text style={{ color: "#999", fontSize: 10 * (dimensions.width >= 270 ? 2 : 1) }}>
               Photo
             </Text>
           </View>
@@ -105,6 +108,7 @@ export function CardPreview({ composition, size }: CardPreviewProps) {
             color: slot.color,
             fontSize: slot.fontSize * scale,
             fontWeight: "bold",
+            ...(RN_FONT_MAP[slot.fontFamily] ?? {}),
           }}
           numberOfLines={1}
         >

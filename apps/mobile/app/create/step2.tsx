@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   TextInput,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -87,6 +88,9 @@ export default function Step2Screen() {
   const [activeTab, setActiveTab] = useState<Tab>("text");
   const [customMode, setCustomMode] = useState<Record<string, boolean>>({});
   const { composition } = state;
+  const { width: screenWidth } = useWindowDimensions();
+  const previewWidth = Math.round(screenWidth * 0.55);
+  const previewHeight = Math.round(previewWidth * (16 / 9));
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
@@ -111,7 +115,7 @@ export default function Step2Screen() {
 
         {/* Preview */}
         <View style={{ alignItems: "center", marginBottom: 20 }}>
-          <AnimatedCardPreview composition={composition} size="small" />
+          <AnimatedCardPreview composition={composition} size={{ width: previewWidth, height: previewHeight }} />
         </View>
 
         {/* Tabs */}

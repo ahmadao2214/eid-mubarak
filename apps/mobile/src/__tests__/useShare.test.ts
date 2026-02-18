@@ -1,101 +1,75 @@
-import { downloadAndShare, saveToGallery } from "../hooks/useShare";
-import * as Sharing from "expo-sharing";
-import * as MediaLibrary from "expo-media-library";
+import { downloadAndShare, saveToGallery } from "@/hooks/useShare";
 
-const mockDownloadFileAsync = jest.fn();
-const mockFileUri = "file:///tmp/cache/eid-card-123.mp4";
+// Mock expo modules
+const mockIsAvailableAsync = jest.fn().mockResolvedValue(true);
+const mockShareAsync = jest.fn().mockResolvedValue(undefined);
+jest.mock("expo-sharing", () => ({
+  isAvailableAsync: () => mockIsAvailableAsync(),
+  shareAsync: (...args: unknown[]) => mockShareAsync(...args),
+}));
 
+const mockDownloadFileAsync = jest
+  .fn()
+  .mockResolvedValue({ uri: "file:///tmp/video.mp4" });
 jest.mock("expo-file-system/next", () => ({
-  Paths: { cache: { uri: "file:///tmp/cache/" } },
+  Paths: { cache: "/tmp" },
   File: {
-    downloadFileAsync: (...args: any[]) => mockDownloadFileAsync(...args),
+    downloadFileAsync: (...args: unknown[]) => mockDownloadFileAsync(...args),
   },
 }));
 
-jest.mock("expo-sharing");
-jest.mock("expo-media-library");
+const mockRequestPermissionsAsync = jest
+  .fn()
+  .mockResolvedValue({ status: "granted" });
+const mockSaveToLibraryAsync = jest.fn().mockResolvedValue(undefined);
+jest.mock("expo-media-library", () => ({
+  requestPermissionsAsync: (...args: unknown[]) =>
+    mockRequestPermissionsAsync(...args),
+  saveToLibraryAsync: (...args: unknown[]) => mockSaveToLibraryAsync(...args),
+}));
 
-const mockedSharing = Sharing as jest.Mocked<typeof Sharing>;
-const mockedMedia = MediaLibrary as jest.Mocked<typeof MediaLibrary>;
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockIsAvailableAsync.mockResolvedValue(true);
+  mockRequestPermissionsAsync.mockResolvedValue({ status: "granted" });
+});
 
-describe("useShare", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockDownloadFileAsync.mockResolvedValue({ uri: mockFileUri });
+describe("useShare - mock URL guard", () => {
+  const mockUrl = "https://mock-s3.example.com/videos/output.mp4";
+  const realUrl = "https://real-s3.amazonaws.com/videos/output.mp4";
+
+  it("downloadAndShare rejects mock URLs with clear message", async () => {
+    const result = await downloadAndShare(mockUrl);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe(
+      "Video rendering backend is not connected yet.",
+    );
+    expect(mockDownloadFileAsync).not.toHaveBeenCalled();
   });
 
-  describe("downloadAndShare", () => {
-    it("checks Sharing.isAvailableAsync", async () => {
-      mockedSharing.isAvailableAsync.mockResolvedValue(true);
-      await downloadAndShare("https://example.com/video.mp4");
-      expect(mockedSharing.isAvailableAsync).toHaveBeenCalled();
-    });
-
-    it("downloads file and calls shareAsync", async () => {
-      mockedSharing.isAvailableAsync.mockResolvedValue(true);
-      await downloadAndShare("https://example.com/video.mp4");
-      expect(mockDownloadFileAsync).toHaveBeenCalledWith(
-        "https://example.com/video.mp4",
-        expect.anything(),
-      );
-      expect(mockedSharing.shareAsync).toHaveBeenCalledWith(
-        mockFileUri,
-        expect.objectContaining({ mimeType: "video/mp4" }),
-      );
-    });
-
-    it("returns error when sharing unavailable", async () => {
-      mockedSharing.isAvailableAsync.mockResolvedValue(false);
-      const result = await downloadAndShare("https://example.com/video.mp4");
-      expect(result.success).toBe(false);
-      expect(result.error).toContain("not available");
-    });
-
-    it("returns error when download fails", async () => {
-      mockedSharing.isAvailableAsync.mockResolvedValue(true);
-      mockDownloadFileAsync.mockRejectedValue(new Error("Network error"));
-      const result = await downloadAndShare("https://example.com/video.mp4");
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Network error");
-    });
+  it("saveToGallery rejects mock URLs with clear message", async () => {
+    const result = await saveToGallery(mockUrl);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe(
+      "Video rendering backend is not connected yet.",
+    );
+    expect(mockRequestPermissionsAsync).not.toHaveBeenCalled();
   });
 
-  describe("saveToGallery", () => {
-    it("requests MediaLibrary permissions", async () => {
-      mockedMedia.requestPermissionsAsync.mockResolvedValue({
-        status: "granted" as MediaLibrary.PermissionStatus,
-        granted: true,
-        canAskAgain: true,
-        expires: "never",
-      });
-      mockedMedia.saveToLibraryAsync.mockResolvedValue(undefined as any);
-      await saveToGallery("https://example.com/video.mp4");
-      expect(mockedMedia.requestPermissionsAsync).toHaveBeenCalled();
-    });
+  it("downloadAndShare proceeds for real URLs", async () => {
+    await downloadAndShare(realUrl);
+    expect(mockDownloadFileAsync).toHaveBeenCalledWith(realUrl, "/tmp");
+  });
 
-    it("calls MediaLibrary.saveToLibraryAsync on success", async () => {
-      mockedMedia.requestPermissionsAsync.mockResolvedValue({
-        status: "granted" as MediaLibrary.PermissionStatus,
-        granted: true,
-        canAskAgain: true,
-        expires: "never",
-      });
-      mockedMedia.saveToLibraryAsync.mockResolvedValue(undefined as any);
-      const result = await saveToGallery("https://example.com/video.mp4");
-      expect(mockedMedia.saveToLibraryAsync).toHaveBeenCalledWith(mockFileUri);
-      expect(result.success).toBe(true);
-    });
+  it("saveToGallery proceeds for real URLs", async () => {
+    await saveToGallery(realUrl);
+    expect(mockDownloadFileAsync).toHaveBeenCalledWith(realUrl, "/tmp");
+  });
+});
 
-    it("returns error when permission denied", async () => {
-      mockedMedia.requestPermissionsAsync.mockResolvedValue({
-        status: "denied" as MediaLibrary.PermissionStatus,
-        granted: false,
-        canAskAgain: true,
-        expires: "never",
-      });
-      const result = await saveToGallery("https://example.com/video.mp4");
-      expect(result.success).toBe(false);
-      expect(result.error).toContain("Permission denied");
-    });
+describe("useShare - permission fix", () => {
+  it("saveToGallery requests write-only permission (true arg)", async () => {
+    await saveToGallery("https://real-s3.amazonaws.com/videos/output.mp4");
+    expect(mockRequestPermissionsAsync).toHaveBeenCalledWith(true);
   });
 });

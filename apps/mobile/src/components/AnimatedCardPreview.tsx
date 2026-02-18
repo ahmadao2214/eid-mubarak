@@ -7,15 +7,19 @@ import Animated, {
   withTiming,
   withSpring,
   withDelay,
+  withSequence,
   cancelAnimation,
 } from "react-native-reanimated";
 import type { CompositionProps } from "@/types";
+import { RN_FONT_MAP } from "@/lib/font-map";
 
 type TextSlot = CompositionProps["textSlots"][number];
 
+type SizeProp = "small" | "large" | { width: number; height: number };
+
 interface AnimatedCardPreviewProps {
   composition: CompositionProps;
-  size: "small" | "large";
+  size: SizeProp;
 }
 
 interface AnimatedTextSlotProps {
@@ -32,8 +36,31 @@ function AnimatedTextSlot({ slot, index, scale, dimensionsHeight }: AnimatedText
   useEffect(() => {
     opacity.value = 0;
     translateY.value = 20;
-    opacity.value = withDelay(index * 200, withTiming(1, { duration: 600 }));
-    translateY.value = withDelay(index * 200, withTiming(0, { duration: 600 }));
+    // Looping cycle: fade in → hold → fade out → pause → repeat
+    opacity.value = withDelay(
+      index * 200,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration: 600 }),
+          withTiming(1, { duration: 1500 }),
+          withTiming(0, { duration: 600 }),
+          withTiming(0, { duration: 800 }),
+        ),
+        -1,
+      ),
+    );
+    translateY.value = withDelay(
+      index * 200,
+      withRepeat(
+        withSequence(
+          withTiming(0, { duration: 600 }),
+          withTiming(0, { duration: 1500 }),
+          withTiming(20, { duration: 600 }),
+          withTiming(20, { duration: 800 }),
+        ),
+        -1,
+      ),
+    );
   }, [index]);
 
   const animStyle = useAnimatedStyle(() => ({
@@ -54,6 +81,7 @@ function AnimatedTextSlot({ slot, index, scale, dimensionsHeight }: AnimatedText
           color: slot.color,
           fontSize: slot.fontSize * scale,
           fontWeight: "bold",
+          ...(RN_FONT_MAP[slot.fontFamily] ?? {}),
         },
         animStyle,
       ]}
@@ -70,7 +98,7 @@ const SIZES = {
 };
 
 export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewProps) {
-  const dimensions = SIZES[size];
+  const dimensions = typeof size === "string" ? SIZES[size] : size;
   const scale = dimensions.width / composition.width;
 
   const bgColor =
@@ -100,10 +128,20 @@ export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewPr
     opacity: hueOpacity.value,
   }));
 
-  // Head scale bounce
+  // Head scale bounce + subtle pulse loop
   const headScale = useSharedValue(0);
   useEffect(() => {
-    headScale.value = withSpring(1, { damping: 12, stiffness: 100 });
+    headScale.value = withSequence(
+      withSpring(1, { damping: 12, stiffness: 100 }),
+      withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 800 }),
+          withTiming(0.95, { duration: 800 }),
+        ),
+        -1,
+        true,
+      ),
+    );
   }, []);
 
   const headAnimatedStyle = useAnimatedStyle(() => ({
@@ -176,7 +214,7 @@ export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewPr
               backgroundColor: "rgba(255,255,255,0.1)",
             }}
           >
-            <Text style={{ color: "#999", fontSize: 10 * (size === "large" ? 2 : 1) }}>
+            <Text style={{ color: "#999", fontSize: 10 * (dimensions.width >= 270 ? 2 : 1) }}>
               Photo
             </Text>
           </View>

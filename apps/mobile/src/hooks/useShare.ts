@@ -8,6 +8,9 @@ export interface ShareResult {
 }
 
 export async function downloadAndShare(outputUrl: string): Promise<ShareResult> {
+  if (/mock-s3\.example\.com/.test(outputUrl)) {
+    return { success: false, error: "Video rendering backend is not connected yet." };
+  }
   try {
     const available = await Sharing.isAvailableAsync();
     if (!available) {
@@ -31,8 +34,11 @@ export async function downloadAndShare(outputUrl: string): Promise<ShareResult> 
 }
 
 export async function saveToGallery(outputUrl: string): Promise<ShareResult> {
+  if (/mock-s3\.example\.com/.test(outputUrl)) {
+    return { success: false, error: "Video rendering backend is not connected yet." };
+  }
   try {
-    const { status } = await MediaLibrary.requestPermissionsAsync();
+    const { status } = await MediaLibrary.requestPermissionsAsync(true);
     if (status !== "granted") {
       return { success: false, error: "Permission denied" };
     }
