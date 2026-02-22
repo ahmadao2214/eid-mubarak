@@ -8,6 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "RNTL_SKIP_DEPS_CHECK=1 jest",
+    "test:convex": "vitest --run",
     "lint": "expo lint"
   },
   "dependencies": {
@@ -16,7 +17,7 @@
     "@gluestack-ui/modal": "^0.1.41",
     "@gluestack-ui/nativewind-utils": "^1.0.28",
     "@gluestack-ui/overlay": "^0.1.22",
-    "convex": "^1.31.7",
+    "convex": "^1.32.0",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.13",
     "expo-file-system": "~19.0.21",
@@ -42,8 +43,10 @@
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^29",
     "@types/react": "~19.1.0",
+    "convex-test": "^0.0.41",
     "jest-expo": "^54.0.17",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^1.4.0"
   },
   "private": true
 }

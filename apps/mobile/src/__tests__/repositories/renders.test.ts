@@ -1,31 +1,56 @@
-import * as mockApi from "@/lib/mock-api";
 import { requestRender, getRenderStatus } from "@/repositories/renders";
 
-jest.mock("@/lib/mock-api");
+jest.mock("@/lib/convex", () => ({
+  convexClient: {
+    query: jest.fn(),
+    mutation: jest.fn(),
+  },
+  api: {
+    renders: {
+      request: "renders:request",
+      getStatus: "renders:getStatus",
+    },
+  },
+}));
 
-const mockedApi = mockApi as jest.Mocked<typeof mockApi>;
+jest.mock("@/lib/convex-mappers", () => ({
+  mapRender: jest.fn((doc: any) => ({
+    id: doc._id,
+    projectId: doc.projectId,
+    status: doc.status === "pending" ? "queued" : doc.status,
+    progress: doc.progress,
+    outputUrl: doc.outputS3Url,
+    error: doc.error,
+  })),
+}));
+
+const { convexClient } = require("@/lib/convex");
 
 describe("renders repository", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("requestRender delegates to mockRequestRender", async () => {
-    mockedApi.mockRequestRender.mockResolvedValue("render-1");
+  it("requestRender calls convexClient.mutation", async () => {
+    convexClient.mutation.mockResolvedValue("render-1");
     const result = await requestRender("proj-1");
-    expect(mockedApi.mockRequestRender).toHaveBeenCalledWith("proj-1");
+    expect(convexClient.mutation).toHaveBeenCalledWith("renders:request", { projectId: "proj-1" });
     expect(result).toBe("render-1");
   });
 
-  it("getRenderStatus delegates to mockGetRenderStatus", async () => {
-    const job = {
-      id: "render-1",
+  it("getRenderStatus calls convexClient.query and maps result", async () => {
+    const doc = {
+      _id: "render-1",
+      _creationTime: 1000,
       projectId: "proj-1",
-      status: "completed" as const,
+      status: "completed",
       progress: 100,
-      outputUrl: "https://mock.com/video.mp4",
+      outputS3Url: "https://mock.com/video.mp4",
+      createdAt: 1000,
+      completedAt: 2000,
     };
-    mockedApi.mockGetRenderStatus.mockResolvedValue(job);
+    convexClient.query.mockResolvedValue(doc);
     const result = await getRenderStatus("render-1");
-    expect(mockedApi.mockGetRenderStatus).toHaveBeenCalledWith("render-1");
-    expect(result).toEqual(job);
+    expect(convexClient.query).toHaveBeenCalledWith("renders:getStatus", { renderId: "render-1" });
+    expect(result.id).toBe("render-1");
+    expect(result.status).toBe("completed");
   });
 });
