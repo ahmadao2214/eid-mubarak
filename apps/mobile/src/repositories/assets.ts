@@ -2,6 +2,9 @@ import { convexClient, api } from "@/lib/convex";
 import { mapAsset, mapCelebrityHead, mapSound } from "@/lib/convex-mappers";
 import type { CelebrityHead, Asset, Sound } from "@/types";
 
+type AssetType = "background" | "lottie" | "celebrity_head" | "font";
+type SoundCategory = "nasheed" | "bollywood" | "voiceover" | "sfx";
+
 export async function listCelebrityHeads(): Promise<CelebrityHead[]> {
   const docs = await convexClient.query(api.assets.listCelebrityHeads, {});
   return docs.map(mapCelebrityHead);
@@ -10,7 +13,7 @@ export async function listCelebrityHeads(): Promise<CelebrityHead[]> {
 export async function listAssets(type?: string): Promise<Asset[]> {
   if (type) {
     const docs = await convexClient.query(api.assets.listByType, {
-      type: type as any,
+      type: type as AssetType,
     });
     return docs.map(mapAsset);
   }
@@ -27,7 +30,7 @@ export async function listAssets(type?: string): Promise<Asset[]> {
 export async function listSounds(category?: string): Promise<Sound[]> {
   if (category) {
     const docs = await convexClient.query(api.sounds.listByCategory, {
-      category: category as any,
+      category: category as SoundCategory,
     });
     return docs.map(mapSound);
   }

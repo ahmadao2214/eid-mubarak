@@ -1,6 +1,7 @@
 import { convexClient, api } from "@/lib/convex";
 import { mapProject } from "@/lib/convex-mappers";
 import type { CompositionProps, Project } from "@/types";
+import type { Id } from "../../convex/_generated/dataModel";
 
 export async function createProject(
   name: string,
@@ -17,7 +18,7 @@ export async function getProject(
   projectId: string,
 ): Promise<Project | null> {
   const doc = await convexClient.query(api.projects.get, {
-    id: projectId as any,
+    id: projectId as Id<"projects">,
   });
   if (!doc) return null;
   return mapProject(doc);
@@ -28,7 +29,7 @@ export async function updateProject(
   composition: CompositionProps,
 ): Promise<void> {
   await convexClient.mutation(api.projects.update, {
-    id: projectId as any,
+    id: projectId as Id<"projects">,
     composition,
   });
 }
@@ -40,6 +41,6 @@ export async function listAllProjects(): Promise<Project[]> {
 
 export async function removeProject(projectId: string): Promise<void> {
   await convexClient.mutation(api.projects.remove, {
-    id: projectId as any,
+    id: projectId as Id<"projects">,
   });
 }
