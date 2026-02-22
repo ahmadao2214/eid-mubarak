@@ -51,7 +51,8 @@ export function useRenderStatus(
     api.renders.getStatus,
     renderId ? { renderId: renderId as Id<"renders"> } : "skip",
   );
-  if (!doc) return undefined;
+  // doc is undefined while loading or when skipped, null if not found
+  if (doc === undefined || doc === null) return undefined;
   return mapRender(doc);
 }
 

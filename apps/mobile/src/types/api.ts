@@ -16,6 +16,7 @@ export interface ConfirmUploadParams {
 
 export interface UploadResult {
   s3Key: string | null;
+  s3Url?: string; // Public S3 URL to display/use the uploaded file
   success: boolean;
   error?: string;
 }

@@ -5,8 +5,10 @@ jest.mock("@/lib/convex", () => ({
     action: jest.fn(),
   },
   api: {
+    storage: {
+      getUploadUrl: "storage:getUploadUrl",
+    },
     uploads: {
-      getPresignedUrl: "uploads:getPresignedUrl",
       removeBackground: "uploads:removeBackground",
     },
   },
@@ -20,28 +22,27 @@ global.fetch = jest.fn() as jest.Mock;
 describe("uploads repository", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("getUploadUrl calls convexClient.action", async () => {
+  it("getUploadUrl calls storage.getUploadUrl action", async () => {
     convexClient.action.mockResolvedValue({
       url: "https://presigned.url",
       s3Key: "user-photos/123.png",
     });
     const result = await getUploadUrl();
-    expect(convexClient.action).toHaveBeenCalledWith("uploads:getPresignedUrl", {
-      type: "user-photo",
+    expect(convexClient.action).toHaveBeenCalledWith("storage:getUploadUrl", {
       contentType: "image/png",
     });
-    expect(result).toEqual({ url: "https://presigned.url" });
+    expect(result).toEqual({ url: "https://presigned.url", s3Key: "user-photos/123.png" });
   });
 
-  it("uploadToS3 does a PUT request to the presigned URL", async () => {
+  it("uploadToS3 does a PUT request and returns s3Key", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
     const blob = new Blob(["test"]);
-    const result = await uploadToS3("https://presigned.url", blob);
+    const result = await uploadToS3("https://presigned.url", blob, "user-photos/123.png");
     expect(global.fetch).toHaveBeenCalledWith("https://presigned.url", {
       method: "PUT",
       body: blob,
     });
-    expect(typeof result).toBe("string");
+    expect(result).toBe("user-photos/123.png");
   });
 
   it("removeBackground calls convexClient.action", async () => {

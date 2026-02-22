@@ -16,7 +16,9 @@ export const request = mutation({
 export const getStatus = query({
   args: { renderId: v.id("renders") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.renderId);
+    const doc = await ctx.db.get(args.renderId);
+    if (!doc) throw new Error(`Render ${args.renderId} not found`);
+    return doc;
   },
 });
 

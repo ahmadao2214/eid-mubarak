@@ -31,7 +31,6 @@ export const api = {
     confirmUploadRecord: {},
   },
   uploads: {
-    getPresignedUrl: {},
     removeBackground: {},
   },
 };
