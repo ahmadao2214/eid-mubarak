@@ -11,6 +11,8 @@ module.exports = {
   ],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "^p-limit$": "<rootDir>/../../node_modules/jest-circus/node_modules/p-limit/index.js",
+    "^yocto-queue$": "<rootDir>/../../node_modules/jest-circus/node_modules/p-limit/node_modules/yocto-queue/index.js",
   },
   setupFiles: ["<rootDir>/src/test-utils/setup.ts"],
   collectCoverageFrom: [
