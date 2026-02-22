@@ -110,9 +110,11 @@ export const confirmUpload = action({
       await client.send(
         new HeadObjectCommand({ Bucket: bucket, Key: s3Key })
       );
-    } catch {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Unknown S3 error";
       throw new Error(
-        "Upload verification failed: object not found in S3. Only call confirmUpload after a successful PUT."
+        `Upload verification failed for key "${s3Key}": ${message}`
       );
     }
 

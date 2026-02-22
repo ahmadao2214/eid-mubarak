@@ -47,10 +47,11 @@ describe("useUpload", () => {
         s3Key: "user-photos/test/123.png",
         type: "user-photo",
       });
-      expect(uploadResult!).toEqual({
+      expect(uploadResult!).toMatchObject({
         s3Key: "user-photos/test/123.png",
         success: true,
       });
+      expect(uploadResult!).toHaveProperty("s3Url");
     });
 
     it("returns failure when presigned URL fetch fails", async () => {

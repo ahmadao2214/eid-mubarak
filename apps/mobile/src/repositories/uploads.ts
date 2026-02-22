@@ -16,6 +16,7 @@ export async function uploadToS3(
   await fetch(presignedUrl, {
     method: "PUT",
     body: file,
+    headers: { "Content-Type": "image/png" },
   });
   return s3Key;
 }

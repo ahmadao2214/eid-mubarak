@@ -41,6 +41,7 @@ describe("uploads repository", () => {
     expect(global.fetch).toHaveBeenCalledWith("https://presigned.url", {
       method: "PUT",
       body: blob,
+      headers: { "Content-Type": "image/png" },
     });
     expect(result).toBe("user-photos/123.png");
   });

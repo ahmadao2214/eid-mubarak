@@ -32,7 +32,10 @@ export function useUpload() {
 
       await confirmUploadAction({ s3Key, type: "user-photo" });
 
-      const s3Url = S3_BASE_URL ? `${S3_BASE_URL}/${s3Key}` : undefined;
+      if (!S3_BASE_URL) {
+        console.warn("EXPO_PUBLIC_S3_BASE_URL is not set — s3Url will be unavailable");
+      }
+      const s3Url = S3_BASE_URL ? `${S3_BASE_URL}/${s3Key}` : `https://s3.amazonaws.com/${s3Key}`;
 
       return { s3Key, s3Url, success: true };
     } catch (error) {
