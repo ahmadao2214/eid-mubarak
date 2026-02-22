@@ -1,13 +1,42 @@
-import { Stack } from "expo-router";
+import React, { useState, useEffect } from "react";
+import { View, ActivityIndicator } from "react-native";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { CompositionProvider } from "@/context/CompositionContext";
+import { getProject } from "@/repositories/projects";
+import { Colors } from "@/lib/colors";
+import type { CompositionProps } from "@/types";
 
 export default function CreateLayout() {
+  const { projectId } = useLocalSearchParams<{ projectId?: string }>();
+  const [initialComposition, setInitialComposition] = useState<CompositionProps | undefined>(undefined);
+  const [loading, setLoading] = useState(!!projectId);
+
+  useEffect(() => {
+    if (!projectId) return;
+    getProject(projectId).then((project) => {
+      if (project) {
+        setInitialComposition(project.composition);
+      }
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+    });
+  }, [projectId]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: Colors.bgPrimary, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator testID="create-layout-loading" size="large" color={Colors.gold} />
+      </View>
+    );
+  }
+
   return (
-    <CompositionProvider>
+    <CompositionProvider initialComposition={initialComposition} initialProjectId={initialComposition ? projectId : undefined}>
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#1a1a2e" },
+          contentStyle: { backgroundColor: Colors.bgPrimary },
           animation: "slide_from_right",
         }}
       />

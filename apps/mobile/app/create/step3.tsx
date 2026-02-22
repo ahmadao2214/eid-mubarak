@@ -3,54 +3,74 @@ import { View, Text, ScrollView, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useComposition } from "@/context/CompositionContext";
-import { CardPreview } from "@/components/CardPreview";
-import {
-  mockCreateProject,
-  mockRequestRender,
-  mockGetRenderStatus,
-} from "@/lib/mock-api";
+import { AnimatedCardPreview } from "@/components/AnimatedCardPreview";
+import { createProject, updateProject } from "@/repositories/projects";
+import { requestRender, getRenderStatus } from "@/repositories/renders";
+import { downloadAndShare, saveToGallery } from "@/hooks/useShare";
+import { useToast } from "@/context/ToastContext";
+import { Colors } from "@/lib/colors";
 
 type ShareState = "idle" | "saving" | "rendering" | "ready" | "failed";
 
 export default function Step3Screen() {
   const router = useRouter();
-  const { state } = useComposition();
+  const { showToast } = useToast();
+  const { state, setProjectId } = useComposition();
   const { composition } = state;
 
   const [shareState, setShareState] = useState<ShareState>("idle");
   const [progress, setProgress] = useState(0);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [savedDraft, setSavedDraft] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
   const cancelledRef = useRef(false);
+  const isSharingRef = useRef(false);
+  const isSavingDraftRef = useRef(false);
+  const isShareActionRef = useRef(false);
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       cancelledRef.current = true;
+      if (pollTimerRef.current) {
+        clearTimeout(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
     };
   }, []);
 
   const handleShare = async () => {
+    if (isSharingRef.current || isSavingDraftRef.current) return;
+    isSharingRef.current = true;
+    setSavedDraft(false);
+    setShareError(null);
     try {
       cancelledRef.current = false;
 
-      // Step 1: Save project
+      // Step 1: Save or update project
       setShareState("saving");
       setProgress(0);
-      const projectId = await mockCreateProject(
-        `Eid Card ${Date.now()}`,
-        composition,
-      );
+      let projectId = state.projectId;
+      if (projectId) {
+        await updateProject(projectId, composition);
+      } else {
+        projectId = await createProject(
+          `Eid Card ${Date.now()}`,
+          composition,
+        );
+        setProjectId(projectId);
+      }
       if (cancelledRef.current) return;
 
       // Step 2: Render video
       setShareState("rendering");
-      const renderId = await mockRequestRender(projectId);
+      const renderId = await requestRender(projectId);
       if (cancelledRef.current) return;
 
       // Step 3: Poll for completion
       const poll = async () => {
         if (cancelledRef.current) return;
-        const status = await mockGetRenderStatus(renderId);
+        const status = await getRenderStatus(renderId);
         if (cancelledRef.current) return;
         setProgress(status.progress);
 
@@ -59,21 +79,37 @@ export default function Step3Screen() {
           setOutputUrl(status.outputUrl ?? null);
         } else if (status.status === "failed") {
           setShareState("failed");
-        } else {
-          setTimeout(poll, 500);
+        } else if (!cancelledRef.current) {
+          pollTimerRef.current = setTimeout(poll, 500);
         }
       };
       await poll();
-    } catch {
+    } catch (error) {
       if (!cancelledRef.current) {
         setShareState("failed");
+        setShareError(error instanceof Error ? error.message : "Something went wrong");
       }
+    } finally {
+      isSharingRef.current = false;
     }
   };
 
   const handleSaveDraft = async () => {
-    await mockCreateProject(`Draft ${Date.now()}`, composition);
-    setSavedDraft(true);
+    if (isSavingDraftRef.current) return;
+    isSavingDraftRef.current = true;
+    try {
+      if (state.projectId) {
+        await updateProject(state.projectId, composition);
+      } else {
+        const newId = await createProject(`Draft ${Date.now()}`, composition);
+        setProjectId(newId);
+      }
+      setSavedDraft(true);
+    } catch {
+      showToast("Failed to save draft. Please try again.", "error");
+    } finally {
+      isSavingDraftRef.current = false;
+    }
   };
 
   const isProcessing = shareState === "saving" || shareState === "rendering";
@@ -90,12 +126,12 @@ export default function Step3Screen() {
     idle: null,
     saving: "Saving your card...",
     rendering: `Rendering video... ${progress}%`,
-    ready: "Your video is ready!",
+    ready: null,
     failed: "Something went wrong. Try again.",
   }[shareState];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bgPrimary }}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
@@ -105,19 +141,19 @@ export default function Step3Screen() {
           style={{
             fontSize: 24,
             fontWeight: "bold",
-            color: "#FFD700",
+            color: Colors.gold,
             marginBottom: 4,
           }}
         >
-          Preview
+          Share Your Vibe
         </Text>
-        <Text style={{ fontSize: 16, color: "#e0e0e0", marginBottom: 20 }}>
+        <Text style={{ fontSize: 16, color: Colors.textSecondary, marginBottom: 20 }}>
           Here's your card — share it with the world!
         </Text>
 
         {/* Preview */}
         <View style={{ alignItems: "center", marginBottom: 24 }}>
-          <CardPreview composition={composition} size="large" />
+          <AnimatedCardPreview composition={composition} size="large" />
         </View>
 
         {/* Status message */}
@@ -127,10 +163,10 @@ export default function Step3Screen() {
               style={{
                 color:
                   shareState === "ready"
-                    ? "#00C853"
+                    ? Colors.success
                     : shareState === "failed"
-                      ? "#FF5252"
-                      : "#e0e0e0",
+                      ? Colors.error
+                      : Colors.textSecondary,
                 fontSize: 14,
                 textAlign: "center",
                 fontWeight: "600",
@@ -148,7 +184,7 @@ export default function Step3Screen() {
               style={{
                 height: 6,
                 borderRadius: 3,
-                backgroundColor: "rgba(255,255,255,0.1)",
+                backgroundColor: Colors.bgSurface,
                 overflow: "hidden",
               }}
             >
@@ -156,7 +192,7 @@ export default function Step3Screen() {
                 style={{
                   height: "100%",
                   width: `${shareState === "saving" ? 20 : progress}%`,
-                  backgroundColor: "#FFD700",
+                  backgroundColor: Colors.gold,
                   borderRadius: 3,
                 }}
               />
@@ -164,51 +200,116 @@ export default function Step3Screen() {
           </View>
         )}
 
-        {/* Ready state */}
+        {/* Ready state with share actions */}
         {shareState === "ready" && (
           <View testID="share-ready" style={{ marginBottom: 16 }}>
             <Text
               style={{
-                color: "#00C853",
+                color: Colors.success,
                 fontSize: 14,
                 textAlign: "center",
                 fontWeight: "600",
+                marginBottom: 16,
               }}
             >
-              Tap Share Again to send to another app
+              Your video is ready!
             </Text>
+
+            {shareError && (
+              <Text
+                testID="share-error"
+                style={{
+                  color: Colors.error,
+                  fontSize: 13,
+                  textAlign: "center",
+                  marginBottom: 12,
+                }}
+              >
+                {shareError}
+              </Text>
+            )}
+
+            <Pressable
+              testID="share-video-button"
+              onPress={async () => {
+                if (!outputUrl || isShareActionRef.current) return;
+                isShareActionRef.current = true;
+                setShareError(null);
+                try {
+                  const result = await downloadAndShare(outputUrl);
+                  if (!result.success) setShareError(result.error ?? "Share failed");
+                } finally {
+                  isShareActionRef.current = false;
+                }
+              }}
+              style={{
+                backgroundColor: Colors.success,
+                paddingVertical: 14,
+                borderRadius: 12,
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <Text style={{ color: Colors.textPrimary, fontSize: 16, fontWeight: "bold" }}>
+                Share Video
+              </Text>
+            </Pressable>
+
+            <Pressable
+              testID="save-gallery-button"
+              onPress={async () => {
+                if (!outputUrl || isShareActionRef.current) return;
+                isShareActionRef.current = true;
+                setShareError(null);
+                try {
+                  const result = await saveToGallery(outputUrl);
+                  if (!result.success) setShareError(result.error ?? "Save failed");
+                } finally {
+                  isShareActionRef.current = false;
+                }
+              }}
+              style={{
+                backgroundColor: Colors.bgSurface,
+                paddingVertical: 14,
+                borderRadius: 12,
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <Text style={{ color: Colors.textPrimary, fontSize: 16, fontWeight: "bold" }}>
+                Save to Camera Roll
+              </Text>
+            </Pressable>
           </View>
         )}
 
-        {/* Share button (primary action) */}
-        <Pressable
-          testID="share-button"
-          onPress={handleShare}
-          disabled={isProcessing}
-          accessibilityState={{ disabled: isProcessing }}
-          style={{
-            backgroundColor: isProcessing
-              ? "#555"
-              : shareState === "ready"
-                ? "#00C853"
-                : "#FFD700",
-            paddingVertical: 16,
-            borderRadius: 12,
-            alignItems: "center",
-            marginBottom: 12,
-            opacity: isProcessing ? 0.7 : 1,
-          }}
-        >
-          <Text
+        {/* Render button (primary action, before ready) */}
+        {shareState !== "ready" && (
+          <Pressable
+            testID="share-button"
+            onPress={handleShare}
+            disabled={isProcessing}
+            accessibilityState={{ disabled: isProcessing }}
             style={{
-              color: isProcessing ? "#999" : "#1a1a2e",
-              fontSize: 18,
-              fontWeight: "bold",
+              backgroundColor: isProcessing ? Colors.textDisabled : Colors.gold,
+              paddingVertical: 16,
+              borderRadius: 12,
+              alignItems: "center",
+              marginBottom: 12,
+              opacity: isProcessing ? 0.7 : 1,
             }}
           >
-            {shareLabel}
-          </Text>
-        </Pressable>
+            <Text
+              style={{
+                color: isProcessing ? Colors.textMuted : Colors.bgPrimary,
+                fontSize: 18,
+                fontWeight: "bold",
+              }}
+            >
+              {shareLabel}
+            </Text>
+          </Pressable>
+        )}
 
         {/* Save draft (secondary, subtle) */}
         <Pressable
@@ -225,7 +326,7 @@ export default function Step3Screen() {
         >
           <Text
             style={{
-              color: savedDraft ? "#00C853" : "#999",
+              color: savedDraft ? Colors.success : Colors.textMuted,
               fontSize: 14,
               fontWeight: "600",
             }}
@@ -244,9 +345,9 @@ export default function Step3Screen() {
           right: 0,
           padding: 20,
           paddingBottom: 36,
-          backgroundColor: "#1a1a2e",
+          backgroundColor: Colors.bgPrimary,
           borderTopWidth: 1,
-          borderTopColor: "rgba(255,255,255,0.1)",
+          borderTopColor: Colors.borderSubtle,
         }}
       >
         <Pressable
@@ -257,11 +358,11 @@ export default function Step3Screen() {
             borderRadius: 12,
             alignItems: "center",
             borderWidth: 1,
-            borderColor: "#FFD700",
+            borderColor: Colors.gold,
           }}
         >
           <Text
-            style={{ color: "#FFD700", fontSize: 16, fontWeight: "bold" }}
+            style={{ color: Colors.gold, fontSize: 16, fontWeight: "bold" }}
           >
             Back
           </Text>

@@ -37,6 +37,13 @@
           "photosPermission": "EidMemeMaker needs access to your photos to create meme cards.",
           "cameraPermission": "EidMemeMaker needs access to your camera to take photos for meme cards."
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "EidMemeMaker needs access to save videos to your camera roll.",
+          "savePhotosPermission": "EidMemeMaker needs permission to save videos to your camera roll."
+        }
       ]
     ]
   }

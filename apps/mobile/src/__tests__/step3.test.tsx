@@ -10,20 +10,37 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush, back: mockBack }),
 }));
 
+jest.mock("@/context/ToastContext", () => ({
+  useToast: () => ({ showToast: jest.fn() }),
+}));
+
 const mockCreateProject = jest.fn();
+const mockUpdateProject = jest.fn();
+
+jest.mock("@/repositories/projects", () => ({
+  get createProject() {
+    return mockCreateProject;
+  },
+  get updateProject() {
+    return mockUpdateProject;
+  },
+}));
+
 const mockRequestRender = jest.fn();
 const mockGetRenderStatus = jest.fn();
 
-jest.mock("@/lib/mock-api", () => ({
-  get mockCreateProject() {
-    return mockCreateProject;
-  },
-  get mockRequestRender() {
+jest.mock("@/repositories/renders", () => ({
+  get requestRender() {
     return mockRequestRender;
   },
-  get mockGetRenderStatus() {
+  get getRenderStatus() {
     return mockGetRenderStatus;
   },
+}));
+
+jest.mock("@/hooks/useShare", () => ({
+  downloadAndShare: jest.fn().mockResolvedValue({ success: true }),
+  saveToGallery: jest.fn().mockResolvedValue({ success: true }),
 }));
 
 beforeEach(() => {
@@ -45,6 +62,11 @@ describe("Step3Screen", () => {
       initialPresetId: "zohran-classic",
       initialHeadImage: "https://example.com/head.png",
     });
+
+  it("renders Share Your Vibe title", () => {
+    renderStep3();
+    expect(screen.getByText("Share Your Vibe")).toBeTruthy();
+  });
 
   it("renders preview with composition data", () => {
     renderStep3();
