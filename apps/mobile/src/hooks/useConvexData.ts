@@ -88,10 +88,8 @@ export function useRequestRender() {
 }
 
 // ── Action hooks ────────────────────────────────────────────
-
-export function useGetPresignedUrl() {
-  return useAction(api.uploads.getPresignedUrl);
-}
+// Note: For uploads, use the useUpload() hook from ./useUpload.ts instead.
+// It wraps getUploadUrl + confirmUpload from api.storage with full error handling.
 
 export function useRemoveBackground() {
   return useAction(api.uploads.removeBackground);
