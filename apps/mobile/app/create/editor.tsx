@@ -20,7 +20,7 @@ import { PRESETS } from "@/lib/presets";
 import { Colors } from "@/lib/colors";
 import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
 import { removeBackground } from "@/hooks/useRemoveBg";
-import { listCelebrityHeads } from "@/repositories/assets";
+import { useCelebrityHeads } from "@/hooks/useConvexData";
 import { lightTap } from "@/lib/haptics";
 import type {
   PresetId,
@@ -111,7 +111,7 @@ export default function EditorScreen() {
     state.composition.head.imageUrl || null,
   );
   const [removingBg, setRemovingBg] = useState(false);
-  const [celebHeads, setCelebHeads] = useState<CelebrityHead[]>([]);
+  const celebHeads = useCelebrityHeads();
   const [selectedHeadId, setSelectedHeadId] = useState<string | null>(null);
   const [customMode, setCustomMode] = useState<Record<string, boolean>>({});
 
@@ -119,17 +119,6 @@ export default function EditorScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const previewWidth = Math.round(screenWidth * 0.55);
   const previewHeight = Math.round(previewWidth * (16 / 9));
-
-  useEffect(() => {
-    listCelebrityHeads()
-      .then((heads) => {
-        console.log("[editor] listCelebrityHeads returned:", heads.length, "heads");
-        setCelebHeads(heads);
-      })
-      .catch((err) => {
-        console.error("[editor] listCelebrityHeads FAILED:", err);
-      });
-  }, []);
 
   useEffect(() => {
     if (paramPresetId && paramPresetId !== state.selectedPresetId) {

@@ -3,9 +3,7 @@ import { mapAsset, mapCelebrityHead, mapSound } from "@/lib/convex-mappers";
 import type { CelebrityHead, Asset, Sound } from "@/types";
 
 export async function listCelebrityHeads(): Promise<CelebrityHead[]> {
-  console.log("[assets repo] listCelebrityHeads called, api ref:", api.assets.listCelebrityHeads);
   const docs = await convexClient.query(api.assets.listCelebrityHeads, {});
-  console.log("[assets repo] got docs:", docs?.length ?? "null/undefined");
   return docs.map(mapCelebrityHead);
 }
 
