@@ -17,8 +17,7 @@ export const getStatus = query({
   args: { renderId: v.id("renders") },
   handler: async (ctx, args) => {
     const doc = await ctx.db.get(args.renderId);
-    if (!doc) throw new Error(`Render ${args.renderId} not found`);
-    return doc;
+    return doc ?? null;
   },
 });
 
