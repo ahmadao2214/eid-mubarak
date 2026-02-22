@@ -121,7 +121,14 @@ export default function EditorScreen() {
   const previewHeight = Math.round(previewWidth * (16 / 9));
 
   useEffect(() => {
-    listCelebrityHeads().then(setCelebHeads).catch(() => {});
+    listCelebrityHeads()
+      .then((heads) => {
+        console.log("[editor] listCelebrityHeads returned:", heads.length, "heads");
+        setCelebHeads(heads);
+      })
+      .catch((err) => {
+        console.error("[editor] listCelebrityHeads FAILED:", err);
+      });
   }, []);
 
   useEffect(() => {

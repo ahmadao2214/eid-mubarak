@@ -3,28 +3,27 @@ import { ConvexHttpClient } from "convex/browser";
 
 export const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL ?? "";
 
-// Lazy-initialized imperative client for repository layer.
-// Deferred so tests can mock before instantiation and empty URL doesn't throw at import time.
-let _client: ConvexHttpClient | null = null;
+// Imperative client for repository layer (query/mutation/action calls).
+// Created lazily via getter to avoid throwing on empty URL during test imports.
+let _httpClient: ConvexHttpClient | null = null;
 
-function getClient(): ConvexHttpClient {
-  if (!_client) {
-    _client = new ConvexHttpClient(CONVEX_URL);
+export function getConvexHttpClient(): ConvexHttpClient {
+  if (!_httpClient) {
+    console.log("[convex] Creating ConvexHttpClient, URL:", CONVEX_URL ? CONVEX_URL.substring(0, 40) + "..." : "(EMPTY!)");
+    _httpClient = new ConvexHttpClient(CONVEX_URL);
   }
-  return _client;
+  return _httpClient;
 }
 
-export const convexClient: ConvexHttpClient = new Proxy({} as ConvexHttpClient, {
-  get(_target, prop) {
-    const client = getClient();
-    const value = (client as any)[prop];
-    // Bind methods so `this` points to the real client
-    if (typeof value === "function") {
-      return value.bind(client);
-    }
-    return value;
-  },
-});
+// Convenience object matching the old convexClient API so repositories don't change.
+export const convexClient = {
+  query: (...args: Parameters<ConvexHttpClient["query"]>) =>
+    getConvexHttpClient().query(...args),
+  mutation: (...args: Parameters<ConvexHttpClient["mutation"]>) =>
+    getConvexHttpClient().mutation(...args),
+  action: (...args: Parameters<ConvexHttpClient["action"]>) =>
+    getConvexHttpClient().action(...args),
+};
 
 // Re-export generated API for type-safe function references
 export { api } from "../../convex/_generated/api";
