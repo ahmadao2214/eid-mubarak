@@ -11,6 +11,7 @@ module.exports = {
   ],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    ".*convex/_generated/api$": "<rootDir>/src/__mocks__/convex-api.ts",
   },
   setupFiles: ["<rootDir>/src/test-utils/setup.ts"],
   collectCoverageFrom: [

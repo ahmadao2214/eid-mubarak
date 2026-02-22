@@ -1,45 +1,58 @@
-import { uploadPhoto } from "../hooks/useUpload";
-import * as mockApi from "../lib/mock-api";
+import { renderHook, act } from "@testing-library/react-native";
+import { useUpload } from "../hooks/useUpload";
 
-jest.mock("../lib/mock-api");
+const mockGetUploadUrl = jest.fn();
+const mockConfirmUpload = jest.fn();
 
-const mockedApi = mockApi as jest.Mocked<typeof mockApi>;
+jest.mock("convex/react", () => ({
+  useAction: () => mockGetUploadUrl,
+  useMutation: () => mockConfirmUpload,
+}));
 
 describe("useUpload", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockGetUploadUrl.mockResolvedValue({
+      url: "https://s3.example.com/presigned-upload",
+      s3Key: "user-photos/test/123.png",
+    });
+    mockConfirmUpload.mockResolvedValue(undefined);
+    global.fetch = jest.fn();
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({ blob: () => Promise.resolve(new Blob()) })
+      .mockResolvedValueOnce({ ok: true });
   });
 
   describe("uploadPhoto", () => {
     it("gets a presigned URL and uploads the photo", async () => {
-      mockedApi.mockGetUploadUrl.mockResolvedValue({
-        url: "https://s3.example.com/presigned-upload",
+      const { result } = renderHook(() => useUpload());
+
+      let uploadResult: { s3Key: string | null; success: boolean };
+      await act(async () => {
+        uploadResult = await result.current.uploadPhoto("file:///my-photo.jpg");
       });
-      mockedApi.mockUploadToS3.mockResolvedValue(
-        "user-photos/test/123.png"
-      );
 
-      const result = await uploadPhoto("file:///my-photo.jpg");
-
-      expect(mockedApi.mockGetUploadUrl).toHaveBeenCalled();
-      expect(mockedApi.mockUploadToS3).toHaveBeenCalledWith(
-        "https://s3.example.com/presigned-upload",
-        expect.anything()
-      );
-      expect(result).toEqual({
+      expect(mockGetUploadUrl).toHaveBeenCalled();
+      expect(mockConfirmUpload).toHaveBeenCalledWith({
+        s3Key: "user-photos/test/123.png",
+        type: "user-photo",
+      });
+      expect(uploadResult!).toEqual({
         s3Key: "user-photos/test/123.png",
         success: true,
       });
     });
 
     it("returns failure when presigned URL fetch fails", async () => {
-      mockedApi.mockGetUploadUrl.mockRejectedValue(
-        new Error("Network error")
-      );
+      mockGetUploadUrl.mockRejectedValueOnce(new Error("Network error"));
+      const { result } = renderHook(() => useUpload());
 
-      const result = await uploadPhoto("file:///my-photo.jpg");
+      let uploadResult: { s3Key: string | null; success: boolean; error?: string };
+      await act(async () => {
+        uploadResult = await result.current.uploadPhoto("file:///my-photo.jpg");
+      });
 
-      expect(result).toEqual({
+      expect(uploadResult!).toEqual({
         s3Key: null,
         success: false,
         error: "Network error",
@@ -47,19 +60,21 @@ describe("useUpload", () => {
     });
 
     it("returns failure when upload fails", async () => {
-      mockedApi.mockGetUploadUrl.mockResolvedValue({
-        url: "https://s3.example.com/presigned",
+      (global.fetch as jest.Mock)
+        .mockReset()
+        .mockResolvedValueOnce({ blob: () => Promise.resolve(new Blob()) })
+        .mockResolvedValueOnce({ ok: false, status: 403 });
+      const { result } = renderHook(() => useUpload());
+
+      let uploadResult: { s3Key: string | null; success: boolean; error?: string };
+      await act(async () => {
+        uploadResult = await result.current.uploadPhoto("file:///my-photo.jpg");
       });
-      mockedApi.mockUploadToS3.mockRejectedValue(
-        new Error("Upload failed")
-      );
 
-      const result = await uploadPhoto("file:///my-photo.jpg");
-
-      expect(result).toEqual({
+      expect(uploadResult!).toEqual({
         s3Key: null,
         success: false,
-        error: "Upload failed",
+        error: "Upload failed: 403",
       });
     });
   });
