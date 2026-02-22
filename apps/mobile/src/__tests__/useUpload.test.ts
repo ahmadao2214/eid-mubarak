@@ -4,14 +4,24 @@ import { useUpload } from "../hooks/useUpload";
 const mockGetUploadUrl = jest.fn();
 const mockConfirmUpload = jest.fn();
 
-jest.mock("convex/react", () => ({
-  useAction: () => mockGetUploadUrl,
-  useMutation: () => mockConfirmUpload,
-}));
+jest.mock("convex/react", () => {
+  let useActionCallCount = 0;
+  return {
+    useAction: () => {
+      useActionCallCount += 1;
+      return useActionCallCount === 1 ? mockGetUploadUrl : mockConfirmUpload;
+    },
+    useMutation: () => () => {},
+    __resetUseActionCallCount: () => {
+      useActionCallCount = 0;
+    },
+  };
+});
 
 describe("useUpload", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    require("convex/react").__resetUseActionCallCount?.();
     mockGetUploadUrl.mockResolvedValue({
       url: "https://s3.example.com/presigned-upload",
       s3Key: "user-photos/test/123.png",

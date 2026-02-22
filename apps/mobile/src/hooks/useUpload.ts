@@ -8,26 +8,27 @@ import type { UploadResult } from "@/types";
  */
 export function useUpload() {
   const getUploadUrl = useAction(api.storage.getUploadUrl);
-  const confirmUploadMutation = useMutation(api.storage.confirmUpload);
+  const confirmUploadAction = useAction(api.storage.confirmUpload);
 
   async function uploadPhoto(localUri: string): Promise<UploadResult> {
     try {
-      const { url, s3Key } = await getUploadUrl();
-
       const fileResponse = await fetch(localUri);
       const blob = await fileResponse.blob();
+      const contentType = blob.type || "image/png";
+
+      const { url, s3Key } = await getUploadUrl({ contentType });
 
       const putResponse = await fetch(url, {
         method: "PUT",
         body: blob,
-        headers: { "Content-Type": "image/png" },
+        headers: { "Content-Type": contentType },
       });
 
       if (!putResponse.ok) {
         throw new Error(`Upload failed: ${putResponse.status}`);
       }
 
-      await confirmUploadMutation({ s3Key, type: "user-photo" });
+      await confirmUploadAction({ s3Key, type: "user-photo" });
 
       return { s3Key, success: true };
     } catch (error) {
