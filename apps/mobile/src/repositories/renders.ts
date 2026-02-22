@@ -12,5 +12,6 @@ export async function getRenderStatus(renderId: string): Promise<RenderJob> {
   const doc = await convexClient.query(api.renders.getStatus, {
     renderId: renderId as any,
   });
-  return mapRender(doc!);
+  if (!doc) throw new Error(`Render ${renderId} not found`);
+  return mapRender(doc);
 }
