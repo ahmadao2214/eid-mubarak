@@ -1,32 +1,15 @@
 import { downloadAndShare, saveToGallery } from "@/hooks/useShare";
+import {
+  mockIsAvailableAsync,
+  mockShareAsync,
+} from "expo-sharing";
+import {
+  mockRequestPermissionsAsync,
+  mockSaveToLibraryAsync,
+} from "expo-media-library";
+import { mockDownloadFileAsync } from "expo-file-system/next";
 
-// Mock expo modules
-const mockIsAvailableAsync = jest.fn().mockResolvedValue(true);
-const mockShareAsync = jest.fn().mockResolvedValue(undefined);
-jest.mock("expo-sharing", () => ({
-  isAvailableAsync: () => mockIsAvailableAsync(),
-  shareAsync: (...args: unknown[]) => mockShareAsync(...args),
-}));
-
-const mockDownloadFileAsync = jest
-  .fn()
-  .mockResolvedValue({ uri: "file:///tmp/video.mp4" });
-jest.mock("expo-file-system/next", () => ({
-  Paths: { cache: "/tmp" },
-  File: {
-    downloadFileAsync: (...args: unknown[]) => mockDownloadFileAsync(...args),
-  },
-}));
-
-const mockRequestPermissionsAsync = jest
-  .fn()
-  .mockResolvedValue({ status: "granted" });
-const mockSaveToLibraryAsync = jest.fn().mockResolvedValue(undefined);
-jest.mock("expo-media-library", () => ({
-  requestPermissionsAsync: (...args: unknown[]) =>
-    mockRequestPermissionsAsync(...args),
-  saveToLibraryAsync: (...args: unknown[]) => mockSaveToLibraryAsync(...args),
-}));
+// All three expo modules resolved via moduleNameMapper so hook and test share the same mocks
 
 beforeEach(() => {
   jest.clearAllMocks();

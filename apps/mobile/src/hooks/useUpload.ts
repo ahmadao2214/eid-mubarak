@@ -1,29 +1,44 @@
-import { getUploadUrl, uploadToS3 } from "../repositories/uploads";
+import { useAction, useMutation } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import type { UploadResult } from "@/types";
 
-export interface UploadResult {
-  s3Key: string | null;
-  success: boolean;
-  error?: string;
-}
+/**
+ * Hook that provides uploadPhoto using Convex presigned URLs and confirmUpload.
+ * Must be used within ConvexProvider.
+ */
+export function useUpload() {
+  const getUploadUrl = useAction(api.storage.getUploadUrl);
+  const confirmUploadAction = useAction(api.storage.confirmUpload);
 
-export async function uploadPhoto(localUri: string): Promise<UploadResult> {
-  try {
-    // Step 1: Get a presigned upload URL from the backend
-    // TODO: Replace mockGetUploadUrl with real Convex call:
-    // api.storage.getUploadUrl()
-    const { url } = await getUploadUrl();
+  async function uploadPhoto(localUri: string): Promise<UploadResult> {
+    try {
+      const fileResponse = await fetch(localUri);
+      const blob = await fileResponse.blob();
+      const contentType = blob.type || "image/png";
 
-    // Step 2: Upload to S3 using presigned URL
-    // In production, this will fetch the local file and PUT to S3
-    // TODO: Replace mockUploadToS3 with real S3 upload
-    const s3Key = await uploadToS3(url, localUri as unknown as Blob);
+      const { url, s3Key } = await getUploadUrl({ contentType });
 
-    return { s3Key, success: true };
-  } catch (error) {
-    return {
-      s3Key: null,
-      success: false,
-      error: error instanceof Error ? error.message : "Upload failed",
-    };
+      const putResponse = await fetch(url, {
+        method: "PUT",
+        body: blob,
+        headers: { "Content-Type": contentType },
+      });
+
+      if (!putResponse.ok) {
+        throw new Error(`Upload failed: ${putResponse.status}`);
+      }
+
+      await confirmUploadAction({ s3Key, type: "user-photo" });
+
+      return { s3Key, success: true };
+    } catch (error) {
+      return {
+        s3Key: null,
+        success: false,
+        error: error instanceof Error ? error.message : "Upload failed",
+      };
+    }
   }
+
+  return { uploadPhoto };
 }

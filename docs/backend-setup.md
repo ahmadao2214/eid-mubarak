@@ -55,4 +55,14 @@ After Phase 1, from the repo root:
 
 3. **Deployment URL:** After the first deploy, copy the Convex URL from the dashboard or terminal and set `EXPO_PUBLIC_CONVEX_URL` in the mobile app. Copy [apps/mobile/.env.example](../apps/mobile/.env.example) to `apps/mobile/.env` and fill in the URL.
 
-4. **Convex functions:** Write queries, mutations, and actions in `convex/` (e.g. `convex/storage.ts`, `convex/projects.ts`). The schema is in `convex/schema.ts`. See [Convex functions docs](https://docs.convex.dev/functions) for how to define and deploy them.
+4. **Convex functions:** Write queries, mutations, and actions in `convex/`. The schema is in `convex/schema.ts`. See [Convex functions docs](https://docs.convex.dev/functions) for how to define and deploy them.
+
+---
+
+## Phase 3: Presigned upload + confirm (done)
+
+- **Convex env (required):** In the Convex dashboard, set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_BUCKET`.
+- **Backend:** `convex/storage.ts` exposes:
+  - `storage.getUploadUrl` (action) — returns `{ url, s3Key }` (presigned S3 PUT URL).
+  - `storage.confirmUpload` (mutation) — args: `{ s3Key, type: "user-photo" | "rendered-video" }`; records the upload in the `uploads` table.
+- **App:** Use the `useUpload()` hook (from `@/hooks/useUpload`) inside a component under `ConvexProvider`; call `uploadPhoto(localUri)` to upload a photo and get back `s3Key` for use in remove.bg or composition.
