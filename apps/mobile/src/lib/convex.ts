@@ -7,12 +7,22 @@ export const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL ?? "";
 // Deferred so tests can mock before instantiation and empty URL doesn't throw at import time.
 let _client: ConvexHttpClient | null = null;
 
+function getClient(): ConvexHttpClient {
+  if (!_client) {
+    _client = new ConvexHttpClient(CONVEX_URL);
+  }
+  return _client;
+}
+
 export const convexClient: ConvexHttpClient = new Proxy({} as ConvexHttpClient, {
   get(_target, prop) {
-    if (!_client) {
-      _client = new ConvexHttpClient(CONVEX_URL);
+    const client = getClient();
+    const value = (client as any)[prop];
+    // Bind methods so `this` points to the real client
+    if (typeof value === "function") {
+      return value.bind(client);
     }
-    return (_client as any)[prop];
+    return value;
   },
 });
 
