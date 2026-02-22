@@ -29,7 +29,7 @@ export const getUploadUrl = action({
   args: {
     contentType: v.optional(v.string()),
   },
-  handler: async (_ctx, args): Promise<{ url: string; s3Key: string }> => {
+  handler: async (_ctx, args): Promise<{ url: string; s3Key: string; publicUrl: string }> => {
     const bucket = process.env.S3_BUCKET;
     const region = process.env.AWS_REGION;
     const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
@@ -59,7 +59,9 @@ export const getUploadUrl = action({
       expiresIn: PRESIGNED_EXPIRY_SECONDS,
     });
 
-    return { url, s3Key };
+    const publicUrl = `https://${bucket}.s3.${region}.amazonaws.com/${s3Key}`;
+
+    return { url, s3Key, publicUrl };
   },
 });
 
@@ -111,10 +113,15 @@ export const confirmUpload = action({
         new HeadObjectCommand({ Bucket: bucket, Key: s3Key })
       );
     } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : "UnknownError";
       const message =
         err instanceof Error ? err.message : "Unknown S3 error";
+      const code =
+        typeof err === "object" && err !== null && "Code" in err
+          ? String((err as Record<string, unknown>).Code)
+          : undefined;
       throw new Error(
-        `Upload verification failed for key "${s3Key}": ${message}`
+        `Upload verification failed for key "${s3Key}" [${name}${code ? `: ${code}` : ""}]: ${message}`
       );
     }
 

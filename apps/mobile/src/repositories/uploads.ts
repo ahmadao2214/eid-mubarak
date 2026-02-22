@@ -1,3 +1,5 @@
+// @deprecated — Legacy repository layer; screens use useUpload hook instead.
+// Kept for backward-compatible tests only.
 import { convexClient, api } from "@/lib/convex";
 import type { UploadUrlResponse, RemoveBgResponse } from "@/types";
 

@@ -2,8 +2,6 @@ import { useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { UploadResult } from "@/types";
 
-const S3_BASE_URL = process.env.EXPO_PUBLIC_S3_BASE_URL ?? "";
-
 /**
  * Hook that provides uploadPhoto using Convex presigned URLs and confirmUpload.
  * Must be used within ConvexProvider.
@@ -18,7 +16,7 @@ export function useUpload() {
       const blob = await fileResponse.blob();
       const contentType = blob.type || "image/png";
 
-      const { url, s3Key } = await getUploadUrl({ contentType });
+      const { url, s3Key, publicUrl } = await getUploadUrl({ contentType });
 
       const putResponse = await fetch(url, {
         method: "PUT",
@@ -32,14 +30,7 @@ export function useUpload() {
 
       await confirmUploadAction({ s3Key, type: "user-photo" });
 
-      const s3Bucket = process.env.EXPO_PUBLIC_S3_BUCKET ?? "";
-      const s3Url = S3_BASE_URL
-        ? `${S3_BASE_URL}/${s3Key}`
-        : s3Bucket
-          ? `https://${s3Bucket}.s3.amazonaws.com/${s3Key}`
-          : undefined;
-
-      return { s3Key, s3Url, success: true };
+      return { s3Key, s3Url: publicUrl, success: true };
     } catch (error) {
       return {
         s3Key: null,

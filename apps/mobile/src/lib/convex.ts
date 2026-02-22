@@ -3,9 +3,10 @@ import { ConvexHttpClient } from "convex/browser";
 
 export const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL ?? "";
 
-// Imperative client used only by the repository layer (test-time mocking).
-// Screens should use the React hooks in src/hooks/useConvexData.ts instead,
+// @deprecated — Imperative HTTP client kept only for legacy repository tests.
+// All runtime code should use React hooks (useConvexData.ts / useUpload.ts)
 // which go through the WebSocket-based ConvexReactClient.
+// TODO: Remove once repository layer tests are migrated to hook-based tests.
 let _httpClient: ConvexHttpClient | null = null;
 
 function getConvexHttpClient(): ConvexHttpClient {

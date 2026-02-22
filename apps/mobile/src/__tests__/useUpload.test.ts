@@ -25,6 +25,7 @@ describe("useUpload", () => {
     mockGetUploadUrl.mockResolvedValue({
       url: "https://s3.example.com/presigned-upload",
       s3Key: "user-photos/test/123.png",
+      publicUrl: "https://my-bucket.s3.us-east-1.amazonaws.com/user-photos/test/123.png",
     });
     mockConfirmUpload.mockResolvedValue(undefined);
     global.fetch = jest.fn();
@@ -47,11 +48,11 @@ describe("useUpload", () => {
         s3Key: "user-photos/test/123.png",
         type: "user-photo",
       });
-      expect(uploadResult!).toMatchObject({
+      expect(uploadResult!).toEqual({
         s3Key: "user-photos/test/123.png",
+        s3Url: "https://my-bucket.s3.us-east-1.amazonaws.com/user-photos/test/123.png",
         success: true,
       });
-      expect(uploadResult!).toHaveProperty("s3Url");
     });
 
     it("returns failure when presigned URL fetch fails", async () => {
