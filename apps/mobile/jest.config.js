@@ -11,8 +11,6 @@ module.exports = {
   ],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
-    "^p-limit$": "<rootDir>/../../node_modules/jest-circus/node_modules/p-limit/index.js",
-    "^yocto-queue$": "<rootDir>/../../node_modules/jest-circus/node_modules/p-limit/node_modules/yocto-queue/index.js",
     ".*convex/_generated/api$": "<rootDir>/src/__mocks__/convex-api.ts",
     "^expo-sharing$": "<rootDir>/src/__mocks__/expo-sharing.ts",
     "^expo-media-library$": "<rootDir>/src/__mocks__/expo-media-library.ts",

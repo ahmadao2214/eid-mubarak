@@ -14,28 +14,17 @@ jest.mock("@/context/ToastContext", () => ({
   useToast: () => ({ showToast: jest.fn() }),
 }));
 
-const mockCreateProject = jest.fn();
-const mockUpdateProject = jest.fn();
+const mockCreateProjectFn = jest.fn();
+const mockUpdateProjectFn = jest.fn();
+const mockRequestRenderFn = jest.fn();
+let mockRenderStatusValue: any = undefined;
 
-jest.mock("@/repositories/projects", () => ({
-  get createProject() {
-    return mockCreateProject;
-  },
-  get updateProject() {
-    return mockUpdateProject;
-  },
-}));
-
-const mockRequestRender = jest.fn();
-const mockGetRenderStatus = jest.fn();
-
-jest.mock("@/repositories/renders", () => ({
-  get requestRender() {
-    return mockRequestRender;
-  },
-  get getRenderStatus() {
-    return mockGetRenderStatus;
-  },
+jest.mock("@/hooks/useConvexData", () => ({
+  useCreateProject: () => mockCreateProjectFn,
+  useUpdateProject: () => mockUpdateProjectFn,
+  useRequestRender: () => mockRequestRenderFn,
+  useRenderStatus: (renderId: string | undefined) =>
+    renderId ? mockRenderStatusValue : undefined,
 }));
 
 jest.mock("@/hooks/useShare", () => ({
@@ -45,15 +34,15 @@ jest.mock("@/hooks/useShare", () => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockCreateProject.mockResolvedValue("proj-123");
-  mockRequestRender.mockResolvedValue("render-123");
-  mockGetRenderStatus.mockResolvedValue({
+  mockCreateProjectFn.mockResolvedValue("proj-123");
+  mockRequestRenderFn.mockResolvedValue("render-123");
+  mockRenderStatusValue = {
     id: "render-123",
     projectId: "proj-123",
     status: "completed",
     progress: 100,
     outputUrl: "https://mock-s3.example.com/rendered/test-video.mp4",
-  });
+  };
 });
 
 describe("Step3Screen", () => {
@@ -73,22 +62,23 @@ describe("Step3Screen", () => {
     expect(screen.getByTestId("card-preview")).toBeTruthy();
   });
 
-  it("share button triggers save + render + ready flow", async () => {
+  it("share button triggers save + render flow", async () => {
     renderStep3();
     fireEvent.press(screen.getByTestId("share-button"));
     await waitFor(() => {
-      expect(mockCreateProject).toHaveBeenCalledTimes(1);
-      expect(mockRequestRender).toHaveBeenCalledTimes(1);
+      expect(mockCreateProjectFn).toHaveBeenCalledTimes(1);
+      expect(mockRequestRenderFn).toHaveBeenCalledTimes(1);
     });
   });
 
   it("shows progress during share flow", async () => {
-    mockGetRenderStatus.mockResolvedValueOnce({
+    // Render status returns "rendering" so useEffect doesn't jump to "ready"
+    mockRenderStatusValue = {
       id: "render-123",
       projectId: "proj-123",
       status: "rendering",
       progress: 50,
-    });
+    };
     renderStep3();
     fireEvent.press(screen.getByTestId("share-button"));
     await waitFor(() => {
@@ -105,7 +95,7 @@ describe("Step3Screen", () => {
   });
 
   it("share button is disabled during processing", async () => {
-    mockCreateProject.mockImplementation(() => new Promise(() => {})); // never resolves
+    mockCreateProjectFn.mockImplementation(() => new Promise(() => {})); // never resolves
     renderStep3();
     fireEvent.press(screen.getByTestId("share-button"));
     await waitFor(() => {
@@ -118,7 +108,7 @@ describe("Step3Screen", () => {
     renderStep3();
     fireEvent.press(screen.getByTestId("save-draft-button"));
     await waitFor(() => {
-      expect(mockCreateProject).toHaveBeenCalledTimes(1);
+      expect(mockCreateProjectFn).toHaveBeenCalledTimes(1);
       expect(screen.getByText("Draft saved")).toBeTruthy();
     });
   });
