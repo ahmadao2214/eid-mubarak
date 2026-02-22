@@ -22,6 +22,7 @@ import { ProjectCard } from "@/components/ProjectCard";
 import { EmptyState } from "@/components/EmptyState";
 import { listAllProjects, removeProject } from "@/repositories/projects";
 import { useToast } from "@/context/ToastContext";
+import { Colors } from "@/lib/colors";
 import type { Project } from "@/types";
 
 export default function SavedScreen() {
@@ -74,12 +75,12 @@ export default function SavedScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bgPrimary }}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFD700" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.gold} />
         }
       >
         {/* Header */}
@@ -95,23 +96,23 @@ export default function SavedScreen() {
             style={{
               fontSize: 24,
               fontWeight: "bold",
-              color: "#FFD700",
+              color: Colors.gold,
             }}
           >
-            My Cards
+            My Vibes
           </Text>
           <Pressable
             testID="back-home-button"
             onPress={() => router.back()}
           >
-            <Text style={{ fontSize: 15, fontWeight: "600", color: "#FFD700" }}>
+            <Text style={{ fontSize: 15, fontWeight: "600", color: Colors.gold }}>
               Back
             </Text>
           </Pressable>
         </View>
 
         {loading ? (
-          <ActivityIndicator testID="loading-indicator" size="large" color="#FFD700" />
+          <ActivityIndicator testID="loading-indicator" size="large" color={Colors.gold} />
         ) : projects.length === 0 ? (
           <EmptyState
             title="No saved projects"
@@ -124,7 +125,7 @@ export default function SavedScreen() {
               project={project}
               onPress={() =>
                 router.replace({
-                  pathname: "/create/step1",
+                  pathname: "/create/editor",
                   params: { projectId: project.id },
                 })
               }
@@ -140,14 +141,14 @@ export default function SavedScreen() {
         onClose={() => setDeleteTarget(null)}
       >
         <ModalBackdrop />
-        <ModalContent style={{ backgroundColor: "#2a2a3e", borderRadius: 16 }}>
+        <ModalContent style={{ backgroundColor: Colors.bgSurface, borderRadius: 16 }}>
           <ModalHeader>
-            <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>
+            <Text style={{ color: Colors.textPrimary, fontSize: 18, fontWeight: "bold" }}>
               Delete Project
             </Text>
           </ModalHeader>
           <ModalBody>
-            <Text style={{ color: "#ccc", fontSize: 14 }}>
+            <Text style={{ color: Colors.textSecondary, fontSize: 14 }}>
               Are you sure you want to delete "{deleteTarget?.name}"? This cannot be undone.
             </Text>
           </ModalBody>
@@ -163,9 +164,9 @@ export default function SavedScreen() {
             <Button
               testID="confirm-delete"
               onPress={handleDelete}
-              style={{ backgroundColor: "#FF5252" }}
+              style={{ backgroundColor: Colors.error }}
             >
-              <ButtonText style={{ color: "#fff" }}>Delete</ButtonText>
+              <ButtonText style={{ color: Colors.textPrimary }}>Delete</ButtonText>
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { CardPreview } from "./CardPreview";
+import { Colors } from "@/lib/colors";
 import { formatRelativeTime } from "@/lib/format-time";
 import type { Project } from "@/types";
 
@@ -17,7 +18,7 @@ export function ProjectCard({ project, onPress, onDelete }: ProjectCardProps) {
       onPress={onPress}
       style={{
         flexDirection: "row",
-        backgroundColor: "rgba(255,255,255,0.05)",
+        backgroundColor: Colors.bgSurface,
         borderRadius: 12,
         padding: 12,
         marginBottom: 12,
@@ -26,10 +27,10 @@ export function ProjectCard({ project, onPress, onDelete }: ProjectCardProps) {
     >
       <CardPreview composition={project.composition} size="small" />
       <View style={{ flex: 1, marginLeft: 12 }}>
-        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>
+        <Text style={{ color: Colors.textPrimary, fontSize: 16, fontWeight: "bold", marginBottom: 4 }}>
           {project.name}
         </Text>
-        <Text style={{ color: "#999", fontSize: 12 }}>
+        <Text style={{ color: Colors.textMuted, fontSize: 12 }}>
           {formatRelativeTime(project.updatedAt)}
         </Text>
       </View>
@@ -43,7 +44,7 @@ export function ProjectCard({ project, onPress, onDelete }: ProjectCardProps) {
           padding: 8,
         }}
       >
-        <Text style={{ color: "#FF5252", fontSize: 18 }}>X</Text>
+        <Text style={{ color: Colors.error, fontSize: 18 }}>X</Text>
       </Pressable>
     </Pressable>
   );

@@ -7,6 +7,12 @@ const mockRouter = { push: mockPush, back: jest.fn() };
 
 jest.mock("expo-router", () => ({
   useRouter: () => mockRouter,
+  useFocusEffect: (cb: () => void) => {
+    const React = require("react");
+    React.useEffect(() => {
+      cb();
+    }, []);
+  },
 }));
 
 jest.mock("react-native-safe-area-context", () => ({
@@ -16,14 +22,22 @@ jest.mock("react-native-safe-area-context", () => ({
   },
 }));
 
+jest.mock("react-native-reanimated", () =>
+  require("react-native-reanimated/mock"),
+);
+
+jest.mock("@/repositories/projects", () => ({
+  listAllProjects: jest.fn().mockResolvedValue([]),
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
 });
 
 describe("HomeScreen", () => {
-  it("renders header title", () => {
+  it("renders Send Eid Vibes title", () => {
     render(<HomeScreen />);
-    expect(screen.getByText("Eid Mubarak!")).toBeTruthy();
+    expect(screen.getByText("Send Eid Vibes")).toBeTruthy();
   });
 
   it("renders subtitle", () => {
@@ -35,33 +49,37 @@ describe("HomeScreen", () => {
     ).toBeTruthy();
   });
 
-  it("renders Create New Card button", () => {
+  it("renders Send Vibes CTA button", () => {
     render(<HomeScreen />);
     expect(screen.getByTestId("create-new-card")).toBeTruthy();
-    expect(screen.getByText("Create New Card")).toBeTruthy();
+    expect(screen.getByText("Send Vibes")).toBeTruthy();
   });
 
-  it("Create New Card navigates to /create/step1", () => {
+  it("Send Vibes navigates to /create/editor", () => {
     render(<HomeScreen />);
     fireEvent.press(screen.getByTestId("create-new-card"));
-    expect(mockPush).toHaveBeenCalledWith("/create/step1");
+    expect(mockPush).toHaveBeenCalledWith("/create/editor");
   });
 
-  it("renders My Cards button", () => {
+  it("renders My Vibes link", () => {
     render(<HomeScreen />);
-    expect(screen.getByTestId("my-cards-button")).toBeTruthy();
-    expect(screen.getByText("My Cards")).toBeTruthy();
+    expect(screen.getByTestId("my-vibes-link")).toBeTruthy();
+    expect(screen.getByText("My Vibes")).toBeTruthy();
   });
 
-  it("My Cards button navigates to /saved", () => {
+  it("My Vibes link navigates to /saved", () => {
     render(<HomeScreen />);
-    fireEvent.press(screen.getByTestId("my-cards-button"));
+    fireEvent.press(screen.getByTestId("my-vibes-link"));
     expect(mockPush).toHaveBeenCalledWith("/saved");
   });
 
-  it("does NOT show saved projects section", () => {
+  it("renders Featured Templates section", () => {
     render(<HomeScreen />);
-    expect(screen.queryByText("Saved Projects")).toBeNull();
-    expect(screen.queryByTestId("loading-indicator")).toBeNull();
+    expect(screen.getByText("Featured Templates")).toBeTruthy();
+  });
+
+  it("renders preset template cards", () => {
+    render(<HomeScreen />);
+    expect(screen.getByTestId("featured-template-zohran-classic")).toBeTruthy();
   });
 });

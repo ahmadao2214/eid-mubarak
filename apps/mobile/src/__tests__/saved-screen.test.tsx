@@ -67,7 +67,7 @@ const mockComposition = {
   height: 1920,
   fps: 30,
   durationInFrames: 300,
-  background: { type: "solid" as const, source: "#1a1a2e" },
+  background: { type: "solid" as const, source: "#0D4A3F" },
   hue: { enabled: false, color: "none" as const, opacity: 0, animation: "static" as const },
   head: {
     imageUrl: "",
@@ -98,10 +98,10 @@ beforeEach(() => {
 });
 
 describe("SavedScreen", () => {
-  it("renders My Cards header", async () => {
+  it("renders My Vibes header", async () => {
     render(<SavedScreen />);
     await waitFor(() => {
-      expect(screen.getByText("My Cards")).toBeTruthy();
+      expect(screen.getByText("My Vibes")).toBeTruthy();
     });
   });
 
@@ -131,7 +131,7 @@ describe("SavedScreen", () => {
     expect(screen.getByText("Test Card")).toBeTruthy();
   });
 
-  it("tapping project card navigates with projectId param", async () => {
+  it("tapping project card navigates to editor with projectId", async () => {
     mockListAllProjects.mockResolvedValue([
       {
         id: "proj-1",
@@ -147,7 +147,7 @@ describe("SavedScreen", () => {
     });
     fireEvent.press(screen.getByTestId("project-card-proj-1"));
     expect(mockReplace).toHaveBeenCalledWith({
-      pathname: "/create/step1",
+      pathname: "/create/editor",
       params: { projectId: "proj-1" },
     });
   });
@@ -194,6 +194,8 @@ describe("SavedScreen", () => {
     fireEvent.press(screen.getByTestId("confirm-delete"));
     await waitFor(() => {
       expect(mockRemoveProject).toHaveBeenCalledWith("proj-1");
+    });
+    await waitFor(() => {
       expect(screen.queryByTestId("project-card-proj-1")).toBeNull();
     });
   });

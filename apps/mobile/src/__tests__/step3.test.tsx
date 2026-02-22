@@ -63,6 +63,11 @@ describe("Step3Screen", () => {
       initialHeadImage: "https://example.com/head.png",
     });
 
+  it("renders Share Your Vibe title", () => {
+    renderStep3();
+    expect(screen.getByText("Share Your Vibe")).toBeTruthy();
+  });
+
   it("renders preview with composition data", () => {
     renderStep3();
     expect(screen.getByTestId("card-preview")).toBeTruthy();

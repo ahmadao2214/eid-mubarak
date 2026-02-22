@@ -1,0 +1,16 @@
+export const Colors = {
+  bgPrimary: "#0D4A3F",
+  bgSurface: "#135C4D",
+  bgSurfaceLight: "#1A6B5A",
+  bgOverlay: "rgba(13,74,63,0.95)",
+  gold: "#FFD700",
+  goldMuted: "rgba(255,215,0,0.15)",
+  textPrimary: "#FFFFFF",
+  textSecondary: "#C8E6C9",
+  textMuted: "#81B29A",
+  textDisabled: "#5A8A78",
+  borderSubtle: "rgba(255,255,255,0.1)",
+  success: "#00C853",
+  error: "#FF5252",
+  pink: "#FF69B4",
+} as const;

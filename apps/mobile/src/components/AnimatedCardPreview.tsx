@@ -12,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import type { CompositionProps } from "@/types";
 import { RN_FONT_MAP } from "@/lib/font-map";
+import { Colors } from "@/lib/colors";
 
 type TextSlot = CompositionProps["textSlots"][number];
 
@@ -202,7 +203,7 @@ export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewPr
             borderRadius: headSize / 2,
             overflow: "hidden",
             borderWidth: 2,
-            borderColor: "#FFD700",
+            borderColor: Colors.gold,
             borderStyle: composition.head.imageUrl ? "solid" : "dashed",
           },
           headAnimatedStyle,

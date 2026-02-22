@@ -8,6 +8,7 @@ import { createProject, updateProject } from "@/repositories/projects";
 import { requestRender, getRenderStatus } from "@/repositories/renders";
 import { downloadAndShare, saveToGallery } from "@/hooks/useShare";
 import { useToast } from "@/context/ToastContext";
+import { Colors } from "@/lib/colors";
 
 type ShareState = "idle" | "saving" | "rendering" | "ready" | "failed";
 
@@ -130,7 +131,7 @@ export default function Step3Screen() {
   }[shareState];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#1a1a2e" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bgPrimary }}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
@@ -140,13 +141,13 @@ export default function Step3Screen() {
           style={{
             fontSize: 24,
             fontWeight: "bold",
-            color: "#FFD700",
+            color: Colors.gold,
             marginBottom: 4,
           }}
         >
-          Preview
+          Share Your Vibe
         </Text>
-        <Text style={{ fontSize: 16, color: "#e0e0e0", marginBottom: 20 }}>
+        <Text style={{ fontSize: 16, color: Colors.textSecondary, marginBottom: 20 }}>
           Here's your card — share it with the world!
         </Text>
 
@@ -162,10 +163,10 @@ export default function Step3Screen() {
               style={{
                 color:
                   shareState === "ready"
-                    ? "#00C853"
+                    ? Colors.success
                     : shareState === "failed"
-                      ? "#FF5252"
-                      : "#e0e0e0",
+                      ? Colors.error
+                      : Colors.textSecondary,
                 fontSize: 14,
                 textAlign: "center",
                 fontWeight: "600",
@@ -183,7 +184,7 @@ export default function Step3Screen() {
               style={{
                 height: 6,
                 borderRadius: 3,
-                backgroundColor: "rgba(255,255,255,0.1)",
+                backgroundColor: Colors.bgSurface,
                 overflow: "hidden",
               }}
             >
@@ -191,7 +192,7 @@ export default function Step3Screen() {
                 style={{
                   height: "100%",
                   width: `${shareState === "saving" ? 20 : progress}%`,
-                  backgroundColor: "#FFD700",
+                  backgroundColor: Colors.gold,
                   borderRadius: 3,
                 }}
               />
@@ -204,7 +205,7 @@ export default function Step3Screen() {
           <View testID="share-ready" style={{ marginBottom: 16 }}>
             <Text
               style={{
-                color: "#00C853",
+                color: Colors.success,
                 fontSize: 14,
                 textAlign: "center",
                 fontWeight: "600",
@@ -218,7 +219,7 @@ export default function Step3Screen() {
               <Text
                 testID="share-error"
                 style={{
-                  color: "#FF5252",
+                  color: Colors.error,
                   fontSize: 13,
                   textAlign: "center",
                   marginBottom: 12,
@@ -242,14 +243,14 @@ export default function Step3Screen() {
                 }
               }}
               style={{
-                backgroundColor: "#00C853",
+                backgroundColor: Colors.success,
                 paddingVertical: 14,
                 borderRadius: 12,
                 alignItems: "center",
                 marginBottom: 10,
               }}
             >
-              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+              <Text style={{ color: Colors.textPrimary, fontSize: 16, fontWeight: "bold" }}>
                 Share Video
               </Text>
             </Pressable>
@@ -268,14 +269,14 @@ export default function Step3Screen() {
                 }
               }}
               style={{
-                backgroundColor: "rgba(255,255,255,0.1)",
+                backgroundColor: Colors.bgSurface,
                 paddingVertical: 14,
                 borderRadius: 12,
                 alignItems: "center",
                 marginBottom: 10,
               }}
             >
-              <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+              <Text style={{ color: Colors.textPrimary, fontSize: 16, fontWeight: "bold" }}>
                 Save to Camera Roll
               </Text>
             </Pressable>
@@ -290,7 +291,7 @@ export default function Step3Screen() {
             disabled={isProcessing}
             accessibilityState={{ disabled: isProcessing }}
             style={{
-              backgroundColor: isProcessing ? "#555" : "#FFD700",
+              backgroundColor: isProcessing ? Colors.textDisabled : Colors.gold,
               paddingVertical: 16,
               borderRadius: 12,
               alignItems: "center",
@@ -300,7 +301,7 @@ export default function Step3Screen() {
           >
             <Text
               style={{
-                color: isProcessing ? "#999" : "#1a1a2e",
+                color: isProcessing ? Colors.textMuted : Colors.bgPrimary,
                 fontSize: 18,
                 fontWeight: "bold",
               }}
@@ -325,7 +326,7 @@ export default function Step3Screen() {
         >
           <Text
             style={{
-              color: savedDraft ? "#00C853" : "#999",
+              color: savedDraft ? Colors.success : Colors.textMuted,
               fontSize: 14,
               fontWeight: "600",
             }}
@@ -344,9 +345,9 @@ export default function Step3Screen() {
           right: 0,
           padding: 20,
           paddingBottom: 36,
-          backgroundColor: "#1a1a2e",
+          backgroundColor: Colors.bgPrimary,
           borderTopWidth: 1,
-          borderTopColor: "rgba(255,255,255,0.1)",
+          borderTopColor: Colors.borderSubtle,
         }}
       >
         <Pressable
@@ -357,11 +358,11 @@ export default function Step3Screen() {
             borderRadius: 12,
             alignItems: "center",
             borderWidth: 1,
-            borderColor: "#FFD700",
+            borderColor: Colors.gold,
           }}
         >
           <Text
-            style={{ color: "#FFD700", fontSize: 16, fontWeight: "bold" }}
+            style={{ color: Colors.gold, fontSize: 16, fontWeight: "bold" }}
           >
             Back
           </Text>

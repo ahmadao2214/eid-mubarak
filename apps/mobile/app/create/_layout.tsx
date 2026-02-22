@@ -3,6 +3,7 @@ import { View, ActivityIndicator } from "react-native";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { CompositionProvider } from "@/context/CompositionContext";
 import { getProject } from "@/repositories/projects";
+import { Colors } from "@/lib/colors";
 import type { CompositionProps } from "@/types";
 
 export default function CreateLayout() {
@@ -24,8 +25,8 @@ export default function CreateLayout() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#1a1a2e", justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator testID="create-layout-loading" size="large" color="#FFD700" />
+      <View style={{ flex: 1, backgroundColor: Colors.bgPrimary, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator testID="create-layout-loading" size="large" color={Colors.gold} />
       </View>
     );
   }
@@ -35,7 +36,7 @@ export default function CreateLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#1a1a2e" },
+          contentStyle: { backgroundColor: Colors.bgPrimary },
           animation: "slide_from_right",
         }}
       />
