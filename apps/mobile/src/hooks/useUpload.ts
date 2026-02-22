@@ -41,4 +41,3 @@ export function useUpload() {
 
   return { uploadPhoto };
 }
-
