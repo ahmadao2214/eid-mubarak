@@ -14,7 +14,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useComposition } from "@/context/CompositionContext";
-import { AnimatedCardPreview } from "@/components/AnimatedCardPreview";
+import { RemotionPreview } from "@/components/RemotionPreview";
 import { LetterAvatar } from "@/components/LetterAvatar";
 import { PRESETS } from "@/lib/presets";
 import { Colors } from "@/lib/colors";
@@ -201,9 +201,10 @@ export default function EditorScreen() {
 
         {/* Live preview — top ~50% */}
         <View style={{ alignItems: "center", paddingVertical: 8 }}>
-          <AnimatedCardPreview
+          <RemotionPreview
             composition={composition}
-            size={{ width: previewWidth, height: previewHeight }}
+            width={previewWidth}
+            height={previewHeight}
           />
         </View>
 

@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
 export const list = query({
@@ -51,5 +51,12 @@ export const remove = mutation({
   args: { id: v.id("projects") },
   handler: async (ctx, args) => {
     await ctx.db.delete(args.id);
+  },
+});
+
+export const internalGet = internalQuery({
+  args: { id: v.id("projects") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });
