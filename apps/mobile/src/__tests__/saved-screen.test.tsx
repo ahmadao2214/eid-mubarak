@@ -9,12 +9,6 @@ const mockRouter = { push: mockPush, replace: mockReplace, back: mockBack };
 
 jest.mock("expo-router", () => ({
   useRouter: () => mockRouter,
-  useFocusEffect: (cb: () => void) => {
-    const React = require("react");
-    React.useEffect(() => {
-      cb();
-    }, []);
-  },
 }));
 
 jest.mock("@/context/ToastContext", () => ({
@@ -50,16 +44,12 @@ jest.mock("@/components/ui/button", () => {
   };
 });
 
-const mockListAllProjects = jest.fn();
-const mockRemoveProject = jest.fn();
+let mockProjects: any[] = [];
+const mockRemoveProjectFn = jest.fn().mockResolvedValue(undefined);
 
-jest.mock("@/repositories/projects", () => ({
-  get listAllProjects() {
-    return mockListAllProjects;
-  },
-  get removeProject() {
-    return mockRemoveProject;
-  },
+jest.mock("@/hooks/useConvexData", () => ({
+  useAllProjects: () => ({ projects: mockProjects, isLoading: false }),
+  useRemoveProject: () => mockRemoveProjectFn,
 }));
 
 const mockComposition = {
@@ -94,28 +84,25 @@ const mockComposition = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockListAllProjects.mockResolvedValue([]);
+  mockProjects = [];
+  mockRemoveProjectFn.mockResolvedValue(undefined);
 });
 
 describe("SavedScreen", () => {
-  it("renders My Vibes header", async () => {
+  it("renders My Vibes header", () => {
     render(<SavedScreen />);
-    await waitFor(() => {
-      expect(screen.getByText("My Vibes")).toBeTruthy();
-    });
+    expect(screen.getByText("My Vibes")).toBeTruthy();
   });
 
-  it("shows empty state when no saved projects", async () => {
-    mockListAllProjects.mockResolvedValue([]);
+  it("shows empty state when no saved projects", () => {
+    mockProjects = [];
     render(<SavedScreen />);
-    await waitFor(() => {
-      expect(screen.getByTestId("empty-state")).toBeTruthy();
-    });
+    expect(screen.getByTestId("empty-state")).toBeTruthy();
     expect(screen.getByText("No saved projects")).toBeTruthy();
   });
 
-  it("shows project cards when projects exist", async () => {
-    mockListAllProjects.mockResolvedValue([
+  it("shows project cards when projects exist", () => {
+    mockProjects = [
       {
         id: "proj-1",
         name: "Test Card",
@@ -123,16 +110,14 @@ describe("SavedScreen", () => {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
-    ]);
+    ];
     render(<SavedScreen />);
-    await waitFor(() => {
-      expect(screen.getByTestId("project-card-proj-1")).toBeTruthy();
-    });
+    expect(screen.getByTestId("project-card-proj-1")).toBeTruthy();
     expect(screen.getByText("Test Card")).toBeTruthy();
   });
 
-  it("tapping project card navigates to editor with projectId", async () => {
-    mockListAllProjects.mockResolvedValue([
+  it("tapping project card navigates to editor with projectId", () => {
+    mockProjects = [
       {
         id: "proj-1",
         name: "Test Card",
@@ -140,11 +125,8 @@ describe("SavedScreen", () => {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
-    ]);
+    ];
     render(<SavedScreen />);
-    await waitFor(() => {
-      expect(screen.getByTestId("project-card-proj-1")).toBeTruthy();
-    });
     fireEvent.press(screen.getByTestId("project-card-proj-1"));
     expect(mockReplace).toHaveBeenCalledWith({
       pathname: "/create/editor",
@@ -152,8 +134,8 @@ describe("SavedScreen", () => {
     });
   });
 
-  it("delete icon opens confirmation modal", async () => {
-    mockListAllProjects.mockResolvedValue([
+  it("delete icon opens confirmation modal", () => {
+    mockProjects = [
       {
         id: "proj-1",
         name: "Test Card",
@@ -161,19 +143,14 @@ describe("SavedScreen", () => {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
-    ]);
+    ];
     render(<SavedScreen />);
-    await waitFor(() => {
-      expect(screen.getByTestId("delete-project-proj-1")).toBeTruthy();
-    });
     fireEvent.press(screen.getByTestId("delete-project-proj-1"));
-    await waitFor(() => {
-      expect(screen.getByText(/Are you sure/)).toBeTruthy();
-    });
+    expect(screen.getByText(/Are you sure/)).toBeTruthy();
   });
 
-  it("confirming delete removes project from list", async () => {
-    mockListAllProjects.mockResolvedValue([
+  it("confirming delete calls remove mutation", async () => {
+    mockProjects = [
       {
         id: "proj-1",
         name: "Test Card",
@@ -181,22 +158,13 @@ describe("SavedScreen", () => {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
-    ]);
-    mockRemoveProject.mockResolvedValue(undefined);
+    ];
     render(<SavedScreen />);
-    await waitFor(() => {
-      expect(screen.getByTestId("delete-project-proj-1")).toBeTruthy();
-    });
     fireEvent.press(screen.getByTestId("delete-project-proj-1"));
-    await waitFor(() => {
-      expect(screen.getByTestId("confirm-delete")).toBeTruthy();
-    });
+    expect(screen.getByTestId("confirm-delete")).toBeTruthy();
     fireEvent.press(screen.getByTestId("confirm-delete"));
     await waitFor(() => {
-      expect(mockRemoveProject).toHaveBeenCalledWith("proj-1");
-    });
-    await waitFor(() => {
-      expect(screen.queryByTestId("project-card-proj-1")).toBeNull();
+      expect(mockRemoveProjectFn).toHaveBeenCalledWith({ id: "proj-1" });
     });
   });
 });

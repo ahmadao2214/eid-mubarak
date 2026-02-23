@@ -7,12 +7,6 @@ const mockRouter = { push: mockPush, back: jest.fn() };
 
 jest.mock("expo-router", () => ({
   useRouter: () => mockRouter,
-  useFocusEffect: (cb: () => void) => {
-    const React = require("react");
-    React.useEffect(() => {
-      cb();
-    }, []);
-  },
 }));
 
 jest.mock("react-native-safe-area-context", () => ({
@@ -26,8 +20,8 @@ jest.mock("react-native-reanimated", () =>
   require("react-native-reanimated/mock"),
 );
 
-jest.mock("@/repositories/projects", () => ({
-  listAllProjects: jest.fn().mockResolvedValue([]),
+jest.mock("@/hooks/useConvexData", () => ({
+  useAllProjects: () => ({ projects: [], isLoading: false }),
 }));
 
 beforeEach(() => {

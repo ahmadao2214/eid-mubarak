@@ -4,11 +4,16 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useComposition } from "@/context/CompositionContext";
 import { AnimatedCardPreview } from "@/components/AnimatedCardPreview";
-import { createProject, updateProject } from "@/repositories/projects";
-import { requestRender, getRenderStatus } from "@/repositories/renders";
+import {
+  useCreateProject,
+  useUpdateProject,
+  useRequestRender,
+  useRenderStatus,
+} from "@/hooks/useConvexData";
 import { downloadAndShare, saveToGallery } from "@/hooks/useShare";
 import { useToast } from "@/context/ToastContext";
 import { Colors } from "@/lib/colors";
+import type { Id } from "../../convex/_generated/dataModel";
 
 type ShareState = "idle" | "saving" | "rendering" | "ready" | "failed";
 
@@ -18,26 +23,34 @@ export default function Step3Screen() {
   const { state, setProjectId } = useComposition();
   const { composition } = state;
 
+  const createProjectMutation = useCreateProject();
+  const updateProjectMutation = useUpdateProject();
+  const requestRenderMutation = useRequestRender();
+
   const [shareState, setShareState] = useState<ShareState>("idle");
-  const [progress, setProgress] = useState(0);
+  const [renderId, setRenderId] = useState<string | undefined>(undefined);
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [savedDraft, setSavedDraft] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
-  const cancelledRef = useRef(false);
   const isSharingRef = useRef(false);
   const isSavingDraftRef = useRef(false);
   const isShareActionRef = useRef(false);
-  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Reactive render status — auto-updates via WebSocket, no polling needed
+  const renderStatus = useRenderStatus(renderId);
+
+  // React to render status changes
   useEffect(() => {
-    return () => {
-      cancelledRef.current = true;
-      if (pollTimerRef.current) {
-        clearTimeout(pollTimerRef.current);
-        pollTimerRef.current = null;
-      }
-    };
-  }, []);
+    if (!renderStatus || shareState !== "rendering") return;
+    if (renderStatus.status === "completed") {
+      setShareState("ready");
+      setOutputUrl(renderStatus.outputUrl ?? null);
+    } else if (renderStatus.status === "failed") {
+      setShareState("failed");
+    }
+  }, [renderStatus, shareState]);
+
+  const progress = renderStatus?.progress ?? 0;
 
   const handleShare = async () => {
     if (isSharingRef.current || isSavingDraftRef.current) return;
@@ -45,50 +58,32 @@ export default function Step3Screen() {
     setSavedDraft(false);
     setShareError(null);
     try {
-      cancelledRef.current = false;
-
       // Step 1: Save or update project
       setShareState("saving");
-      setProgress(0);
       let projectId = state.projectId;
       if (projectId) {
-        await updateProject(projectId, composition);
-      } else {
-        projectId = await createProject(
-          `Eid Card ${Date.now()}`,
+        await updateProjectMutation({
+          id: projectId as Id<"projects">,
           composition,
-        );
+        });
+      } else {
+        projectId = await createProjectMutation({
+          name: `Eid Card ${Date.now()}`,
+          templateId: "default",
+          composition,
+        });
         setProjectId(projectId);
       }
-      if (cancelledRef.current) return;
 
-      // Step 2: Render video
+      // Step 2: Request render — status updates arrive reactively via useRenderStatus
       setShareState("rendering");
-      const renderId = await requestRender(projectId);
-      if (cancelledRef.current) return;
-
-      // Step 3: Poll for completion
-      const poll = async () => {
-        if (cancelledRef.current) return;
-        const status = await getRenderStatus(renderId);
-        if (cancelledRef.current) return;
-        setProgress(status.progress);
-
-        if (status.status === "completed") {
-          setShareState("ready");
-          setOutputUrl(status.outputUrl ?? null);
-        } else if (status.status === "failed") {
-          setShareState("failed");
-        } else if (!cancelledRef.current) {
-          pollTimerRef.current = setTimeout(poll, 500);
-        }
-      };
-      await poll();
+      const newRenderId = await requestRenderMutation({
+        projectId: projectId as Id<"projects">,
+      });
+      setRenderId(newRenderId);
     } catch (error) {
-      if (!cancelledRef.current) {
-        setShareState("failed");
-        setShareError(error instanceof Error ? error.message : "Something went wrong");
-      }
+      setShareState("failed");
+      setShareError(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       isSharingRef.current = false;
     }
@@ -99,9 +94,16 @@ export default function Step3Screen() {
     isSavingDraftRef.current = true;
     try {
       if (state.projectId) {
-        await updateProject(state.projectId, composition);
+        await updateProjectMutation({
+          id: state.projectId as Id<"projects">,
+          composition,
+        });
       } else {
-        const newId = await createProject(`Draft ${Date.now()}`, composition);
+        const newId = await createProjectMutation({
+          name: `Draft ${Date.now()}`,
+          templateId: "default",
+          composition,
+        });
         setProjectId(newId);
       }
       setSavedDraft(true);

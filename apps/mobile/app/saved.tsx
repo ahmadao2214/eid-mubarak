@@ -1,13 +1,12 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
   Pressable,
   ScrollView,
-  RefreshControl,
   ActivityIndicator,
 } from "react-native";
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Modal,
@@ -20,52 +19,25 @@ import {
 import { Button, ButtonText } from "@/components/ui/button";
 import { ProjectCard } from "@/components/ProjectCard";
 import { EmptyState } from "@/components/EmptyState";
-import { listAllProjects, removeProject } from "@/repositories/projects";
+import { useAllProjects, useRemoveProject } from "@/hooks/useConvexData";
 import { useToast } from "@/context/ToastContext";
 import { Colors } from "@/lib/colors";
 import type { Project } from "@/types";
+import type { Id } from "../../convex/_generated/dataModel";
 
 export default function SavedScreen() {
   const router = useRouter();
   const { showToast } = useToast();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { projects, isLoading: loading } = useAllProjects();
+  const removeProjectMutation = useRemoveProject();
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
   const isDeletingRef = useRef(false);
-
-  const loadProjects = useCallback(async (isRefresh = false) => {
-    try {
-      const list = await listAllProjects();
-      setProjects(list);
-    } catch {
-      showToast("Failed to load projects", "error");
-    } finally {
-      if (!isRefresh) setLoading(false);
-    }
-  }, [showToast]);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadProjects();
-    }, [loadProjects]),
-  );
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await loadProjects(true);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [loadProjects]);
 
   const handleDelete = async () => {
     if (!deleteTarget || isDeletingRef.current) return;
     isDeletingRef.current = true;
     try {
-      await removeProject(deleteTarget.id);
-      setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+      await removeProjectMutation({ id: deleteTarget.id as Id<"projects"> });
     } catch {
       showToast("Failed to delete project. Please try again.", "error");
     } finally {
@@ -79,9 +51,6 @@ export default function SavedScreen() {
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.gold} />
-        }
       >
         {/* Header */}
         <View

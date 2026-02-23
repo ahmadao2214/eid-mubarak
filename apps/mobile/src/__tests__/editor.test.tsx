@@ -28,10 +28,10 @@ jest.mock("@/hooks/useRemoveBg", () => ({
   removeBackground: jest.fn().mockResolvedValue({ success: false }),
 }));
 
-jest.mock("@/repositories/assets", () => ({
-  listCelebrityHeads: jest.fn().mockResolvedValue([
+jest.mock("@/hooks/useConvexData", () => ({
+  useCelebrityHeads: () => [
     { id: "drake", name: "Drake", imageUrl: "https://example.com/drake.png", thumbnail: "https://example.com/drake-thumb.png" },
-  ]),
+  ],
 }));
 
 jest.mock("@/lib/haptics", () => ({

@@ -1,25 +1,17 @@
-import React, { useState, useCallback } from "react";
+import React from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TemplateCard } from "@/components/TemplateCard";
 import { ProjectCard } from "@/components/ProjectCard";
 import { PRESETS } from "@/lib/presets";
-import { listAllProjects } from "@/repositories/projects";
+import { useAllProjects } from "@/hooks/useConvexData";
 import { Colors } from "@/lib/colors";
-import type { Project } from "@/types";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [recentProjects, setRecentProjects] = useState<Project[]>([]);
-
-  useFocusEffect(
-    useCallback(() => {
-      listAllProjects()
-        .then((projects) => setRecentProjects(projects.slice(0, 3)))
-        .catch(() => {});
-    }, []),
-  );
+  const { projects } = useAllProjects();
+  const recentProjects = projects.slice(0, 3);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bgPrimary }}>

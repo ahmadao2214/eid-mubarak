@@ -14,6 +14,13 @@ export interface ConfirmUploadParams {
   type: "user-photo" | "rendered-video";
 }
 
+export interface UploadResult {
+  s3Key: string | null;
+  s3Url?: string; // Public S3 URL to display/use the uploaded file
+  success: boolean;
+  error?: string;
+}
+
 // ── Background Removal ────────────────────────────────────
 
 export interface RemoveBgParams {
