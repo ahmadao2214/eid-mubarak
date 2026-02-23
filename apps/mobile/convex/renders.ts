@@ -121,8 +121,6 @@ export const executeRender = internalAction({
       status: "rendering",
     });
 
-    let lambdaRenderId: string;
-    let bucketName: string;
     try {
       const result = await renderMediaOnLambda({
         region,
@@ -133,8 +131,17 @@ export const executeRender = internalAction({
         codec: "h264",
         outName: `renders/${renderId}.mp4`,
       });
-      lambdaRenderId = result.renderId;
-      bucketName = result.bucketName;
+      await ctx.scheduler.runAfter(
+        POLL_INTERVAL_MS,
+        internal.renders.pollRenderProgress,
+        {
+          renderId,
+          lambdaRenderId: result.renderId,
+          bucketName: result.bucketName,
+          functionName,
+          region,
+        },
+      );
     } catch (err) {
       await ctx.runMutation(internal.renders.internalUpdateProgress, {
         renderId,
@@ -142,46 +149,51 @@ export const executeRender = internalAction({
         status: "failed",
         error: err instanceof Error ? err.message : "Lambda render failed",
       });
-      return;
     }
+  },
+});
 
-    let done = false;
-    while (!done) {
-      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+export const pollRenderProgress = internalAction({
+  args: {
+    renderId: v.id("renders"),
+    lambdaRenderId: v.string(),
+    bucketName: v.string(),
+    functionName: v.string(),
+    region: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const progress = await getRenderProgress({
+      renderId: args.lambdaRenderId,
+      bucketName: args.bucketName,
+      functionName: args.functionName,
+      region: args.region as AwsRegion,
+    });
 
-      const progress = await getRenderProgress({
-        renderId: lambdaRenderId,
-        bucketName,
-        functionName,
-        region,
+    if (progress.done) {
+      await ctx.runMutation(internal.renders.internalUpdateProgress, {
+        renderId: args.renderId,
+        progress: 100,
+        status: "completed",
+        outputS3Url: progress.outputFile ?? undefined,
       });
-
-      if (progress.done) {
-        done = true;
-        const outputUrl = progress.outputFile
-          ? `https://${bucketName}.s3.${region}.amazonaws.com/renders/${renderId}.mp4`
-          : undefined;
-        await ctx.runMutation(internal.renders.internalUpdateProgress, {
-          renderId,
-          progress: 100,
-          status: "completed",
-          outputS3Url: outputUrl,
-        });
-      } else if (progress.fatalErrorEncountered) {
-        done = true;
-        await ctx.runMutation(internal.renders.internalUpdateProgress, {
-          renderId,
-          progress: Math.round((progress.overallProgress ?? 0) * 100),
-          status: "failed",
-          error: progress.errors?.[0]?.message ?? "Render failed",
-        });
-      } else {
-        await ctx.runMutation(internal.renders.internalUpdateProgress, {
-          renderId,
-          progress: Math.round((progress.overallProgress ?? 0) * 100),
-          status: "rendering",
-        });
-      }
+    } else if (progress.fatalErrorEncountered) {
+      await ctx.runMutation(internal.renders.internalUpdateProgress, {
+        renderId: args.renderId,
+        progress: Math.round((progress.overallProgress ?? 0) * 100),
+        status: "failed",
+        error: progress.errors?.[0]?.message ?? "Render failed",
+      });
+    } else {
+      await ctx.runMutation(internal.renders.internalUpdateProgress, {
+        renderId: args.renderId,
+        progress: Math.round((progress.overallProgress ?? 0) * 100),
+        status: "rendering",
+      });
+      await ctx.scheduler.runAfter(
+        POLL_INTERVAL_MS,
+        internal.renders.pollRenderProgress,
+        args,
+      );
     }
   },
 });
