@@ -11,6 +11,7 @@
 import type * as assets from "../assets.js";
 import type * as projects from "../projects.js";
 import type * as renders from "../renders.js";
+import type * as rendersLambda from "../rendersLambda.js";
 import type * as sounds from "../sounds.js";
 import type * as storage from "../storage.js";
 import type * as uploads from "../uploads.js";
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   assets: typeof assets;
   projects: typeof projects;
   renders: typeof renders;
+  rendersLambda: typeof rendersLambda;
   sounds: typeof sounds;
   storage: typeof storage;
   uploads: typeof uploads;
