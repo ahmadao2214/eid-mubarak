@@ -100,7 +100,7 @@ The Remotion `packages/remotion/` package has the **exact** implementation with 
 
 ## Implementation Phases
 
-### Phase 1: Preview Web App (TDD)
+### Phase 1: Preview Web App (TDD) ✅ COMPLETED
 
 Create a minimal web app that hosts the Remotion Player and accepts composition props via postMessage.
 
@@ -158,7 +158,7 @@ Create a minimal web app that hosts the Remotion Player and accepts composition 
 - **Import** `EidMemeVideo` from `@eid-meme-maker/remotion` (monorepo workspace dependency)
 - **Deploy** to Vercel or Convex site URL
 
-### Phase 2: WebView Integration (TDD)
+### Phase 2: WebView Integration (TDD) ✅ COMPLETED
 
 #### Test Phase 2a: WebView component tests
 - **Write** `apps/mobile/src/__tests__/RemotionPreview.test.tsx`
@@ -211,7 +211,7 @@ Create a minimal web app that hosts the Remotion Player and accepts composition 
 - **Edit** `apps/mobile/app/create/editor.tsx` — Replace `AnimatedCardPreview` with `RemotionPreview`
 - **Add** `EXPO_PUBLIC_PREVIEW_URL` to `.env.example` and `.env`
 
-### Phase 3: Remotion Lambda Render Pipeline (TDD)
+### Phase 3: Remotion Lambda Render Pipeline (TDD) ✅ COMPLETED
 
 #### Test Phase 3a: Render pipeline tests
 - **Write** `convex/__tests__/renders.test.ts`

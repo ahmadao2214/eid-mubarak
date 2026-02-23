@@ -38,6 +38,14 @@ jest.mock("@/lib/haptics", () => ({
   lightTap: jest.fn(),
 }));
 
+jest.mock("react-native-webview", () => {
+  const { View } = require("react-native");
+  return {
+    __esModule: true,
+    WebView: (props: Record<string, unknown>) => <View testID={props.testID as string} />,
+  };
+});
+
 beforeEach(() => {
   jest.clearAllMocks();
 });

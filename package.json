@@ -1,7 +1,10 @@
 {
   "name": "eid-meme-maker",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "dependencies": {
     "@aws-sdk/client-s3": "^3.700.0",
     "@aws-sdk/s3-request-presigner": "^3.700.0"
@@ -19,5 +22,8 @@
     "jest": "^29.7.0",
     "turbo": "^2"
   },
-  "packageManager": "npm@11.4.2"
+  "packageManager": "npm@11.4.2",
+  "optionalDependencies": {
+    "@rollup/rollup-darwin-arm64": "^4.59.0"
+  }
 }
