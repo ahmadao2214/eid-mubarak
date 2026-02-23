@@ -37,6 +37,13 @@ export default function App() {
     if (isUpdateMessage(parsed)) {
       setComposition(parsed.composition);
       if (!ready) setReady(true);
+      // Acknowledge receipt so React Native knows we're listening
+      const rn = (window as Record<string, unknown>).ReactNativeWebView as
+        | { postMessage: (msg: string) => void }
+        | undefined;
+      if (rn) {
+        rn.postMessage(JSON.stringify({ type: "ACK" }));
+      }
     }
   }, [ready]);
 
@@ -44,6 +51,16 @@ export default function App() {
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [handleMessage]);
+
+  // Notify React Native WebView that we're ready to receive messages
+  useEffect(() => {
+    const rn = (window as Record<string, unknown>).ReactNativeWebView as
+      | { postMessage: (msg: string) => void }
+      | undefined;
+    if (rn) {
+      rn.postMessage(JSON.stringify({ type: "READY" }));
+    }
+  }, []);
 
   return (
     <div data-testid="preview-root" style={{ width: "100%", height: "100%" }}>

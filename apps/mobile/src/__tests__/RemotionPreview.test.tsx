@@ -11,14 +11,16 @@ jest.mock("react-native-webview", () => {
     __esModule: true,
     WebView: React.forwardRef(function MockWebView(
       props: Record<string, unknown>,
-      ref: React.Ref<{ postMessage: typeof mockPostMessage }>,
+      ref: React.Ref<{ injectJavaScript: typeof mockPostMessage }>,
     ) {
-      React.useImperativeHandle(ref, () => ({ postMessage: mockPostMessage }));
+      React.useImperativeHandle(ref, () => ({
+        injectJavaScript: mockPostMessage,
+      }));
       React.useEffect(() => {
-        if (typeof props.onLoad === "function") {
-          (props.onLoad as () => void)();
+        if (typeof props.onLoadEnd === "function") {
+          props.onLoadEnd();
         }
-      }, [props.onLoad]);
+      }, [props.onLoadEnd]);
       return <RN.View testID={props.testID as string} />;
     }),
   };
@@ -80,7 +82,7 @@ describe("RemotionPreview", () => {
     expect(screen.getByTestId("remotion-webview")).toBeTruthy();
   });
 
-  it("sends composition via postMessage after WebView loads", () => {
+  it("injects composition via injectJavaScript after WebView loads", () => {
     render(
       <RemotionPreview
         composition={MOCK_COMPOSITION}
@@ -89,12 +91,12 @@ describe("RemotionPreview", () => {
       />,
     );
     expect(mockPostMessage).toHaveBeenCalled();
-    const message = JSON.parse(mockPostMessage.mock.calls[0][0]);
-    expect(message.type).toBe("UPDATE_COMPOSITION");
-    expect(message.composition.width).toBe(1080);
+    const jsCode = mockPostMessage.mock.calls[0][0];
+    expect(jsCode).toContain("UPDATE_COMPOSITION");
+    expect(jsCode).toContain("1080");
   });
 
-  it("sends updated composition when props change", () => {
+  it("injects updated composition when props change", () => {
     const { rerender } = render(
       <RemotionPreview
         composition={MOCK_COMPOSITION}
@@ -111,9 +113,8 @@ describe("RemotionPreview", () => {
       <RemotionPreview composition={updated} width={300} height={534} />,
     );
     expect(mockPostMessage).toHaveBeenCalled();
-    const message = JSON.parse(
-      mockPostMessage.mock.calls[mockPostMessage.mock.calls.length - 1][0],
-    );
-    expect(message.composition.textSlots[0].text).toBe("Updated!");
+    const lastCall =
+      mockPostMessage.mock.calls[mockPostMessage.mock.calls.length - 1][0];
+    expect(lastCall).toContain("Updated!");
   });
 });

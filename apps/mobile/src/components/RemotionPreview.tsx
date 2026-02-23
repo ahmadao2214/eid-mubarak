@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 import type { CompositionProps } from "@/types";
@@ -17,16 +17,32 @@ export function RemotionPreview({ composition, width, height }: RemotionPreviewP
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
+  const injectComposition = useCallback(
+    (comp: CompositionProps) => {
+      if (!webViewRef.current) return;
+      const payload = JSON.stringify({
+        type: "UPDATE_COMPOSITION",
+        composition: comp,
+      });
+      webViewRef.current.injectJavaScript(`
+        window.dispatchEvent(new MessageEvent('message', { data: ${JSON.stringify(payload)} }));
+        true;
+      `);
+    },
+    [],
+  );
+
+  // After page loads, wait for React to mount then send composition
   useEffect(() => {
-    if (loaded && webViewRef.current) {
-      webViewRef.current.postMessage(
-        JSON.stringify({
-          type: "UPDATE_COMPOSITION",
-          composition,
-        }),
-      );
-    }
-  }, [composition, loaded]);
+    if (!loaded) return;
+    const timer = setTimeout(() => injectComposition(composition), 500);
+    return () => clearTimeout(timer);
+  }, [loaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Send composition updates immediately after initial load
+  useEffect(() => {
+    if (loaded) injectComposition(composition);
+  }, [composition, loaded, injectComposition]);
 
   if (!PREVIEW_URL || error) {
     return (
@@ -51,7 +67,7 @@ export function RemotionPreview({ composition, width, height }: RemotionPreviewP
         ref={webViewRef}
         testID="remotion-webview"
         source={{ uri: PREVIEW_URL }}
-        onLoad={() => setLoaded(true)}
+        onLoadEnd={() => setLoaded(true)}
         onError={() => setError(true)}
         style={[
           styles.webview,
