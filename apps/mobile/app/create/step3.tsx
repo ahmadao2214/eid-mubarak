@@ -10,18 +10,30 @@ import {
   useRequestRender,
   useRenderStatus,
 } from "@/hooks/useConvexData";
+import { useUpload } from "@/hooks/useUpload";
 import { downloadAndShare, saveToGallery } from "@/hooks/useShare";
 import { useToast } from "@/context/ToastContext";
 import { Colors } from "@/lib/colors";
 import type { Id } from "../../convex/_generated/dataModel";
+import type { CompositionProps } from "@/types/composition";
+
+function isLocalImageUrl(url: string): boolean {
+  if (!url?.trim()) return false;
+  return (
+    url.startsWith("file://") ||
+    url.startsWith("content://") ||
+    (!url.startsWith("http://") && !url.startsWith("https://"))
+  );
+}
 
 type ShareState = "idle" | "saving" | "rendering" | "ready" | "failed";
 
 export default function Step3Screen() {
   const router = useRouter();
   const { showToast } = useToast();
-  const { state, setProjectId } = useComposition();
+  const { state, setProjectId, setHeadImage } = useComposition();
   const { composition } = state;
+  const { uploadPhoto } = useUpload();
 
   const createProjectMutation = useCreateProject();
   const updateProjectMutation = useUpdateProject();
@@ -52,25 +64,47 @@ export default function Step3Screen() {
 
   const progress = renderStatus?.progress ?? 0;
 
+  /** If head image is a local file, upload to S3 and return composition with S3 URL; otherwise return current composition. Returns null if upload fails. */
+  const ensureHeadImageUploaded = async (): Promise<CompositionProps | null> => {
+    const headUrl = composition.head?.imageUrl;
+    if (!headUrl || !isLocalImageUrl(headUrl)) return composition;
+
+    const result = await uploadPhoto(headUrl);
+    if (!result.success || !result.s3Url) return null;
+
+    const updatedComposition: CompositionProps = {
+      ...composition,
+      head: { ...composition.head, imageUrl: result.s3Url },
+    };
+    setHeadImage(result.s3Url);
+    return updatedComposition;
+  };
+
   const handleShare = async () => {
     if (isSharingRef.current || isSavingDraftRef.current) return;
     isSharingRef.current = true;
     setSavedDraft(false);
     setShareError(null);
     try {
-      // Step 1: Save or update project
       setShareState("saving");
+      const compositionToSave = await ensureHeadImageUploaded();
+      if (!compositionToSave) {
+        setShareState("failed");
+        setShareError("Failed to upload photo. Please try again.");
+        return;
+      }
+
       let projectId = state.projectId;
       if (projectId) {
         await updateProjectMutation({
           id: projectId as Id<"projects">,
-          composition,
+          composition: compositionToSave,
         });
       } else {
         projectId = await createProjectMutation({
           name: `Eid Card ${Date.now()}`,
           templateId: "default",
-          composition,
+          composition: compositionToSave,
         });
         setProjectId(projectId);
       }
@@ -93,16 +127,22 @@ export default function Step3Screen() {
     if (isSavingDraftRef.current) return;
     isSavingDraftRef.current = true;
     try {
+      const compositionToSave = await ensureHeadImageUploaded();
+      if (!compositionToSave) {
+        showToast("Failed to upload photo. Please try again.", "error");
+        return;
+      }
+
       if (state.projectId) {
         await updateProjectMutation({
           id: state.projectId as Id<"projects">,
-          composition,
+          composition: compositionToSave,
         });
       } else {
         const newId = await createProjectMutation({
           name: `Draft ${Date.now()}`,
           templateId: "default",
-          composition,
+          composition: compositionToSave,
         });
         setProjectId(newId);
       }
