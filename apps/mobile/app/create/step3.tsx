@@ -91,6 +91,7 @@ export default function Step3Screen() {
       if (!compositionToSave) {
         setShareState("failed");
         setShareError("Failed to upload photo. Please try again.");
+        isSharingRef.current = false;
         return;
       }
 
@@ -130,6 +131,7 @@ export default function Step3Screen() {
       const compositionToSave = await ensureHeadImageUploaded();
       if (!compositionToSave) {
         showToast("Failed to upload photo. Please try again.", "error");
+        isSavingDraftRef.current = false;
         return;
       }
 
