@@ -4,6 +4,11 @@ import { useUpload } from "../hooks/useUpload";
 const mockGetUploadUrl = jest.fn();
 const mockConfirmUpload = jest.fn();
 
+jest.mock("expo-file-system", () => ({
+  readAsStringAsync: jest.fn().mockResolvedValue(""), // empty base64 -> empty blob
+  EncodingType: { Base64: "base64" },
+}));
+
 jest.mock("convex/react", () => {
   let useActionCallCount = 0;
   return {
@@ -29,9 +34,8 @@ describe("useUpload", () => {
     });
     mockConfirmUpload.mockResolvedValue(undefined);
     global.fetch = jest.fn();
-    (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({ blob: () => Promise.resolve(new Blob()) })
-      .mockResolvedValueOnce({ ok: true });
+    // file:// URIs use expo-file-system, so fetch is only called once (PUT to presigned URL)
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
   });
 
   describe("uploadPhoto", () => {
@@ -74,7 +78,6 @@ describe("useUpload", () => {
     it("returns failure when upload fails", async () => {
       (global.fetch as jest.Mock)
         .mockReset()
-        .mockResolvedValueOnce({ blob: () => Promise.resolve(new Blob()) })
         .mockResolvedValueOnce({ ok: false, status: 403 });
       const { result } = renderHook(() => useUpload());
 

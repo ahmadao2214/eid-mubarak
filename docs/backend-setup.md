@@ -103,3 +103,20 @@ Static assets (backgrounds, Lottie, celebrity heads, fonts) go into S3 and are s
 
 4. **Use in the app**  
    The app already calls `api.assets.listByType` and `api.assets.listCelebrityHeads` via repositories and `useConvexData`; once seeded, those queries return the S3-backed assets.
+
+---
+
+## Troubleshooting
+
+### "Missing S3 env: S3_BUCKET, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY"
+
+This error comes from **Convex** when you use upload (e.g. Save as draft with a photo) or when the app requests a presigned download URL. The Convex backend needs these variables on **its** side, not in the app’s `.env`.
+
+**Fix:** In the [Convex Dashboard](https://dashboard.convex.dev), open your project → **Settings** → **Environment Variables**. Add:
+
+- `S3_BUCKET` (e.g. `eid-meme-maker-assets`)
+- `AWS_REGION` (e.g. `us-east-1`)
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+Use the same values from Phase 1 (the IAM user created for Convex). Save and redeploy if needed (`npx convex dev` or **Deploy** in the dashboard). The app’s `apps/mobile/.env` is only for `EXPO_PUBLIC_CONVEX_URL`; S3 credentials are never sent from the client.

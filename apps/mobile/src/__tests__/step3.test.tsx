@@ -32,8 +32,20 @@ jest.mock("@/hooks/useShare", () => ({
   saveToGallery: jest.fn().mockResolvedValue({ success: true }),
 }));
 
+const mockUploadPhoto = jest.fn();
+jest.mock("@/hooks/useUpload", () => ({
+  useUpload: () => ({
+    uploadPhoto: mockUploadPhoto,
+  }),
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUploadPhoto.mockResolvedValue({
+    success: true,
+    s3Url: "https://s3.example.com/head.png",
+    s3Key: "user-photos/head.png",
+  });
   mockCreateProjectFn.mockResolvedValue("proj-123");
   mockRequestRenderFn.mockResolvedValue("render-123");
   mockRenderStatusValue = {
