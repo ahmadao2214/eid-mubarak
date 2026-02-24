@@ -1,11 +1,19 @@
 import { convexTest } from "convex-test";
-import { expect, test, describe } from "vitest";
+import { expect, test, describe, vi, beforeEach, afterEach } from "vitest";
 import { api } from "../_generated/api";
 import schema from "../schema";
 
 const modules = import.meta.glob("../**/*.*s");
 
 describe("renders", () => {
+  // Prevent convex-test from running scheduled executeRender (would trigger write-outside-transaction in fake).
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   test("request creates a pending render", async () => {
     const t = convexTest(schema, modules);
     // Create a project first

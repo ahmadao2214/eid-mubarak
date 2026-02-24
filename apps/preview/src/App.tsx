@@ -38,7 +38,7 @@ export default function App() {
       setComposition(parsed.composition);
       if (!ready) setReady(true);
       // Acknowledge receipt so React Native knows we're listening
-      const rn = (window as Record<string, unknown>).ReactNativeWebView as
+      const rn = (window as unknown as Record<string, unknown>).ReactNativeWebView as
         | { postMessage: (msg: string) => void }
         | undefined;
       if (rn) {
@@ -54,7 +54,7 @@ export default function App() {
 
   // Notify React Native WebView that we're ready to receive messages
   useEffect(() => {
-    const rn = (window as Record<string, unknown>).ReactNativeWebView as
+    const rn = (window as unknown as Record<string, unknown>).ReactNativeWebView as
       | { postMessage: (msg: string) => void }
       | undefined;
     if (rn) {

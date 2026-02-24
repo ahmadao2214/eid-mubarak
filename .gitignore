@@ -28,6 +28,7 @@ web-build/
 # IDE
 .vscode/
 .idea/
+.cursor/
 
 # OS
 .DS_Store
@@ -46,3 +47,7 @@ yarn-error.*
 
 # Convex (boilerplate README; docs in docs/backend-setup.md)
 convex/README.md
+
+# Phase 4 asset manifest and local asset files (copy example, add your paths)
+scripts/asset-manifest.json
+scripts/asset-files/
