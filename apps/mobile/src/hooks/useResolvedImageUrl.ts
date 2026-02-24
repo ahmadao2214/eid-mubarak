@@ -43,7 +43,7 @@ export function useResolvedImageUrl(uri: string | null | undefined): string | nu
     return () => {
       cancelled = true;
     };
-  }, [uri, getDownloadUrl]);
+  }, [uri]);
 
   if (uri == null || uri === "") return uri;
   if (extractS3Key(uri) == null) return uri;
