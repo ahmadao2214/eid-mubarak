@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Mountain Road",
+    "type": "background",
+    "localPath": "scripts/asset-files/backgrounds/mountain-road.jpg",
+    "s3Key": "assets/backgrounds/mountain-road.jpg",
+    "tags": ["zohran", "preset"]
+  },
+  {
+    "name": "drake",
+    "type": "celebrity_head",
+    "localPath": "scripts/asset-files/heads/drake.png",
+    "s3Key": "assets/heads/drake.png",
+    "tags": []
+  }
+]
