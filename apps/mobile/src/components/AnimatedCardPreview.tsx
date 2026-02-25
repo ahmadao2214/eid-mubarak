@@ -15,6 +15,12 @@ import { RN_FONT_MAP } from "@/lib/font-map";
 import { Colors } from "@/lib/colors";
 import { useResolvedImageUrl } from "@/hooks/useResolvedImageUrl";
 
+const PLACEHOLDER_BG_COLORS: Record<string, string> = {
+  "placeholder:mountain-road": "#2a1043",
+  "placeholder:trucker-panel": "#5C3A1E",
+  "placeholder:desert-highway": "#C46A28",
+};
+
 type TextSlot = CompositionProps["textSlots"][number];
 
 type SizeProp = "small" | "large" | { width: number; height: number };
@@ -112,7 +118,7 @@ export function AnimatedCardPreview({ composition, size }: AnimatedCardPreviewPr
   const bgColor =
     composition.background.type === "solid"
       ? composition.background.source
-      : "#333333";
+      : PLACEHOLDER_BG_COLORS[composition.background.source] ?? "#333333";
 
   const headSize = dimensions.width * composition.head.scale;
 

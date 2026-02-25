@@ -84,8 +84,8 @@ export default function SavedScreen() {
           <ActivityIndicator testID="loading-indicator" size="large" color={Colors.gold} />
         ) : projects.length === 0 ? (
           <EmptyState
-            title="No saved projects"
-            subtitle="Create a card to get started"
+            title="No vibes yet"
+            subtitle="Create a card and save it here"
           />
         ) : (
           projects.map((project) => (

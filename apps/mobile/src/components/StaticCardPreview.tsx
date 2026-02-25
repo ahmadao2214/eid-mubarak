@@ -10,17 +10,43 @@ interface StaticCardPreviewProps {
 }
 
 /**
+ * Maps Remotion placeholder background sources to representative native colors.
+ * These approximate the SVG-generated backgrounds in the Remotion preview.
+ */
+const PLACEHOLDER_BG_COLORS: Record<string, string> = {
+  "placeholder:mountain-road": "#2a1043",
+  "placeholder:trucker-panel": "#5C3A1E",
+  "placeholder:desert-highway": "#C46A28",
+};
+
+/**
+ * Maps decorative element placeholder sources to simple visual hints.
+ */
+const DECORATIVE_COLORS: Record<string, { color: string; shape: "heart" | "circle" | "border" }> = {
+  "placeholder:rose-heart": { color: "#FF69B4", shape: "heart" },
+  "placeholder:crescent-moon": { color: "#FFD700", shape: "circle" },
+  "placeholder:gold-particles": { color: "#FFD700", shape: "circle" },
+  "placeholder:trucker-art-border": { color: "#F5A623", shape: "border" },
+  "placeholder:sparkle-overlay": { color: "#FFD700", shape: "circle" },
+};
+
+function resolveBackground(source: string, type: string): string {
+  if (type === "solid") return source;
+  return PLACEHOLDER_BG_COLORS[source] ?? "#333333";
+}
+
+/**
  * Lightweight, non-animated card preview for use in grids/thumbnails.
- * Renders the same visual layout as AnimatedCardPreview but with zero
- * Reanimated overhead — just plain Views and Text.
+ * Renders the same visual layout as the Remotion preview but with zero
+ * Reanimated or WebView overhead — just plain Views and Text.
  */
 export function StaticCardPreview({ composition, size }: StaticCardPreviewProps) {
   const scale = size.width / composition.width;
 
-  const bgColor =
-    composition.background.type === "solid"
-      ? composition.background.source
-      : "#333333";
+  const bgColor = resolveBackground(
+    composition.background.source,
+    composition.background.type,
+  );
 
   const headSize = size.width * composition.head.scale;
 
@@ -50,6 +76,30 @@ export function StaticCardPreview({ composition, size }: StaticCardPreviewProps)
         />
       )}
 
+      {/* Decorative element hints */}
+      {composition.decorativeElements.map((el, i) => {
+        const hint = DECORATIVE_COLORS[el.source];
+        if (!hint) return null;
+        const elSize = size.width * (el.scale ?? 0.5) * 0.3;
+        return (
+          <View
+            key={i}
+            style={{
+              position: "absolute",
+              left: (el.position.x / 100) * size.width - elSize / 2,
+              top: (el.position.y / 100) * size.height - elSize / 2,
+              width: elSize,
+              height: hint.shape === "border" ? elSize : elSize,
+              borderRadius: hint.shape === "border" ? 4 : elSize / 2,
+              backgroundColor: hint.shape === "border" ? "transparent" : hint.color,
+              borderWidth: hint.shape === "border" ? 1.5 : 0,
+              borderColor: hint.color,
+              opacity: 0.5,
+            }}
+          />
+        );
+      })}
+
       {/* Head circle */}
       <View
         style={{
@@ -75,8 +125,8 @@ export function StaticCardPreview({ composition, size }: StaticCardPreviewProps)
           key={slot.id}
           style={{
             position: "absolute",
-            left: 0,
-            right: 0,
+            left: 4,
+            right: 4,
             top: (slot.position.y / 100) * size.height,
             textAlign: "center",
             color: slot.color,

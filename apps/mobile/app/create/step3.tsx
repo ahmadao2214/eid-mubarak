@@ -401,7 +401,7 @@ export default function Step3Screen() {
               fontWeight: "600",
             }}
           >
-            {savedDraft ? "Draft saved" : "Save as draft"}
+            {savedDraft ? "Saved to My Vibes" : "Save to My Vibes"}
           </Text>
         </Pressable>
       </ScrollView>
