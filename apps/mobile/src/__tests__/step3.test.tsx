@@ -125,6 +125,23 @@ describe("Step3Screen", () => {
     });
   });
 
+  it("save draft with local head image uploads to S3 then saves project with S3 URL", async () => {
+    renderWithComposition(<Step3Screen />, {
+      initialPresetId: "zohran-classic",
+      initialHeadImage: "file:///cache/photo.png",
+    });
+    fireEvent.press(screen.getByTestId("save-draft-button"));
+    await waitFor(() => {
+      expect(mockUploadPhoto).toHaveBeenCalledWith("file:///cache/photo.png");
+    });
+    await waitFor(() => {
+      expect(mockCreateProjectFn).toHaveBeenCalledTimes(1);
+      const call = mockCreateProjectFn.mock.calls[0][0];
+      expect(call.composition.head.imageUrl).toBe("https://s3.example.com/head.png");
+      expect(screen.getByText("Draft saved")).toBeTruthy();
+    });
+  });
+
   it("back button navigates back", () => {
     renderStep3();
     fireEvent.press(screen.getByTestId("back-button"));

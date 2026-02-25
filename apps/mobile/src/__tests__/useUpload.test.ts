@@ -3,10 +3,17 @@ import { useUpload } from "../hooks/useUpload";
 
 const mockGetUploadUrl = jest.fn();
 const mockConfirmUpload = jest.fn();
+const mockUploadAsync = jest.fn();
 
-jest.mock("expo-file-system", () => ({
-  readAsStringAsync: jest.fn().mockResolvedValue(""), // empty base64 -> empty blob
+jest.mock("@/lib/compressImageForUpload", () => ({
+  compressImageForUpload: jest.fn().mockResolvedValue(null),
+}));
+
+jest.mock("expo-file-system/legacy", () => ({
+  readAsStringAsync: jest.fn().mockResolvedValue(""),
   EncodingType: { Base64: "base64" },
+  FileSystemUploadType: { BINARY_CONTENT: 0 },
+  uploadAsync: (...args: unknown[]) => mockUploadAsync(...args),
 }));
 
 jest.mock("convex/react", () => {
@@ -33,9 +40,9 @@ describe("useUpload", () => {
       publicUrl: "https://my-bucket.s3.us-east-1.amazonaws.com/user-photos/test/123.png",
     });
     mockConfirmUpload.mockResolvedValue(undefined);
-    global.fetch = jest.fn();
-    // file:// URIs use expo-file-system, so fetch is only called once (PUT to presigned URL)
-    (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
+    // On native (iOS/Android in Jest) we use FileSystem.uploadAsync for file:// URIs
+    mockUploadAsync.mockResolvedValue({ status: 200 });
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
   });
 
   describe("uploadPhoto", () => {
@@ -76,9 +83,7 @@ describe("useUpload", () => {
     });
 
     it("returns failure when upload fails", async () => {
-      (global.fetch as jest.Mock)
-        .mockReset()
-        .mockResolvedValueOnce({ ok: false, status: 403 });
+      mockUploadAsync.mockResolvedValueOnce({ status: 403 });
       const { result } = renderHook(() => useUpload());
 
       let uploadResult: { s3Key: string | null; success: boolean; error?: string };

@@ -47,7 +47,7 @@ After Phase 1, from the repo root:
 
 1. **Log in and create/link Convex project** (interactive):
    ```bash
-   npx convex dev
+   bunx convex dev
    ```
    When prompted, log in to Convex and create a new project or link an existing one. This will create `convex.json` and deploy the schema.
 
@@ -77,7 +77,7 @@ Static assets (backgrounds, Lottie, celebrity heads, fonts) go into S3 and are s
 
 - Phase 1–3 done (S3 bucket, Convex project, env vars in Convex dashboard).
 - AWS credentials available when running the script (env or `aws configure`).
-- Convex project linked under `apps/mobile` (run `npx convex dev` from `apps/mobile` once).
+- Convex project linked under `apps/mobile` (run `bunx convex dev` from `apps/mobile` once).
 
 ### Steps
 
@@ -94,12 +94,12 @@ Static assets (backgrounds, Lottie, celebrity heads, fonts) go into S3 and are s
 3. **Run the upload-and-seed script** from the repo root:
    ```bash
    export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_REGION=us-east-1 S3_BUCKET=eid-meme-maker-assets
-   node scripts/upload-and-seed-assets.js
+   bun scripts/upload-and-seed-assets.js
    ```
    Or pass a custom manifest path:  
-   `node scripts/upload-and-seed-assets.js path/to/manifest.json`
+   `bun scripts/upload-and-seed-assets.js path/to/manifest.json`
 
-   The script uploads each file to S3 then runs `npx convex run assets:seed` from `apps/mobile` for each row. The `assets.seed` mutation is idempotent (skips if `s3Key` already exists for that type).
+   The script uploads each file to S3 then runs `bunx convex run assets:seed` from `apps/mobile` for each row. The `assets.seed` mutation is idempotent (skips if `s3Key` already exists for that type).
 
 4. **Use in the app**  
    The app already calls `api.assets.listByType` and `api.assets.listCelebrityHeads` via repositories and `useConvexData`; once seeded, those queries return the S3-backed assets.
@@ -119,4 +119,6 @@ This error comes from **Convex** when you use upload (e.g. Save as draft with a 
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 
-Use the same values from Phase 1 (the IAM user created for Convex). Save and redeploy if needed (`npx convex dev` or **Deploy** in the dashboard). The app’s `apps/mobile/.env` is only for `EXPO_PUBLIC_CONVEX_URL`; S3 credentials are never sent from the client.
+Use the same values from Phase 1 (the IAM user created for Convex). Save and redeploy if needed (`bunx convex dev` or **Deploy** in the dashboard). The app’s `apps/mobile/.env` is only for `EXPO_PUBLIC_CONVEX_URL`; S3 credentials are never sent from the client.
+
+**Or sync from .env:** If you have those four vars in `apps/mobile/.env`, run from repo root: `bun scripts/sync-aws-env-to-convex.js` to push them into Convex.
