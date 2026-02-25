@@ -1,5 +1,6 @@
+"use node";
+
 import { action } from "./_generated/server";
-import { internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import {
@@ -68,23 +69,6 @@ export const getUploadUrl = action({
 });
 
 /**
- * Internal mutation: record upload in DB. Only called by confirmUpload action after S3 verification.
- */
-export const confirmUploadRecord = internalMutation({
-  args: {
-    s3Key: v.string(),
-    type: v.union(v.literal("user-photo"), v.literal("rendered-video")),
-  },
-  handler: async (ctx, { s3Key, type }) => {
-    await ctx.db.insert("uploads", {
-      s3Key,
-      type,
-      createdAt: Date.now(),
-    });
-  },
-});
-
-/**
  * Confirm that an upload completed and record it in the uploads table.
  * Verifies the object exists in S3 before recording to avoid invalid DB entries.
  */
@@ -127,7 +111,7 @@ export const confirmUpload = action({
       );
     }
 
-    await ctx.runMutation(internal.storage.confirmUploadRecord, { s3Key, type });
+    await ctx.runMutation(internal.storageMutations.confirmUploadRecord, { s3Key, type });
   },
 });
 

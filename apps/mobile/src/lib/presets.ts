@@ -31,7 +31,7 @@ const zohranClassic: PresetConfig = {
     head: {
       imageUrl: "https://mock-s3.example.com/heads/zohran.png",
       position: { x: 50, y: 40 },
-      scale: 0.45,
+      scale: 1.35,
       enterAtFrame: 15,
       animation: "zoom-pulse",
       animationConfig: { pulseSpeed: 1 },
@@ -88,7 +88,7 @@ const truckerArt: PresetConfig = {
     head: {
       imageUrl: "",
       position: { x: 50, y: 42 },
-      scale: 0.4,
+      scale: 1.2,
       enterAtFrame: 10,
       animation: "pop",
       animationConfig: { popDamping: 10 },
@@ -158,7 +158,7 @@ const celebrityGreeting: PresetConfig = {
     head: {
       imageUrl: "",
       position: { x: 50, y: 38 },
-      scale: 0.5,
+      scale: 1.5,
       enterAtFrame: 10,
       animation: "pop",
       animationConfig: { popDamping: 14 },
@@ -232,7 +232,7 @@ const sixHeadSpiral: PresetConfig = {
     head: {
       imageUrl: "",
       position: { x: 50, y: 45 },
-      scale: 0.3,
+      scale: 0.9,
       enterAtFrame: 15,
       animation: "spiral-multiply",
       animationConfig: { spiralCount: 6 },
@@ -286,7 +286,7 @@ const customPreset: PresetConfig = {
     head: {
       imageUrl: "",
       position: { x: 50, y: 45 },
-      scale: 0.4,
+      scale: 1.2,
       enterAtFrame: 15,
       animation: "pop",
       animationConfig: { popDamping: 12 },

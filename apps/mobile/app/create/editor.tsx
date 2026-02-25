@@ -15,7 +15,6 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useComposition } from "@/context/CompositionContext";
 import { RemotionPreview } from "@/components/RemotionPreview";
-import { LetterAvatar } from "@/components/LetterAvatar";
 import { PRESETS } from "@/lib/presets";
 import { Colors } from "@/lib/colors";
 import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
@@ -356,7 +355,7 @@ export default function EditorScreen() {
                   </Text>
                 </Pressable>
 
-                {/* Celebrity heads with LetterAvatar fallback */}
+                {/* Celebrity heads with real images */}
                 {celebHeads.map((celeb) => {
                   const isSelected = selectedHeadId === celeb.id;
                   return (
@@ -366,11 +365,22 @@ export default function EditorScreen() {
                       onPress={() => handleSelectCeleb(celeb)}
                       style={{ alignItems: "center", marginRight: 14, width: 80 }}
                     >
-                      <LetterAvatar
-                        name={celeb.name}
-                        size={64}
-                        selected={isSelected}
-                      />
+                      <View
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 32,
+                          borderWidth: 3,
+                          borderColor: isSelected ? Colors.gold : Colors.borderSubtle,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <Image
+                          source={{ uri: celeb.thumbnail ?? celeb.imageUrl }}
+                          style={{ width: 58, height: 58, borderRadius: 29 }}
+                          resizeMode="cover"
+                        />
+                      </View>
                       <Text
                         style={{
                           color: isSelected ? Colors.gold : Colors.textSecondary,

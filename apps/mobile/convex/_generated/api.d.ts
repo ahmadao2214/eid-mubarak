@@ -14,6 +14,7 @@ import type * as renders from "../renders.js";
 import type * as rendersLambda from "../rendersLambda.js";
 import type * as sounds from "../sounds.js";
 import type * as storage from "../storage.js";
+import type * as storageMutations from "../storageMutations.js";
 import type * as uploads from "../uploads.js";
 
 import type {
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   rendersLambda: typeof rendersLambda;
   sounds: typeof sounds;
   storage: typeof storage;
+  storageMutations: typeof storageMutations;
   uploads: typeof uploads;
 }>;
 

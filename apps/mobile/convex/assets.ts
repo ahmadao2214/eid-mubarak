@@ -28,6 +28,13 @@ export const listCelebrityHeads = query({
   },
 });
 
+export const deleteById = mutation({
+  args: { id: v.id("assets") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
+
 // Idempotent seed — skips if s3Key already exists
 export const seed = mutation({
   args: {
