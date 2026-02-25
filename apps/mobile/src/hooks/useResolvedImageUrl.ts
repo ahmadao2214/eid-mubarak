@@ -43,6 +43,7 @@ export function useResolvedImageUrl(uri: string | null | undefined): string | nu
     return () => {
       cancelled = true;
     };
+  // Intentionally [uri] only: including getDownloadUrl would cause infinite re-renders (useAction returns new ref each render).
   }, [uri]);
 
   if (uri == null || uri === "") return uri;
