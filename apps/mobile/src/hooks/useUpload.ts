@@ -32,7 +32,7 @@ async function ensureFileUriForUpload(uri: string): Promise<string> {
   return tempUri;
 }
 
-/** Read local file (file:// or content://) as Blob using legacy FileSystem. Used only on web for local paths. */
+/** Read local file (file:// or content://) as Blob using legacy FileSystem. Used only on web for local paths. atob is available in React Native (Hermes/JSC). */
 async function readLocalFileAsBlob(uri: string): Promise<{ blob: Blob; contentType: string }> {
   const base64 = await FileSystemLegacy.readAsStringAsync(uri, {
     encoding: FileSystemLegacy.EncodingType.Base64,
