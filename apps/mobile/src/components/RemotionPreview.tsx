@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 import type { CompositionProps } from "@/types";
-import { AnimatedCardPreview } from "./AnimatedCardPreview";
+import { StaticCardPreview } from "./StaticCardPreview";
 
 const PREVIEW_URL = process.env.EXPO_PUBLIC_PREVIEW_URL ?? "";
 
@@ -46,7 +46,7 @@ export function RemotionPreview({ composition, width, height }: RemotionPreviewP
 
   if (!PREVIEW_URL || error) {
     return (
-      <AnimatedCardPreview
+      <StaticCardPreview
         composition={composition}
         size={{ width, height }}
       />
@@ -57,7 +57,7 @@ export function RemotionPreview({ composition, width, height }: RemotionPreviewP
     <View style={[styles.container, { width, height }]}>
       {!loaded && (
         <View style={StyleSheet.absoluteFill}>
-          <AnimatedCardPreview
+          <StaticCardPreview
             composition={composition}
             size={{ width, height }}
           />

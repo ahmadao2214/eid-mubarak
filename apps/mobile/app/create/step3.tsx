@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable, Alert, Platform, useWindowDimensions
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useComposition } from "@/context/CompositionContext";
-import { AnimatedCardPreview } from "@/components/AnimatedCardPreview";
+import { RemotionPreview } from "@/components/RemotionPreview";
 import {
   useCreateProject,
   useUpdateProject,
@@ -223,7 +223,11 @@ export default function Step3Screen() {
 
         {/* Preview — height-constrained */}
         <View style={{ alignItems: "center", marginBottom: 20, maxHeight: previewMaxHeight }}>
-          <AnimatedCardPreview composition={composition} size={{ width: Math.round(previewMaxHeight * (9 / 16)), height: previewMaxHeight }} />
+          <RemotionPreview
+            composition={composition}
+            width={Math.round(previewMaxHeight * (9 / 16))}
+            height={previewMaxHeight}
+          />
         </View>
 
         {/* Status message */}

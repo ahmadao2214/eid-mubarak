@@ -295,7 +295,6 @@ export default function EditorScreen() {
                     selected={state.selectedPresetId === preset.id}
                     width={templateCardWidth}
                     testID={`preset-card-${preset.id}`}
-                    livePreview
                   />
                 ))}
               </View>
