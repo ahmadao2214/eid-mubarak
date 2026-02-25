@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, Alert, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useComposition } from "@/context/CompositionContext";
@@ -64,20 +64,24 @@ export default function Step3Screen() {
 
   const progress = renderStatus?.progress ?? 0;
 
-  /** If head image is a local file, upload to S3 and return composition with S3 URL; otherwise return current composition. Returns null if upload fails. */
-  const ensureHeadImageUploaded = async (): Promise<CompositionProps | null> => {
+  /** If head image is a local file, upload to S3 and return composition with S3 URL; otherwise return current composition. On failure returns { composition: null, error } so the UI can show the real error. */
+  const ensureHeadImageUploaded = async (): Promise<
+    { composition: CompositionProps; error?: undefined } | { composition: null; error: string }
+  > => {
     const headUrl = composition.head?.imageUrl;
-    if (!headUrl || !isLocalImageUrl(headUrl)) return composition;
+    if (!headUrl || !isLocalImageUrl(headUrl)) return { composition };
 
     const result = await uploadPhoto(headUrl);
-    if (!result.success || !result.s3Url) return null;
+    if (!result.success || !result.s3Url) {
+      return { composition: null, error: result.error ?? "Failed to upload photo" };
+    }
 
     const updatedComposition: CompositionProps = {
       ...composition,
       head: { ...composition.head, imageUrl: result.s3Url },
     };
     setHeadImage(result.s3Url);
-    return updatedComposition;
+    return { composition: updatedComposition };
   };
 
   const handleShare = async () => {
@@ -87,10 +91,14 @@ export default function Step3Screen() {
     setShareError(null);
     try {
       setShareState("saving");
-      const compositionToSave = await ensureHeadImageUploaded();
+      const { composition: compositionToSave, error: uploadError } = await ensureHeadImageUploaded();
       if (!compositionToSave) {
         setShareState("failed");
-        setShareError("Failed to upload photo. Please try again.");
+        const msg = uploadError ?? "Failed to upload photo. Please try again.";
+        setShareError(msg);
+        if (Platform.OS === "ios" || Platform.OS === "android") {
+          Alert.alert("Upload failed", msg);
+        }
         isSharingRef.current = false;
         return;
       }
@@ -128,9 +136,13 @@ export default function Step3Screen() {
     if (isSavingDraftRef.current) return;
     isSavingDraftRef.current = true;
     try {
-      const compositionToSave = await ensureHeadImageUploaded();
+      const { composition: compositionToSave, error: uploadError } = await ensureHeadImageUploaded();
       if (!compositionToSave) {
-        showToast("Failed to upload photo. Please try again.", "error");
+        const msg = uploadError ?? "Failed to upload photo. Please try again.";
+        showToast(msg, "error");
+        if (Platform.OS === "ios" || Platform.OS === "android") {
+          Alert.alert("Upload failed", msg);
+        }
         isSavingDraftRef.current = false;
         return;
       }

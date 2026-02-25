@@ -6,10 +6,12 @@ import {
   S3Client,
   PutObjectCommand,
   HeadObjectCommand,
+  GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const PRESIGNED_EXPIRY_SECONDS = 15 * 60; // 15 minutes
+const PRESIGNED_GET_EXPIRY_SECONDS = 60 * 60; // 1 hour for loading images
 
 /**
  * Generate a unique S3 key for user uploads.
@@ -126,5 +128,38 @@ export const confirmUpload = action({
     }
 
     await ctx.runMutation(internal.storage.confirmUploadRecord, { s3Key, type });
+  },
+});
+
+/**
+ * Get a presigned GET URL for an S3 object so the app can fetch/display it (e.g. on load).
+ * Use when the bucket is private; pass the s3Key (or extract from stored publicUrl path).
+ */
+export const getDownloadUrl = action({
+  args: {
+    s3Key: v.string(),
+  },
+  handler: async (_ctx, { s3Key }): Promise<{ url: string }> => {
+    const bucket = process.env.S3_BUCKET;
+    const region = process.env.AWS_REGION;
+    const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+
+    if (!bucket || !region || !accessKeyId || !secretAccessKey) {
+      throw new Error(
+        "Missing S3 env: S3_BUCKET, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY"
+      );
+    }
+
+    const client = new S3Client({
+      region,
+      credentials: { accessKeyId, secretAccessKey },
+    });
+
+    const command = new GetObjectCommand({ Bucket: bucket, Key: s3Key });
+    const url = await getSignedUrl(client, command, {
+      expiresIn: PRESIGNED_GET_EXPIRY_SECONDS,
+    });
+    return { url };
   },
 });

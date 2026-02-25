@@ -3,6 +3,7 @@ import { View, Text, Image } from "react-native";
 import type { CompositionProps } from "@/types";
 import { RN_FONT_MAP } from "@/lib/font-map";
 import { Colors } from "@/lib/colors";
+import { useResolvedImageUrl } from "@/hooks/useResolvedImageUrl";
 
 type SizeProp = "small" | "large" | { width: number; height: number };
 
@@ -19,6 +20,7 @@ const SIZES = {
 export function CardPreview({ composition, size }: CardPreviewProps) {
   const dimensions = typeof size === "string" ? SIZES[size] : size;
   const scale = dimensions.width / composition.width;
+  const headImageUrl = useResolvedImageUrl(composition.head?.imageUrl);
 
   const bgColor =
     composition.background.type === "solid"
@@ -68,13 +70,13 @@ export function CardPreview({ composition, size }: CardPreviewProps) {
           overflow: "hidden",
           borderWidth: 2,
           borderColor: Colors.gold,
-          borderStyle: composition.head.imageUrl ? "solid" : "dashed",
+          borderStyle: headImageUrl ? "solid" : "dashed",
         }}
       >
-        {composition.head.imageUrl ? (
+        {headImageUrl ? (
           <Image
             testID="head-image"
-            source={{ uri: composition.head.imageUrl }}
+            source={{ uri: headImageUrl }}
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
           />

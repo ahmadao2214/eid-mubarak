@@ -32,8 +32,20 @@ jest.mock("@/hooks/useShare", () => ({
   saveToGallery: jest.fn().mockResolvedValue({ success: true }),
 }));
 
+const mockUploadPhoto = jest.fn();
+jest.mock("@/hooks/useUpload", () => ({
+  useUpload: () => ({
+    uploadPhoto: mockUploadPhoto,
+  }),
+}));
+
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUploadPhoto.mockResolvedValue({
+    success: true,
+    s3Url: "https://s3.example.com/head.png",
+    s3Key: "user-photos/head.png",
+  });
   mockCreateProjectFn.mockResolvedValue("proj-123");
   mockRequestRenderFn.mockResolvedValue("render-123");
   mockRenderStatusValue = {
@@ -109,6 +121,23 @@ describe("Step3Screen", () => {
     fireEvent.press(screen.getByTestId("save-draft-button"));
     await waitFor(() => {
       expect(mockCreateProjectFn).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("Draft saved")).toBeTruthy();
+    });
+  });
+
+  it("save draft with local head image uploads to S3 then saves project with S3 URL", async () => {
+    renderWithComposition(<Step3Screen />, {
+      initialPresetId: "zohran-classic",
+      initialHeadImage: "file:///cache/photo.png",
+    });
+    fireEvent.press(screen.getByTestId("save-draft-button"));
+    await waitFor(() => {
+      expect(mockUploadPhoto).toHaveBeenCalledWith("file:///cache/photo.png");
+    });
+    await waitFor(() => {
+      expect(mockCreateProjectFn).toHaveBeenCalledTimes(1);
+      const call = mockCreateProjectFn.mock.calls[0][0];
+      expect(call.composition.head.imageUrl).toBe("https://s3.example.com/head.png");
       expect(screen.getByText("Draft saved")).toBeTruthy();
     });
   });

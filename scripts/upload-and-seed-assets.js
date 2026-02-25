@@ -4,10 +4,10 @@
  *
  * Prerequisites:
  * - AWS env: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, S3_BUCKET
- * - Convex: run from repo root; Convex project must be linked in apps/mobile (npx convex dev once)
+ * - Convex: run from repo root; Convex project must be linked in apps/mobile (bunx convex dev once)
  * - Copy scripts/asset-manifest.example.json to scripts/asset-manifest.json and add your entries
  *
- * Usage: node scripts/upload-and-seed-assets.js [path-to-manifest.json]
+ * Usage: bun scripts/upload-and-seed-assets.js [path-to-manifest.json]
  * Default manifest: scripts/asset-manifest.json
  */
 
@@ -127,8 +127,8 @@ async function main() {
       tags: entry.tags || [],
     });
     const result = spawnSync(
-      "npx",
-      ["convex", "run", "assets:seed", seedPayload],
+      "bun",
+      ["x", "convex", "run", "assets:seed", seedPayload],
       { stdio: "inherit", cwd: path.join(repoRoot, "apps/mobile") }
     );
     if (result.status !== 0) {
