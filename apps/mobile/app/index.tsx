@@ -1,23 +1,26 @@
 import React from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TemplateCard } from "@/components/TemplateCard";
-import { ProjectCard } from "@/components/ProjectCard";
 import { PRESETS } from "@/lib/presets";
-import { useAllProjects } from "@/hooks/useConvexData";
 import { Colors } from "@/lib/colors";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { projects } = useAllProjects();
-  const recentProjects = projects.slice(0, 3);
+  const { width: screenWidth } = useWindowDimensions();
+  const gridGap = 12;
+  const gridPadding = 16;
+  const columns = 2;
+  const cardWidth = Math.floor(
+    (screenWidth - gridPadding * 2 - gridGap * (columns - 1)) / columns,
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bgPrimary }}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ padding: gridPadding, paddingBottom: 40 }}
       >
         {/* Header row */}
         <View
@@ -25,14 +28,15 @@ export default function HomeScreen() {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: 4,
+            marginBottom: 20,
           }}
         >
           <Text
             style={{
-              fontSize: 32,
+              fontSize: 28,
               fontWeight: "bold",
-              color: Colors.gold,
+              color: Colors.textPrimary,
+              letterSpacing: -0.5,
             }}
           >
             Send Eid Vibes
@@ -43,7 +47,7 @@ export default function HomeScreen() {
           >
             <Text
               style={{
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: "600",
                 color: Colors.gold,
               }}
@@ -53,31 +57,27 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        <Text style={{ fontSize: 16, color: Colors.textSecondary, marginBottom: 24 }}>
-          Create cheesy Eid video cards with maximum aunty energy
-        </Text>
-
         {/* Create CTA */}
         <Pressable
           testID="create-new-card"
           onPress={() => router.push("/create/editor")}
           style={{
             backgroundColor: Colors.gold,
-            paddingVertical: 16,
-            borderRadius: 12,
+            paddingVertical: 14,
+            borderRadius: 10,
             alignItems: "center",
-            marginBottom: 28,
+            marginBottom: 24,
           }}
         >
-          <Text style={{ fontSize: 18, fontWeight: "bold", color: Colors.bgPrimary }}>
-            Send Vibes
+          <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.bgPrimary }}>
+            Create New Card
           </Text>
         </Pressable>
 
-        {/* Featured Templates */}
+        {/* Templates Grid */}
         <Text
           style={{
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: "600",
             color: Colors.textMuted,
             marginBottom: 12,
@@ -85,12 +85,14 @@ export default function HomeScreen() {
             letterSpacing: 1,
           }}
         >
-          Featured Templates
+          Templates
         </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ marginBottom: 28 }}
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: gridGap,
+          }}
         >
           {PRESETS.map((preset) => (
             <TemplateCard
@@ -103,45 +105,11 @@ export default function HomeScreen() {
                 })
               }
               selected={false}
+              width={cardWidth}
               testID={`featured-template-${preset.id}`}
             />
           ))}
-        </ScrollView>
-
-        {/* Recent Creations */}
-        {recentProjects.length > 0 && (
-          <>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "600",
-                color: Colors.textMuted,
-                marginBottom: 12,
-                textTransform: "uppercase",
-                letterSpacing: 1,
-              }}
-            >
-              Recent Creations
-            </Text>
-            {recentProjects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onPress={() =>
-                  router.push({
-                    pathname: "/create/editor",
-                    params: { projectId: project.id },
-                  })
-                }
-                onDelete={() => {
-                  setRecentProjects((prev) =>
-                    prev.filter((p) => p.id !== project.id),
-                  );
-                }}
-              />
-            ))}
-          </>
-        )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

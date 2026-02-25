@@ -21,14 +21,17 @@ const PETAL_COUNTS: Record<string, number> = {
 
 /**
  * SVG fallback petal animation for when Lottie data is unavailable.
- * Renders petals around the head position with spring-based bloom.
+ * Renders petals as a wreath AROUND the head (not behind it).
+ * The radius is based on head scale so petals are always visible
+ * outside the head circle.
  */
 const PetalFallback: React.FC<{
   flowerType: string;
   position: { x: number; y: number };
+  headScale: number;
   localFrame: number;
   fps: number;
-}> = ({ flowerType, position, localFrame, fps }) => {
+}> = ({ flowerType, position, headScale, localFrame, fps }) => {
   const color = FLOWER_COLORS[flowerType] ?? EID_PINK;
   const petalCount = PETAL_COUNTS[flowerType] ?? 8;
 
@@ -37,6 +40,13 @@ const PetalFallback: React.FC<{
     fps,
     config: { damping: 10, stiffness: 80 },
   });
+
+  // Head is 400px at scale 1.0, so radius = 200 * headScale.
+  // Place petals just outside the head edge with some padding.
+  const headRadius = 200 * headScale;
+  const petalRadius = headRadius + 40; // 40px outside head edge
+  const svgSize = (petalRadius + 80) * 2; // enough room for petals
+  const center = svgSize / 2;
 
   return (
     <div
@@ -48,22 +58,22 @@ const PetalFallback: React.FC<{
         pointerEvents: "none",
       }}
     >
-      <svg width="500" height="500" viewBox="0 0 500 500">
+      <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`}>
         {Array.from({ length: petalCount }, (_, i) => {
           const angle = (360 / petalCount) * i;
           const rad = (angle * Math.PI) / 180;
           const petalScale = bloomProgress;
-          const cx = 250 + Math.cos(rad) * 120 * petalScale;
-          const cy = 250 + Math.sin(rad) * 120 * petalScale;
+          const cx = center + Math.cos(rad) * petalRadius * petalScale;
+          const cy = center + Math.sin(rad) * petalRadius * petalScale;
           return (
             <ellipse
               key={i}
               cx={cx}
               cy={cy}
-              rx={30 * petalScale}
-              ry={50 * petalScale}
+              rx={35 * petalScale}
+              ry={55 * petalScale}
               fill={color}
-              opacity={0.7 * bloomProgress}
+              opacity={0.8 * bloomProgress}
               transform={`rotate(${angle}, ${cx}, ${cy})`}
             />
           );
@@ -94,6 +104,7 @@ export const FlowerReveal: React.FC<Props> = ({ head }) => {
       <PetalFallback
         flowerType={head.flowerReveal.type}
         position={head.position}
+        headScale={head.scale}
         localFrame={localFrame}
         fps={fps}
       />

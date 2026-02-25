@@ -15,6 +15,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useComposition } from "@/context/CompositionContext";
 import { RemotionPreview } from "@/components/RemotionPreview";
+import { TemplateCard } from "@/components/TemplateCard";
 import { PRESETS } from "@/lib/presets";
 import { Colors } from "@/lib/colors";
 import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
@@ -87,6 +88,17 @@ const TEXT_ANIMATIONS: { id: TextAnimation; label: string }[] = [
   { id: "float", label: "Float" },
 ];
 
+const TEXT_COLORS: { label: string; value: string }[] = [
+  { label: "White", value: "#FFFFFF" },
+  { label: "Cream", value: "#FAF3E0" },
+  { label: "Gold", value: "#D4A843" },
+  { label: "Pink", value: "#E87BA4" },
+  { label: "Green", value: "#2ECC71" },
+  { label: "Blue", value: "#2196F3" },
+  { label: "Red", value: "#E74C3C" },
+  { label: "Black", value: "#1A1A1A" },
+];
+
 const MY_PHOTO_ID = "__my-photo__";
 
 export default function EditorScreen() {
@@ -103,6 +115,7 @@ export default function EditorScreen() {
     toggleFlowerReveal,
     setTextFont,
     setTextAnimation,
+    setTextColor,
   } = useComposition();
 
   const [activeTab, setActiveTab] = useState<EditorTab>("templates");
@@ -115,9 +128,24 @@ export default function EditorScreen() {
   const [customMode, setCustomMode] = useState<Record<string, boolean>>({});
 
   const { composition } = state;
-  const { width: screenWidth } = useWindowDimensions();
-  const previewWidth = Math.round(screenWidth * 0.55);
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  // Constrain preview by screen HEIGHT (~45%), then derive width from 9:16 ratio
+  const maxPreviewHeight = Math.round(screenHeight * 0.45);
+  const previewWidth = Math.min(
+    Math.round(maxPreviewHeight * (9 / 16)),
+    screenWidth - 32,
+  );
   const previewHeight = Math.round(previewWidth * (16 / 9));
+  const templateColumns = 2;
+  const templateGap = 10;
+  const templateCardWidth = Math.floor(
+    (screenWidth - 32 - templateGap * (templateColumns - 1)) / templateColumns,
+  );
+  const headColumns = 4;
+  const headGap = 12;
+  const headCellWidth = Math.floor(
+    (screenWidth - 32 - headGap * (headColumns - 1)) / headColumns,
+  );
 
   useEffect(() => {
     if (paramPresetId && paramPresetId !== state.selectedPresetId) {
@@ -135,11 +163,11 @@ export default function EditorScreen() {
   };
 
   const handleSelectMyPhoto = () => {
-    if (selectedHeadId !== MY_PHOTO_ID) {
-      setLocalImage(null);
-      setHeadImage("");
-    }
     setSelectedHeadId(MY_PHOTO_ID);
+    // If we already have a photo, re-apply it to the composition
+    if (localImage) {
+      setHeadImage(localImage);
+    }
   };
 
   const handlePickGallery = async () => {
@@ -248,92 +276,71 @@ export default function EditorScreen() {
           contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Templates Tab */}
+          {/* Templates Tab — 2-column grid */}
           {activeTab === "templates" && (
             <View>
               <Text style={sectionLabel}>Choose a Template</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {PRESETS.map((preset) => {
-                  const isSelected = state.selectedPresetId === preset.id;
-                  const hueColor = preset.defaultProps.hue.color === "none" ? "#666" : preset.defaultProps.hue.color;
-                  return (
-                    <Pressable
-                      key={preset.id}
-                      testID={
-                        isSelected
-                          ? `preset-card-${preset.id}-selected`
-                          : `preset-card-${preset.id}`
-                      }
-                      onPress={() => { lightTap(); selectPreset(preset.id); }}
-                      style={{
-                        width: 120,
-                        marginRight: 12,
-                        padding: 12,
-                        borderRadius: 12,
-                        backgroundColor: isSelected ? Colors.goldMuted : Colors.bgSurface,
-                        borderWidth: 2,
-                        borderColor: isSelected ? Colors.gold : "transparent",
-                      }}
-                    >
-                      <View
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 16,
-                          backgroundColor: hueColor,
-                          marginBottom: 8,
-                        }}
-                      />
-                      <Text
-                        style={{ fontSize: 13, fontWeight: "bold", color: Colors.textPrimary, marginBottom: 4 }}
-                        numberOfLines={1}
-                      >
-                        {preset.name}
-                      </Text>
-                      <Text
-                        style={{ fontSize: 11, color: Colors.textMuted }}
-                        numberOfLines={2}
-                      >
-                        {preset.description}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: templateGap,
+                }}
+              >
+                {PRESETS.map((preset) => (
+                  <TemplateCard
+                    key={preset.id}
+                    preset={preset}
+                    onPress={() => { lightTap(); selectPreset(preset.id); }}
+                    selected={state.selectedPresetId === preset.id}
+                    width={templateCardWidth}
+                    testID={`preset-card-${preset.id}`}
+                  />
+                ))}
+              </View>
             </View>
           )}
 
-          {/* Head Tab */}
+          {/* Head Tab — vertical grid, 4 per row */}
           {activeTab === "head" && (
             <View>
               <Text style={sectionLabel}>Choose a Head</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ marginBottom: 16 }}
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: headGap,
+                  marginBottom: 16,
+                }}
               >
-                {/* My Photo option */}
+                {/* My Photo option — always shows uploaded image if available */}
                 <Pressable
                   testID="head-option-my-photo"
                   onPress={handleSelectMyPhoto}
-                  style={{ alignItems: "center", marginRight: 14, width: 80 }}
+                  style={{ alignItems: "center", width: headCellWidth }}
                 >
                   <View
                     style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 32,
+                      width: headCellWidth - 8,
+                      height: headCellWidth - 8,
+                      borderRadius: (headCellWidth - 8) / 2,
                       borderWidth: 3,
                       borderColor: isMyPhoto ? Colors.gold : Colors.borderSubtle,
-                      backgroundColor: isMyPhoto ? Colors.goldMuted : Colors.bgSurface,
+                      backgroundColor: Colors.bgSurface,
                       justifyContent: "center",
                       alignItems: "center",
+                      overflow: "hidden",
                     }}
                   >
-                    {isMyPhoto && localImage ? (
+                    {localImage ? (
                       <Image
                         source={{ uri: localImage }}
-                        style={{ width: 58, height: 58, borderRadius: 29 }}
+                        style={{
+                          width: headCellWidth - 14,
+                          height: headCellWidth - 14,
+                          borderRadius: (headCellWidth - 14) / 2,
+                        }}
+                        resizeMode="cover"
                       />
                     ) : (
                       <Text style={{ fontSize: 24, color: isMyPhoto ? Colors.gold : Colors.textMuted }}>
@@ -351,7 +358,7 @@ export default function EditorScreen() {
                     }}
                     numberOfLines={1}
                   >
-                    My Photo
+                    {localImage ? "My Photo" : "Add Photo"}
                   </Text>
                 </Pressable>
 
@@ -363,13 +370,13 @@ export default function EditorScreen() {
                       key={celeb.id}
                       testID={`celeb-head-${celeb.id}`}
                       onPress={() => handleSelectCeleb(celeb)}
-                      style={{ alignItems: "center", marginRight: 14, width: 80 }}
+                      style={{ alignItems: "center", width: headCellWidth }}
                     >
                       <View
                         style={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: 32,
+                          width: headCellWidth - 8,
+                          height: headCellWidth - 8,
+                          borderRadius: (headCellWidth - 8) / 2,
                           borderWidth: 3,
                           borderColor: isSelected ? Colors.gold : Colors.borderSubtle,
                           overflow: "hidden",
@@ -377,7 +384,11 @@ export default function EditorScreen() {
                       >
                         <Image
                           source={{ uri: celeb.thumbnail ?? celeb.imageUrl }}
-                          style={{ width: 58, height: 58, borderRadius: 29 }}
+                          style={{
+                            width: headCellWidth - 14,
+                            height: headCellWidth - 14,
+                            borderRadius: (headCellWidth - 14) / 2,
+                          }}
                           resizeMode="cover"
                         />
                       </View>
@@ -396,7 +407,7 @@ export default function EditorScreen() {
                     </Pressable>
                   );
                 })}
-              </ScrollView>
+              </View>
 
               {/* My Photo upload UI */}
               {isMyPhoto && (
@@ -646,7 +657,7 @@ export default function EditorScreen() {
 
               {/* Text animation */}
               <Text style={sectionLabel}>Text Animation</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
                 {TEXT_ANIMATIONS.map((anim) => {
                   const isActive = composition.textSlots[0]?.animation === anim.id;
                   return (
@@ -680,6 +691,33 @@ export default function EditorScreen() {
                   );
                 })}
               </ScrollView>
+
+              {/* Text color */}
+              <Text style={sectionLabel}>Text Color</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+                {TEXT_COLORS.map((tc) => {
+                  const isActive = composition.textSlots[0]?.color === tc.value;
+                  return (
+                    <Pressable
+                      key={tc.value}
+                      testID={`text-color-${tc.label.toLowerCase()}`}
+                      onPress={() => {
+                        for (const slot of composition.textSlots) {
+                          setTextColor(slot.id, tc.value);
+                        }
+                      }}
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        backgroundColor: tc.value,
+                        borderWidth: 3,
+                        borderColor: isActive ? Colors.gold : Colors.borderSubtle,
+                      }}
+                    />
+                  );
+                })}
+              </View>
             </View>
           )}
 

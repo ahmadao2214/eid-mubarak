@@ -86,6 +86,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 12,
     overflow: "hidden",
+    backgroundColor: "transparent",
   },
   webview: {
     position: "absolute",

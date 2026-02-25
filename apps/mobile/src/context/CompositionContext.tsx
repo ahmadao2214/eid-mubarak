@@ -34,6 +34,7 @@ export type CompositionAction =
     }
   | { type: "SET_TEXT_FONT"; slotId: string; fontFamily: FontStyle }
   | { type: "SET_TEXT_ANIMATION"; slotId: string; animation: TextAnimation }
+  | { type: "SET_TEXT_COLOR"; slotId: string; color: string }
   | {
       type: "LOAD_PROJECT";
       projectId: string | null;
@@ -186,6 +187,19 @@ export function compositionReducer(
         },
       };
 
+    case "SET_TEXT_COLOR":
+      return {
+        ...state,
+        composition: {
+          ...state.composition,
+          textSlots: state.composition.textSlots.map((slot) =>
+            slot.id === action.slotId
+              ? { ...slot, color: action.color }
+              : slot,
+          ),
+        },
+      };
+
     case "LOAD_PROJECT":
       return {
         projectId: action.projectId,
@@ -218,6 +232,7 @@ interface CompositionContextValue {
   toggleFlowerReveal: (enabled: boolean, flowerType: FlowerType) => void;
   setTextFont: (slotId: string, fontFamily: FontStyle) => void;
   setTextAnimation: (slotId: string, animation: TextAnimation) => void;
+  setTextColor: (slotId: string, color: string) => void;
   loadProject: (
     projectId: string | null,
     presetId: PresetId | null,
@@ -269,6 +284,8 @@ export function CompositionProvider({
       dispatch({ type: "SET_TEXT_FONT", slotId, fontFamily }),
     setTextAnimation: (slotId, animation) =>
       dispatch({ type: "SET_TEXT_ANIMATION", slotId, animation }),
+    setTextColor: (slotId, color) =>
+      dispatch({ type: "SET_TEXT_COLOR", slotId, color }),
     loadProject: (projectId, presetId, composition) =>
       dispatch({ type: "LOAD_PROJECT", projectId, presetId, composition }),
     setProjectId: (projectId) =>

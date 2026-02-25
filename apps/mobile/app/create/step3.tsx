@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, Alert, Platform } from "react-native";
+import { View, Text, ScrollView, Pressable, Alert, Platform, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useComposition } from "@/context/CompositionContext";
@@ -168,6 +168,9 @@ export default function Step3Screen() {
     }
   };
 
+  const { height: screenHeight } = useWindowDimensions();
+  const previewMaxHeight = Math.round(screenHeight * 0.4);
+
   const isProcessing = shareState === "saving" || shareState === "rendering";
 
   const shareLabel = {
@@ -190,26 +193,37 @@ export default function Step3Screen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bgPrimary }}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
       >
-        {/* Header */}
-        <Text
+        {/* Header row with back */}
+        <View
           style={{
-            fontSize: 24,
-            fontWeight: "bold",
-            color: Colors.gold,
-            marginBottom: 4,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
           }}
         >
-          Share Your Vibe
-        </Text>
-        <Text style={{ fontSize: 16, color: Colors.textSecondary, marginBottom: 20 }}>
-          Here's your card — share it with the world!
-        </Text>
+          <Pressable testID="back-button-top" onPress={() => router.back()}>
+            <Text style={{ color: Colors.gold, fontSize: 16, fontWeight: "600" }}>
+              Back
+            </Text>
+          </Pressable>
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "bold",
+              color: Colors.textPrimary,
+            }}
+          >
+            Share Your Vibe
+          </Text>
+          <View style={{ width: 40 }} />
+        </View>
 
-        {/* Preview */}
-        <View style={{ alignItems: "center", marginBottom: 24 }}>
-          <AnimatedCardPreview composition={composition} size="large" />
+        {/* Preview — height-constrained */}
+        <View style={{ alignItems: "center", marginBottom: 20, maxHeight: previewMaxHeight }}>
+          <AnimatedCardPreview composition={composition} size={{ width: Math.round(previewMaxHeight * (9 / 16)), height: previewMaxHeight }} />
         </View>
 
         {/* Status message */}
@@ -391,39 +405,6 @@ export default function Step3Screen() {
           </Text>
         </Pressable>
       </ScrollView>
-
-      {/* Bottom back button */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 20,
-          paddingBottom: 36,
-          backgroundColor: Colors.bgPrimary,
-          borderTopWidth: 1,
-          borderTopColor: Colors.borderSubtle,
-        }}
-      >
-        <Pressable
-          testID="back-button"
-          onPress={() => router.back()}
-          style={{
-            paddingVertical: 14,
-            borderRadius: 12,
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: Colors.gold,
-          }}
-        >
-          <Text
-            style={{ color: Colors.gold, fontSize: 16, fontWeight: "bold" }}
-          >
-            Back
-          </Text>
-        </Pressable>
-      </View>
     </SafeAreaView>
   );
 }
