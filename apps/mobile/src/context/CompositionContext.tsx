@@ -25,7 +25,7 @@ export type CompositionAction =
   | { type: "SET_HEAD_IMAGE"; imageUrl: string }
   | { type: "UPDATE_TEXT_SLOT"; slotId: string; text: string }
   | { type: "SET_HUE_COLOR"; color: HueColor }
-  | { type: "SET_HUE_ANIMATION"; animation: "pulse" | "static" }
+  | { type: "SET_HUE_ANIMATION"; animation: "pulse" | "static" | "cycle" }
   | { type: "SET_HEAD_ANIMATION"; animation: HeadAnimationType }
   | {
       type: "TOGGLE_FLOWER_REVEAL";
@@ -41,7 +41,8 @@ export type CompositionAction =
       presetId: PresetId | null;
       composition: CompositionProps;
     }
-  | { type: "SET_PROJECT_ID"; projectId: string };
+  | { type: "SET_PROJECT_ID"; projectId: string }
+  | { type: "UPDATE_GROUPED_TEXT"; group: string; texts: string[] };
 
 // ── Initial state factory ────────────────────────────────
 
@@ -86,8 +87,8 @@ export function compositionReducer(
       const preset = getPresetById(action.presetId);
       if (!preset) return state;
       const newProps = JSON.parse(JSON.stringify(preset.defaultProps));
-      // Preserve existing head image
-      newProps.head.imageUrl = state.composition.head.imageUrl;
+      // Use preset's default head; fall back to previous head if preset has none
+      newProps.head.imageUrl = newProps.head.imageUrl || state.composition.head.imageUrl;
       return {
         ...state,
         selectedPresetId: action.presetId,
@@ -213,6 +214,24 @@ export function compositionReducer(
         projectId: action.projectId,
       };
 
+    case "UPDATE_GROUPED_TEXT": {
+      let textIdx = 0;
+      return {
+        ...state,
+        composition: {
+          ...state.composition,
+          textSlots: state.composition.textSlots.map((slot) => {
+            if (slot.group === action.group && textIdx < action.texts.length) {
+              const text = action.texts[textIdx];
+              textIdx++;
+              return { ...slot, text };
+            }
+            return slot;
+          }),
+        },
+      };
+    }
+
     default:
       return state;
   }
@@ -227,12 +246,13 @@ interface CompositionContextValue {
   setHeadImage: (imageUrl: string) => void;
   updateTextSlot: (slotId: string, text: string) => void;
   setHueColor: (color: HueColor) => void;
-  setHueAnimation: (animation: "pulse" | "static") => void;
+  setHueAnimation: (animation: "pulse" | "static" | "cycle") => void;
   setHeadAnimation: (animation: HeadAnimationType) => void;
   toggleFlowerReveal: (enabled: boolean, flowerType: FlowerType) => void;
   setTextFont: (slotId: string, fontFamily: FontStyle) => void;
   setTextAnimation: (slotId: string, animation: TextAnimation) => void;
   setTextColor: (slotId: string, color: string) => void;
+  updateGroupedText: (group: string, texts: string[]) => void;
   loadProject: (
     projectId: string | null,
     presetId: PresetId | null,
@@ -286,6 +306,8 @@ export function CompositionProvider({
       dispatch({ type: "SET_TEXT_ANIMATION", slotId, animation }),
     setTextColor: (slotId, color) =>
       dispatch({ type: "SET_TEXT_COLOR", slotId, color }),
+    updateGroupedText: (group, texts) =>
+      dispatch({ type: "UPDATE_GROUPED_TEXT", group, texts }),
     loadProject: (projectId, presetId, composition) =>
       dispatch({ type: "LOAD_PROJECT", projectId, presetId, composition }),
     setProjectId: (projectId) =>

@@ -2,17 +2,22 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { HueOverlay } from "../components/HueOverlay";
 
+let mockFrame = 15;
 jest.mock("remotion", () => ({
   AbsoluteFill: ({ children, style }: any) => (
     <div data-testid="hue-fill" style={style}>
       {children}
     </div>
   ),
-  useCurrentFrame: () => 15,
+  useCurrentFrame: () => mockFrame,
   useVideoConfig: () => ({ fps: 30 }),
 }));
 
 describe("HueOverlay", () => {
+  beforeEach(() => {
+    mockFrame = 15;
+  });
+
   test("returns null when disabled", () => {
     const { container } = render(
       <HueOverlay
@@ -55,5 +60,52 @@ describe("HueOverlay", () => {
     // Pulse oscillates between opacity*0.5 and opacity
     expect(opacity).toBeGreaterThanOrEqual(0.2 - 0.01);
     expect(opacity).toBeLessThanOrEqual(0.4 + 0.01);
+  });
+
+  test("cycle mode applies hue-rotate filter that changes over frames", () => {
+    mockFrame = 0;
+    const { getByTestId } = render(
+      <HueOverlay
+        hue={{ enabled: true, color: "#FFD700", opacity: 0.35, animation: "cycle" }}
+      />
+    );
+    const fill = getByTestId("hue-fill");
+    expect(fill.style.filter).toContain("hue-rotate(");
+    // At frame 0, hue-rotate should be 0deg
+    expect(fill.style.filter).toBe("hue-rotate(0deg)");
+  });
+
+  test("cycle mode completes 360deg rotation over ~4 seconds (120 frames)", () => {
+    // At frame 60 (2 seconds at 30fps) = half cycle = 180deg
+    mockFrame = 60;
+    const { getByTestId } = render(
+      <HueOverlay
+        hue={{ enabled: true, color: "#FFD700", opacity: 0.35, animation: "cycle" }}
+      />
+    );
+    const fill = getByTestId("hue-fill");
+    expect(fill.style.filter).toBe("hue-rotate(180deg)");
+  });
+
+  test("pulse mode does not apply hue-rotate filter (regression)", () => {
+    mockFrame = 15;
+    const { getByTestId } = render(
+      <HueOverlay
+        hue={{ enabled: true, color: "#FFD700", opacity: 0.3, animation: "pulse" }}
+      />
+    );
+    const fill = getByTestId("hue-fill");
+    expect(fill.style.filter).toBeFalsy();
+  });
+
+  test("static mode does not apply hue-rotate filter (regression)", () => {
+    mockFrame = 0;
+    const { getByTestId } = render(
+      <HueOverlay
+        hue={{ enabled: true, color: "#FFD700", opacity: 0.3, animation: "static" }}
+      />
+    );
+    const fill = getByTestId("hue-fill");
+    expect(fill.style.filter).toBeFalsy();
   });
 });

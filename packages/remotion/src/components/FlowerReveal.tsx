@@ -1,4 +1,4 @@
-import { useCurrentFrame, useVideoConfig, spring } from "remotion";
+import { Img, useCurrentFrame, useVideoConfig, spring } from "remotion";
 import type { CompositionProps } from "../types";
 import { useLottieData } from "../utils/lottie-loader";
 import { EID_PINK, EID_GOLD, EID_GREEN } from "../utils/colors";
@@ -19,11 +19,13 @@ const PETAL_COUNTS: Record<string, number> = {
   lotus: 10,
 };
 
+/** Real rose image for rose type, SVG ellipses for others */
+const ROSE_IMAGE_SRC = "/assets/rose.jpg";
+
 /**
- * SVG fallback petal animation for when Lottie data is unavailable.
- * Renders petals as a wreath AROUND the head (not behind it).
- * The radius is based on head scale so petals are always visible
- * outside the head circle.
+ * Renders petals as a wreath AROUND the head.
+ * For rose type: uses the real rose.jpg with screen blend.
+ * For other types: SVG ellipse fallback.
  */
 const PetalFallback: React.FC<{
   flowerType: string;
@@ -34,6 +36,7 @@ const PetalFallback: React.FC<{
 }> = ({ flowerType, position, headScale, localFrame, fps }) => {
   const color = FLOWER_COLORS[flowerType] ?? EID_PINK;
   const petalCount = PETAL_COUNTS[flowerType] ?? 8;
+  const useRoseImage = flowerType === "rose";
 
   const bloomProgress = spring({
     frame: localFrame,
@@ -44,8 +47,72 @@ const PetalFallback: React.FC<{
   // Head is 400px at scale 1.0, so radius = 200 * headScale.
   // Place petals just outside the head edge with some padding.
   const headRadius = 200 * headScale;
-  const petalRadius = headRadius + 40; // 40px outside head edge
-  const svgSize = (petalRadius + 80) * 2; // enough room for petals
+  const petalRadius = headRadius + 40;
+  const containerSize = (petalRadius + 100) * 2;
+
+  if (useRoseImage) {
+    const roseSize = 100 * headScale;
+    return (
+      <div
+        style={{
+          position: "absolute",
+          left: `${position.x}%`,
+          top: `${position.y}%`,
+          width: containerSize,
+          height: containerSize,
+          transform: "translate(-50%, -50%)",
+          pointerEvents: "none",
+        }}
+      >
+        {Array.from({ length: petalCount }, (_, i) => {
+          const angle = (360 / petalCount) * i;
+          const rad = (angle * Math.PI) / 180;
+
+          // Stagger each petal
+          const staggerFrame = localFrame - i * 3;
+          if (staggerFrame < 0) return null;
+
+          const petalEntrance = spring({
+            frame: staggerFrame,
+            fps,
+            config: { damping: 12, stiffness: 100 },
+          });
+
+          const cx =
+            containerSize / 2 + Math.cos(rad) * petalRadius * petalEntrance;
+          const cy =
+            containerSize / 2 + Math.sin(rad) * petalRadius * petalEntrance;
+
+          return (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                left: cx,
+                top: cy,
+                transform: `translate(-50%, -50%) rotate(${angle}deg) scale(${petalEntrance})`,
+                opacity: petalEntrance,
+              }}
+            >
+              <Img
+                src={ROSE_IMAGE_SRC}
+                style={{
+                  width: roseSize,
+                  height: roseSize,
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                  mixBlendMode: "screen",
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // SVG ellipse fallback for sunflower / lotus
+  const svgSize = containerSize;
   const center = svgSize / 2;
 
   return (
@@ -58,7 +125,11 @@ const PetalFallback: React.FC<{
         pointerEvents: "none",
       }}
     >
-      <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`}>
+      <svg
+        width={svgSize}
+        height={svgSize}
+        viewBox={`0 0 ${svgSize} ${svgSize}`}
+      >
         {Array.from({ length: petalCount }, (_, i) => {
           const angle = (360 / petalCount) * i;
           const rad = (angle * Math.PI) / 180;

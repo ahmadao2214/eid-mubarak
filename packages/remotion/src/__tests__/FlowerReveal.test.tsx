@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import { FlowerReveal } from "../components/FlowerReveal";
 
 jest.mock("remotion", () => ({
+  Img: ({ src, style }: any) => <img data-testid="rose-petal-img" src={src} style={style} />,
   useCurrentFrame: () => 30,
   useVideoConfig: () => ({ fps: 30 }),
   spring: () => 0.8,
@@ -46,8 +47,8 @@ describe("FlowerReveal", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  test("renders SVG petal fallback for rose", () => {
-    const { container } = render(
+  test("renders rose image petals for rose type", () => {
+    const { container, getAllByTestId } = render(
       <FlowerReveal
         head={{
           ...baseHead,
@@ -55,11 +56,13 @@ describe("FlowerReveal", () => {
         }}
       />
     );
+    // Rose type uses real images, not SVG ellipses
     const svg = container.querySelector("svg");
-    expect(svg).not.toBeNull();
-    // Rose has 8 petals
-    const ellipses = container.querySelectorAll("ellipse");
-    expect(ellipses).toHaveLength(8);
+    expect(svg).toBeNull();
+    // Rose has 8 petals rendered as <img> tags
+    const imgs = getAllByTestId("rose-petal-img");
+    expect(imgs).toHaveLength(8);
+    expect(imgs[0].getAttribute("src")).toBe("/assets/rose.jpg");
   });
 
   test("renders SVG petal fallback for sunflower", () => {

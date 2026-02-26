@@ -16,9 +16,9 @@ import { Colors } from "@/lib/colors";
 import { useResolvedImageUrl } from "@/hooks/useResolvedImageUrl";
 
 const PLACEHOLDER_BG_COLORS: Record<string, string> = {
-  "placeholder:mountain-road": "#2a1043",
-  "placeholder:trucker-panel": "#5C3A1E",
-  "placeholder:desert-highway": "#C46A28",
+  "/assets/ladakh-highway.jpg": "#2a1043",
+  "/assets/pakistan-truck-art.jpg": "#5C3A1E",
+  "/assets/zagros-mtns.jpg": "#C46A28",
 };
 
 type TextSlot = CompositionProps["textSlots"][number];

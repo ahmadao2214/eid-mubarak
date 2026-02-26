@@ -24,7 +24,7 @@ export interface CompositionProps {
     enabled: boolean;
     color: HueColor;
     opacity: number;
-    animation: "pulse" | "static";
+    animation: "pulse" | "static" | "cycle";
   };
 
   head: {
@@ -37,6 +37,9 @@ export interface CompositionProps {
       spiralCount?: number;
       pulseSpeed?: number;
       popDamping?: number;
+      orbitRadius?: number;
+      orbitSpeed?: number;
+      copyScale?: number;
     };
     flowerReveal?: {
       enabled: boolean;
@@ -57,6 +60,7 @@ export interface CompositionProps {
     shadow?: boolean;
     animation: TextAnimation;
     enterAtFrame: number;
+    group?: string;
   }>;
 
   audio: {

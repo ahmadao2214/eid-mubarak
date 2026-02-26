@@ -20,7 +20,7 @@ export const celebrityGreeting: PresetConfig = {
       animation: "static",
     },
     head: {
-      imageUrl: "",
+      imageUrl: "/assets/heads/srk.jpg",
       position: { x: 50, y: 38 },
       scale: 0.5,
       enterAtFrame: 10,
@@ -38,7 +38,7 @@ export const celebrityGreeting: PresetConfig = {
       },
       {
         type: "image",
-        source: "placeholder:crescent-moon",
+        source: "/assets/moon-crescent-icon-moon.jpg",
         position: { x: 85, y: 10 },
         scale: 0.5,
         enterAtFrame: 0,

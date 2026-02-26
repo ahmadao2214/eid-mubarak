@@ -17,7 +17,7 @@ export type HueColor =
   | "#F5A623"
   | "none";
 
-export type HueAnimation = "pulse" | "static";
+export type HueAnimation = "pulse" | "static" | "cycle";
 
 export type HeadAnimationType =
   | "pop"
@@ -57,6 +57,7 @@ export interface DecorativeElement {
   position: Position;
   scale: number;
   enterAtFrame: number;
+  exitAtFrame?: number;
   animation?: string;
 }
 
@@ -85,6 +86,9 @@ export interface CompositionProps {
       spiralCount?: number;
       pulseSpeed?: number;
       popDamping?: number;
+      orbitRadius?: number;
+      orbitSpeed?: number;
+      copyScale?: number;
     };
     flowerReveal?: {
       enabled: boolean;
@@ -105,6 +109,7 @@ export interface CompositionProps {
     shadow?: boolean;
     animation: TextAnimation;
     enterAtFrame: number;
+    group?: string;
   }>;
 
   audio: {

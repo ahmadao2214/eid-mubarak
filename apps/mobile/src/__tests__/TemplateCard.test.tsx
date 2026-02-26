@@ -35,10 +35,12 @@ describe("TemplateCard", () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it("renders AnimatedCardPreview inside", () => {
+  it("renders preset name and preview content", () => {
     render(
       <TemplateCard preset={preset} onPress={onPress} selected={false} />,
     );
-    expect(screen.getByTestId("card-preview")).toBeTruthy();
+    // StaticCardPreview renders the text from composition textSlots
+    // zohran-classic now has "EID" + "MUBARAK" as split text slots
+    expect(screen.getByText("EID")).toBeTruthy();
   });
 });

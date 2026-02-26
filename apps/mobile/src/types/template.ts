@@ -4,7 +4,7 @@
 export type HueColor = "#FFD700" | "#FF69B4" | "#00C853" | "#2196F3" | "#F5A623" | "none";
 
 export type BackgroundAnimation = "slow-zoom" | "pan-left" | "static";
-export type HueAnimation = "pulse" | "static";
+export type HueAnimation = "pulse" | "static" | "cycle";
 export type HeadAnimationType = "pop" | "zoom-pulse" | "spiral-multiply" | "float";
 export type FlowerType = "rose" | "sunflower" | "lotus";
 export type TextAnimation = "fade-in" | "rise-up" | "typewriter" | "float";
@@ -36,6 +36,7 @@ export interface DecorativeElement {
   position: Position;
   scale: number;
   enterAtFrame: number;
+  exitAtFrame?: number;
   animation?: string;
 }
 
@@ -48,6 +49,9 @@ export interface HeadSlotLayer {
     spiralCount?: number;
     pulseSpeed?: number;
     popDamping?: number;
+    orbitRadius?: number;
+    orbitSpeed?: number;
+    copyScale?: number;
   };
   flowerReveal?: {
     enabled: boolean;
@@ -69,6 +73,7 @@ export interface TextSlot {
   };
   animation: TextAnimation;
   enterAtFrame: number;
+  group?: string;
 }
 
 export interface TemplateLayers {

@@ -5,6 +5,10 @@ export interface PresetConfig {
   name: string;
   description: string;
   defaultProps: CompositionProps;
+  /** Frame number to capture for the static thumbnail. Pick via Remotion preview scrubber. */
+  thumbnailFrame: number;
+  /** S3 URL of pre-rendered thumbnail PNG. Empty until generated. */
+  thumbnailUrl: string;
 }
 
 const zohranClassic: PresetConfig = {
@@ -12,6 +16,8 @@ const zohranClassic: PresetConfig = {
   name: "Zohran Classic",
   description:
     "Mountain road backdrop with gold hue, rose-heart decor, and psychedelic text",
+  thumbnailFrame: 90,
+  thumbnailUrl: "",
   defaultProps: {
     width: 1080,
     height: 1920,
@@ -19,45 +25,70 @@ const zohranClassic: PresetConfig = {
     durationInFrames: 300,
     background: {
       type: "image",
-      source: "placeholder:mountain-road",
+      source: "/assets/ladakh-highway.jpg",
       animation: "slow-zoom",
     },
     hue: {
       enabled: true,
       color: "#FFD700",
-      opacity: 0.3,
-      animation: "pulse",
+      opacity: 0.55,
+      animation: "cycle",
     },
     head: {
-      imageUrl: "https://mock-s3.example.com/heads/zohran.png",
-      position: { x: 50, y: 40 },
-      scale: 1.35,
-      enterAtFrame: 15,
-      animation: "zoom-pulse",
-      animationConfig: { pulseSpeed: 1 },
-      flowerReveal: { enabled: true, type: "rose" },
+      imageUrl: "/assets/heads/zohran.jpg",
+      position: { x: 50, y: 45 },
+      scale: 0.85,
+      enterAtFrame: 30,
+      animation: "spiral-multiply",
+      animationConfig: {
+        spiralCount: 6,
+        orbitRadius: 450,
+        orbitSpeed: 0.5,
+        copyScale: 0.5,
+      },
+      flowerReveal: { enabled: true, type: "sunflower" },
     },
     decorativeElements: [
       {
         type: "image",
-        source: "placeholder:rose-heart",
-        position: { x: 50, y: 70 },
-        scale: 0.8,
-        enterAtFrame: 5,
-        animation: "pulse",
+        source: "/assets/rose.jpg",
+        position: { x: 50, y: 45 },
+        scale: 3.0,
+        enterAtFrame: 0,
+        exitAtFrame: 45,
+        animation: "rose-heart",
       },
+      { type: "image", source: "/assets/rose.jpg", position: { x: 15, y: 10 }, scale: 0.8, enterAtFrame: 50, animation: "pulse" },
+      { type: "image", source: "/assets/rose.jpg", position: { x: 85, y: 15 }, scale: 0.8, enterAtFrame: 55, animation: "pulse" },
+      { type: "image", source: "/assets/rose.jpg", position: { x: 10, y: 85 }, scale: 0.8, enterAtFrame: 60, animation: "pulse" },
+      { type: "image", source: "/assets/rose.jpg", position: { x: 90, y: 80 }, scale: 0.8, enterAtFrame: 65, animation: "pulse" },
     ],
     textSlots: [
       {
-        id: "main",
-        text: "Eid Mubarak!",
-        position: { x: 50, y: 80 },
+        id: "word-0",
+        text: "EID",
+        position: { x: 50, y: 8 },
         fontFamily: "psychedelic",
-        fontSize: 72,
+        fontSize: 120,
         color: "#FFFFFF",
         stroke: "#FFD700",
+        shadow: true,
         animation: "rise-up",
-        enterAtFrame: 45,
+        enterAtFrame: 50,
+        group: "greeting",
+      },
+      {
+        id: "word-1",
+        text: "MUBARAK",
+        position: { x: 50, y: 68 },
+        fontFamily: "psychedelic",
+        fontSize: 100,
+        color: "#FFFFFF",
+        stroke: "#FFD700",
+        shadow: true,
+        animation: "rise-up",
+        enterAtFrame: 55,
+        group: "greeting",
       },
     ],
     audio: { trackUrl: "", volume: 0.8 },
@@ -69,6 +100,8 @@ const truckerArt: PresetConfig = {
   name: "Trucker Art",
   description:
     "Vibrant trucker panel backdrop with borders, chains, peacock decor, and bold font",
+  thumbnailFrame: 90,
+  thumbnailUrl: "",
   defaultProps: {
     width: 1080,
     height: 1920,
@@ -76,7 +109,7 @@ const truckerArt: PresetConfig = {
     durationInFrames: 300,
     background: {
       type: "image",
-      source: "placeholder:trucker-panel",
+      source: "/assets/pakistan-truck-art.jpg",
       animation: "static",
     },
     hue: {
@@ -86,7 +119,7 @@ const truckerArt: PresetConfig = {
       animation: "pulse",
     },
     head: {
-      imageUrl: "",
+      imageUrl: "/assets/heads/mufti.jpg",
       position: { x: 50, y: 42 },
       scale: 1.2,
       enterAtFrame: 10,
@@ -97,21 +130,21 @@ const truckerArt: PresetConfig = {
     decorativeElements: [
       {
         type: "image",
-        source: "placeholder:trucker-art-border",
+        source: "/assets/pakistani-truck-art-fram.jpg",
         position: { x: 50, y: 50 },
         scale: 1.2,
         enterAtFrame: 0,
       },
       {
         type: "image",
-        source: "placeholder:trucker-art-chain",
+        source: "/assets/pakistani-truck-art-chain.jpg",
         position: { x: 50, y: 15 },
         scale: 1,
         enterAtFrame: 5,
       },
       {
         type: "image",
-        source: "placeholder:trucker-art-peacock",
+        source: "/assets/pakistani-truck-art-peacock.jpg",
         position: { x: 50, y: 90 },
         scale: 0.9,
         enterAtFrame: 10,
@@ -140,6 +173,8 @@ const celebrityGreeting: PresetConfig = {
   name: "Celebrity Greeting",
   description:
     "Elegant dark backdrop with gold particles, crescent moon, and clean typography",
+  thumbnailFrame: 90,
+  thumbnailUrl: "",
   defaultProps: {
     width: 1080,
     height: 1920,
@@ -156,7 +191,7 @@ const celebrityGreeting: PresetConfig = {
       animation: "static",
     },
     head: {
-      imageUrl: "",
+      imageUrl: "/assets/heads/srk.jpg",
       position: { x: 50, y: 38 },
       scale: 1.5,
       enterAtFrame: 10,
@@ -174,7 +209,7 @@ const celebrityGreeting: PresetConfig = {
       },
       {
         type: "image",
-        source: "placeholder:crescent-moon",
+        source: "/assets/moon-crescent-icon-moon.jpg",
         position: { x: 85, y: 10 },
         scale: 0.5,
         enterAtFrame: 0,
@@ -213,6 +248,8 @@ const sixHeadSpiral: PresetConfig = {
   name: "Six Head Spiral",
   description:
     "Desert highway backdrop with pink hue, sparkle overlay, and 6 spiraling heads",
+  thumbnailFrame: 90,
+  thumbnailUrl: "",
   defaultProps: {
     width: 1080,
     height: 1920,
@@ -220,7 +257,7 @@ const sixHeadSpiral: PresetConfig = {
     durationInFrames: 300,
     background: {
       type: "image",
-      source: "placeholder:desert-highway",
+      source: "/assets/zagros-mtns.jpg",
       animation: "pan-left",
     },
     hue: {
@@ -230,12 +267,12 @@ const sixHeadSpiral: PresetConfig = {
       animation: "pulse",
     },
     head: {
-      imageUrl: "",
+      imageUrl: "/assets/heads/drak-hijab.jpg",
       position: { x: 50, y: 45 },
       scale: 0.9,
       enterAtFrame: 15,
       animation: "spiral-multiply",
-      animationConfig: { spiralCount: 6 },
+      animationConfig: { spiralCount: 6, orbitRadius: 400, orbitSpeed: 0.5, copyScale: 0.5 },
     },
     decorativeElements: [
       {
@@ -266,8 +303,10 @@ const sixHeadSpiral: PresetConfig = {
 
 const customPreset: PresetConfig = {
   id: "custom",
-  name: "Start from Scratch",
-  description: "Build your own card from a blank canvas",
+  name: "Blank Canvas",
+  description: "Empty canvas — pick your own head, background, and style",
+  thumbnailFrame: 0,
+  thumbnailUrl: "",
   defaultProps: {
     width: 1080,
     height: 1920,

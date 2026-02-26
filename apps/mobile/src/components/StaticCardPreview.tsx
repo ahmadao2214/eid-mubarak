@@ -10,23 +10,23 @@ interface StaticCardPreviewProps {
 }
 
 /**
- * Maps Remotion placeholder background sources to representative native colors.
- * These approximate the SVG-generated backgrounds in the Remotion preview.
+ * Maps background image sources to representative native colors
+ * for lightweight mobile preview rendering.
  */
 const PLACEHOLDER_BG_COLORS: Record<string, string> = {
-  "placeholder:mountain-road": "#2a1043",
-  "placeholder:trucker-panel": "#5C3A1E",
-  "placeholder:desert-highway": "#C46A28",
+  "/assets/ladakh-highway.jpg": "#2a1043",
+  "/assets/pakistan-truck-art.jpg": "#5C3A1E",
+  "/assets/zagros-mtns.jpg": "#C46A28",
 };
 
 /**
- * Maps decorative element placeholder sources to simple visual hints.
+ * Maps decorative element sources to simple visual hints for mobile preview.
  */
 const DECORATIVE_COLORS: Record<string, { color: string; shape: "heart" | "circle" | "border" }> = {
-  "placeholder:rose-heart": { color: "#FF69B4", shape: "heart" },
-  "placeholder:crescent-moon": { color: "#FFD700", shape: "circle" },
+  "/assets/rose.jpg": { color: "#FF69B4", shape: "heart" },
+  "/assets/moon-crescent-icon-moon.jpg": { color: "#FFD700", shape: "circle" },
   "placeholder:gold-particles": { color: "#FFD700", shape: "circle" },
-  "placeholder:trucker-art-border": { color: "#F5A623", shape: "border" },
+  "/assets/pakistani-truck-art-fram.jpg": { color: "#F5A623", shape: "border" },
   "placeholder:sparkle-overlay": { color: "#FFD700", shape: "circle" },
 };
 

@@ -65,17 +65,18 @@ describe("Union type exhaustiveness", () => {
   });
 
   test("HueAnimation covers all variants", () => {
-    const values: HueAnimation[] = ["pulse", "static"];
+    const values: HueAnimation[] = ["pulse", "static", "cycle"];
     for (const v of values) {
       switch (v) {
         case "pulse":
         case "static":
+        case "cycle":
           break;
         default:
           assertNever(v);
       }
     }
-    expect(values).toHaveLength(2);
+    expect(values).toHaveLength(3);
   });
 
   test("HeadAnimationType covers all variants", () => {

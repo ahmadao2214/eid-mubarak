@@ -1,6 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
-import { RemotionPreview } from "./RemotionPreview";
+import { View, Text, Pressable, Image } from "react-native";
 import { StaticCardPreview } from "./StaticCardPreview";
 import { Colors } from "@/lib/colors";
 import type { PresetConfig } from "@/lib/presets";
@@ -11,11 +10,9 @@ interface TemplateCardProps {
   selected: boolean;
   width?: number;
   testID?: string;
-  /** When true, uses live Remotion WebView for exact render. Default: false (static). */
-  livePreview?: boolean;
 }
 
-export function TemplateCard({ preset, onPress, selected, width = 140, testID, livePreview = false }: TemplateCardProps) {
+export function TemplateCard({ preset, onPress, selected, width = 140, testID }: TemplateCardProps) {
   const previewWidth = width - 16;
   const previewHeight = Math.round(previewWidth * (16 / 9));
 
@@ -33,11 +30,16 @@ export function TemplateCard({ preset, onPress, selected, width = 140, testID, l
       }}
     >
       <View style={{ alignItems: "center", paddingTop: 8, paddingHorizontal: 8 }}>
-        {livePreview ? (
-          <RemotionPreview
-            composition={preset.defaultProps}
-            width={previewWidth}
-            height={previewHeight}
+        {preset.thumbnailUrl ? (
+          <Image
+            source={{ uri: preset.thumbnailUrl }}
+            style={{
+              width: previewWidth,
+              height: previewHeight,
+              borderRadius: 6,
+              backgroundColor: Colors.bgSurface,
+            }}
+            resizeMode="cover"
           />
         ) : (
           <StaticCardPreview

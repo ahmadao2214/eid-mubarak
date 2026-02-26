@@ -11,7 +11,7 @@ export const truckerArt: PresetConfig = {
     durationInFrames: 300,
     background: {
       type: "image",
-      source: "placeholder:trucker-panel",
+      source: "/assets/pakistan-truck-art.jpg",
       animation: "static",
     },
     hue: {
@@ -21,7 +21,7 @@ export const truckerArt: PresetConfig = {
       animation: "pulse",
     },
     head: {
-      imageUrl: "",
+      imageUrl: "/assets/heads/mufti.jpg",
       position: { x: 50, y: 42 },
       scale: 0.4,
       enterAtFrame: 10,
@@ -32,21 +32,21 @@ export const truckerArt: PresetConfig = {
     decorativeElements: [
       {
         type: "image",
-        source: "placeholder:trucker-art-border",
+        source: "/assets/pakistani-truck-art-fram.jpg",
         position: { x: 50, y: 50 },
         scale: 1.2,
         enterAtFrame: 0,
       },
       {
         type: "image",
-        source: "placeholder:trucker-art-chain",
+        source: "/assets/pakistani-truck-art-chain.jpg",
         position: { x: 50, y: 15 },
         scale: 1,
         enterAtFrame: 5,
       },
       {
         type: "image",
-        source: "placeholder:trucker-art-peacock",
+        source: "/assets/pakistani-truck-art-peacock.jpg",
         position: { x: 50, y: 90 },
         scale: 0.9,
         enterAtFrame: 10,

@@ -18,7 +18,7 @@ describe("createInitialState", () => {
     const state = createInitialState("zohran-classic");
     expect(state.selectedPresetId).toBe("zohran-classic");
     expect(state.composition.hue.color).toBe("#FFD700");
-    expect(state.composition.head.animation).toBe("zoom-pulse");
+    expect(state.composition.head.animation).toBe("spiral-multiply");
   });
 
   it("preserves initial head image when provided", () => {
@@ -72,10 +72,10 @@ describe("compositionReducer", () => {
     it("updates correct slot by id", () => {
       const next = compositionReducer(baseState, {
         type: "UPDATE_TEXT_SLOT",
-        slotId: "main",
+        slotId: "word-0",
         text: "Happy Eid!",
       });
-      const slot = next.composition.textSlots.find((s) => s.id === "main");
+      const slot = next.composition.textSlots.find((s) => s.id === "word-0");
       expect(slot?.text).toBe("Happy Eid!");
     });
 
@@ -161,10 +161,10 @@ describe("compositionReducer", () => {
     it("updates fontFamily for a slot", () => {
       const next = compositionReducer(baseState, {
         type: "SET_TEXT_FONT",
-        slotId: "main",
+        slotId: "word-0",
         fontFamily: "bollywood",
       });
-      const slot = next.composition.textSlots.find((s) => s.id === "main");
+      const slot = next.composition.textSlots.find((s) => s.id === "word-0");
       expect(slot?.fontFamily).toBe("bollywood");
     });
   });
@@ -173,10 +173,10 @@ describe("compositionReducer", () => {
     it("updates animation for a slot", () => {
       const next = compositionReducer(baseState, {
         type: "SET_TEXT_ANIMATION",
-        slotId: "main",
+        slotId: "word-0",
         animation: "typewriter",
       });
-      const slot = next.composition.textSlots.find((s) => s.id === "main");
+      const slot = next.composition.textSlots.find((s) => s.id === "word-0");
       expect(slot?.animation).toBe("typewriter");
     });
   });

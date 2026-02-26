@@ -28,13 +28,13 @@ const S3_BASE = "https://eid-meme-maker-assets.s3.amazonaws.com";
 // ── Celebrity Heads ─────────────────────────────────────────
 
 const celebrityHeads = [
-  { name: "Zohran", s3Key: "heads/zohran.png", tags: ["politician"] },
-  { name: "Drake", s3Key: "heads/drake.png", tags: ["rapper"] },
-  { name: "Shah Rukh Khan", s3Key: "heads/srk.png", tags: ["bollywood"] },
-  { name: "Aunty Stock", s3Key: "heads/aunty-stock.png", tags: ["meme"] },
-  { name: "Onija Robinson", s3Key: "heads/onija-robinson.png", tags: ["meme"] },
-  { name: "Wow Grape Teacher", s3Key: "heads/wow-grape-teacher.png", tags: ["meme"] },
-  { name: "Central Cee", s3Key: "heads/central-cee.png", tags: ["rapper"] },
+  { name: "Zohran", s3Key: "heads/zohran.jpg", tags: ["celebrity", "politician"] },
+  { name: "Central Cee", s3Key: "heads/central-cee.jpg", tags: ["celebrity"] },
+  { name: "Drake Hijab", s3Key: "heads/drak-hijab.jpg", tags: ["celebrity"] },
+  { name: "Mufti", s3Key: "heads/mufti.jpg", tags: ["celebrity"] },
+  { name: "Onijah Robinson", s3Key: "heads/onijah-robinson.jpg", tags: ["celebrity"] },
+  { name: "Sehad Kamran", s3Key: "heads/sehad-kamran.jpg", tags: ["celebrity"] },
+  { name: "SRK", s3Key: "heads/srk.jpg", tags: ["celebrity", "bollywood"] },
 ];
 
 // ── Backgrounds ─────────────────────────────────────────────

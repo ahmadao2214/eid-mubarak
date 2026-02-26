@@ -11,7 +11,7 @@ export const sixHeadSpiral: PresetConfig = {
     durationInFrames: 300,
     background: {
       type: "image",
-      source: "placeholder:desert-highway",
+      source: "/assets/zagros-mtns.jpg",
       animation: "pan-left",
     },
     hue: {
@@ -21,12 +21,12 @@ export const sixHeadSpiral: PresetConfig = {
       animation: "pulse",
     },
     head: {
-      imageUrl: "",
+      imageUrl: "/assets/heads/drak-hijab.jpg",
       position: { x: 50, y: 45 },
       scale: 0.3,
       enterAtFrame: 15,
       animation: "spiral-multiply",
-      animationConfig: { spiralCount: 6 },
+      animationConfig: { spiralCount: 6, orbitRadius: 400, orbitSpeed: 0.5, copyScale: 0.5 },
     },
     decorativeElements: [
       {

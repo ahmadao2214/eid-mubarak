@@ -2,11 +2,16 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { DecorativeElement } from "../components/DecorativeElement";
 
+let mockFrame = 30;
 jest.mock("remotion", () => ({
   Img: ({ src, style }: any) => <img data-testid="decor-img" src={src} style={style} />,
-  useCurrentFrame: () => 30,
+  useCurrentFrame: () => mockFrame,
   useVideoConfig: () => ({ fps: 30 }),
   spring: () => 1,
+  interpolate: (input: number, inputRange: number[], outputRange: number[]) => {
+    const t = Math.max(0, Math.min(1, (input - inputRange[0]) / (inputRange[1] - inputRange[0])));
+    return outputRange[0] + t * (outputRange[1] - outputRange[0]);
+  },
 }));
 
 jest.mock("../utils/lottie-loader", () => ({
@@ -14,6 +19,10 @@ jest.mock("../utils/lottie-loader", () => ({
 }));
 
 describe("DecorativeElement", () => {
+  beforeEach(() => {
+    mockFrame = 30;
+  });
+
   test("returns null before enterAtFrame", () => {
     const { container } = render(
       <DecorativeElement
@@ -95,5 +104,62 @@ describe("DecorativeElement", () => {
     );
     const wrapper = container.firstChild as HTMLDivElement;
     expect(wrapper).not.toBeNull();
+  });
+
+  test("element without exitAtFrame renders normally (no fade)", () => {
+    mockFrame = 100;
+    const { container } = render(
+      <DecorativeElement
+        element={{
+          type: "image",
+          source: "https://example.com/star.png",
+          position: { x: 50, y: 50 },
+          scale: 1,
+          enterAtFrame: 0,
+        }}
+      />
+    );
+    const wrapper = container.firstChild as HTMLDivElement;
+    expect(wrapper).not.toBeNull();
+    // No exit fade — opacity should be entrance spring value (1)
+    expect(parseFloat(wrapper.style.opacity)).toBe(1);
+  });
+
+  test("element with exitAtFrame is fully visible before exitAtFrame", () => {
+    mockFrame = 20;
+    const { container } = render(
+      <DecorativeElement
+        element={{
+          type: "image",
+          source: "https://example.com/star.png",
+          position: { x: 50, y: 50 },
+          scale: 1,
+          enterAtFrame: 0,
+          exitAtFrame: 45,
+        }}
+      />
+    );
+    const wrapper = container.firstChild as HTMLDivElement;
+    expect(wrapper).not.toBeNull();
+    expect(parseFloat(wrapper.style.opacity)).toBe(1);
+  });
+
+  test("element with exitAtFrame fades to opacity 0 after exitAtFrame", () => {
+    mockFrame = 75; // well past exitAtFrame 45 + 15 frame fade
+    const { container } = render(
+      <DecorativeElement
+        element={{
+          type: "image",
+          source: "https://example.com/star.png",
+          position: { x: 50, y: 50 },
+          scale: 1,
+          enterAtFrame: 0,
+          exitAtFrame: 45,
+        }}
+      />
+    );
+    const wrapper = container.firstChild as HTMLDivElement;
+    expect(wrapper).not.toBeNull();
+    expect(parseFloat(wrapper.style.opacity)).toBe(0);
   });
 });

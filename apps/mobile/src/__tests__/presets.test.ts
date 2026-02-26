@@ -43,16 +43,34 @@ describe("Presets", () => {
   });
 
   describe("zohran-classic", () => {
-    it("has gold hue, zoom-pulse head, psychedelic font, rose flower reveal", () => {
+    it("has gold hue, spiral-multiply head, cycle hue, psychedelic font, sunflower reveal, 2 text slots", () => {
       const preset = getPresetById("zohran-classic");
       expect(preset).toBeDefined();
       expect(preset!.defaultProps.hue.color).toBe("#FFD700");
-      expect(preset!.defaultProps.head.animation).toBe("zoom-pulse");
+      expect(preset!.defaultProps.hue.animation).toBe("cycle");
+      expect(preset!.defaultProps.head.animation).toBe("spiral-multiply");
+      expect(preset!.defaultProps.head.animationConfig?.spiralCount).toBe(6);
+      expect(preset!.defaultProps.head.animationConfig?.orbitRadius).toBe(450);
       expect(preset!.defaultProps.textSlots[0].fontFamily).toBe("psychedelic");
+      expect(preset!.defaultProps.textSlots).toHaveLength(2);
+      expect(preset!.defaultProps.textSlots[0].text).toBe("EID");
+      expect(preset!.defaultProps.textSlots[1].text).toBe("MUBARAK");
+      expect(preset!.defaultProps.textSlots[0].group).toBe("greeting");
       expect(preset!.defaultProps.head.flowerReveal).toEqual({
         enabled: true,
-        type: "rose",
+        type: "sunflower",
       });
+      expect(preset!.defaultProps.head.imageUrl).toBe("/assets/heads/zohran.jpg");
+      const roseHeart = preset!.defaultProps.decorativeElements.find((d) => d.animation === "rose-heart");
+      expect(roseHeart).toBeDefined();
+      expect(roseHeart!.exitAtFrame).toBe(45);
+      // Visual refinement: larger head, orbit, text positions, roses
+      expect(preset!.defaultProps.head.scale).toBe(0.85);
+      expect(preset!.defaultProps.textSlots[0].position.y).toBe(8);
+      expect(preset!.defaultProps.textSlots[1].position.y).toBe(68);
+      expect(roseHeart!.scale).toBe(3.0);
+      const cornerRoses = preset!.defaultProps.decorativeElements.filter((d) => d.animation !== "rose-heart");
+      cornerRoses.forEach((r) => expect(r.scale).toBe(0.8));
     });
   });
 
@@ -89,6 +107,8 @@ describe("Presets", () => {
       expect(preset!.defaultProps.hue.color).toBe("#FF69B4");
       expect(preset!.defaultProps.head.animation).toBe("spiral-multiply");
       expect(preset!.defaultProps.head.animationConfig?.spiralCount).toBe(6);
+      expect(preset!.defaultProps.head.animationConfig?.orbitRadius).toBe(400);
+      expect(preset!.defaultProps.head.animationConfig?.copyScale).toBe(0.5);
       expect(preset!.defaultProps.textSlots[0].fontFamily).toBe("bollywood");
     });
   });
@@ -102,6 +122,33 @@ describe("Presets", () => {
       expect(preset!.defaultProps.head.animation).toBe("pop");
       expect(preset!.defaultProps.textSlots[0].fontFamily).toBe("clean");
       expect(preset!.defaultProps.decorativeElements).toHaveLength(0);
+    });
+
+    it('is named "Blank Canvas"', () => {
+      const preset = getPresetById("custom");
+      expect(preset!.name).toBe("Blank Canvas");
+    });
+
+    it("has empty default head", () => {
+      const preset = getPresetById("custom");
+      expect(preset!.defaultProps.head.imageUrl).toBe("");
+    });
+  });
+
+  describe("default heads", () => {
+    it("trucker-art has default head /assets/heads/mufti.jpg", () => {
+      const preset = getPresetById("trucker-art");
+      expect(preset!.defaultProps.head.imageUrl).toBe("/assets/heads/mufti.jpg");
+    });
+
+    it("celebrity-greeting has default head /assets/heads/srk.jpg", () => {
+      const preset = getPresetById("celebrity-greeting");
+      expect(preset!.defaultProps.head.imageUrl).toBe("/assets/heads/srk.jpg");
+    });
+
+    it("six-head-spiral has default head /assets/heads/drak-hijab.jpg", () => {
+      const preset = getPresetById("six-head-spiral");
+      expect(preset!.defaultProps.head.imageUrl).toBe("/assets/heads/drak-hijab.jpg");
     });
   });
 

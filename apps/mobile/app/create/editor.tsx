@@ -17,6 +17,7 @@ import { useComposition } from "@/context/CompositionContext";
 import { RemotionPreview } from "@/components/RemotionPreview";
 import { TemplateCard } from "@/components/TemplateCard";
 import { PRESETS } from "@/lib/presets";
+import { splitGreeting } from "@/lib/text-split";
 import { Colors } from "@/lib/colors";
 import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
 import { removeBackground } from "@/hooks/useRemoveBg";
@@ -116,12 +117,11 @@ export default function EditorScreen() {
     setTextFont,
     setTextAnimation,
     setTextColor,
+    updateGroupedText,
   } = useComposition();
 
   const [activeTab, setActiveTab] = useState<EditorTab>("templates");
-  const [localImage, setLocalImage] = useState<string | null>(
-    state.composition.head.imageUrl || null,
-  );
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [removingBg, setRemovingBg] = useState(false);
   const celebHeads = useCelebrityHeads();
   const [selectedHeadId, setSelectedHeadId] = useState<string | null>(null);
@@ -153,20 +153,38 @@ export default function EditorScreen() {
     }
   }, [paramPresetId]);
 
+  // Sync head picker selection when template changes
+  useEffect(() => {
+    const headUrl = composition.head.imageUrl;
+    if (!headUrl) {
+      setSelectedHeadId(null);
+      return;
+    }
+    // Extract filename from the preset's local path (e.g. "zohran.jpg" from "/assets/heads/zohran.jpg")
+    const filename = headUrl.split("/").pop() ?? "";
+    const match = celebHeads.find((celeb) => celeb.imageUrl.endsWith(filename));
+    if (match) {
+      setSelectedHeadId(match.id);
+      // Only update head image to S3 URL if it's currently a local asset path
+      if (headUrl.startsWith("/assets/")) {
+        setHeadImage(match.imageUrl);
+      }
+    }
+  }, [state.selectedPresetId, celebHeads.length]);
+
   const isMyPhoto = selectedHeadId === MY_PHOTO_ID;
 
   const handleSelectCeleb = (celeb: CelebrityHead) => {
     lightTap();
     setSelectedHeadId(celeb.id);
-    setLocalImage(celeb.imageUrl);
     setHeadImage(celeb.imageUrl);
   };
 
   const handleSelectMyPhoto = () => {
+    lightTap();
     setSelectedHeadId(MY_PHOTO_ID);
-    // If we already have a photo, re-apply it to the composition
-    if (localImage) {
-      setHeadImage(localImage);
+    if (userPhoto) {
+      setHeadImage(userPhoto);
     }
   };
 
@@ -174,7 +192,7 @@ export default function EditorScreen() {
     const result = await pickImageFromGallery();
     if (result) {
       const cropped = await cropToSquare(result.uri, result.width, result.height);
-      setLocalImage(cropped);
+      setUserPhoto(cropped);
       setHeadImage(cropped);
     }
   };
@@ -183,17 +201,17 @@ export default function EditorScreen() {
     const result = await pickImageFromCamera();
     if (result) {
       const cropped = await cropToSquare(result.uri, result.width, result.height);
-      setLocalImage(cropped);
+      setUserPhoto(cropped);
       setHeadImage(cropped);
     }
   };
 
   const handleRemoveBg = async () => {
-    if (!localImage) return;
+    if (!userPhoto) return;
     setRemovingBg(true);
-    const result = await removeBackground(localImage);
+    const result = await removeBackground(userPhoto);
     if (result.success && result.transparentUrl) {
-      setLocalImage(result.transparentUrl);
+      setUserPhoto(result.transparentUrl);
       setHeadImage(result.transparentUrl);
     }
     setRemovingBg(false);
@@ -332,9 +350,9 @@ export default function EditorScreen() {
                       overflow: "hidden",
                     }}
                   >
-                    {localImage ? (
+                    {userPhoto ? (
                       <Image
-                        source={{ uri: localImage }}
+                        source={{ uri: userPhoto }}
                         style={{
                           width: headCellWidth - 14,
                           height: headCellWidth - 14,
@@ -358,7 +376,7 @@ export default function EditorScreen() {
                     }}
                     numberOfLines={1}
                   >
-                    {localImage ? "My Photo" : "Add Photo"}
+                    {userPhoto ? "My Photo" : "Add Photo"}
                   </Text>
                 </Pressable>
 
@@ -413,10 +431,10 @@ export default function EditorScreen() {
               {isMyPhoto && (
                 <View testID="my-photo-picker">
                   <View style={{ alignItems: "center", marginBottom: 16 }}>
-                    {localImage ? (
+                    {userPhoto ? (
                       <Image
                         testID="head-preview-image"
-                        source={{ uri: localImage }}
+                        source={{ uri: userPhoto }}
                         style={{
                           width: 140,
                           height: 140,
@@ -481,7 +499,7 @@ export default function EditorScreen() {
                     </Pressable>
                   </View>
 
-                  {localImage && (
+                  {userPhoto && (
                     <Pressable
                       testID="remove-bg-button"
                       onPress={handleRemoveBg}
@@ -514,105 +532,162 @@ export default function EditorScreen() {
           {/* Text Tab */}
           {activeTab === "text" && (
             <View>
-              {composition.textSlots.map((slot) => {
-                const isMain = slot.id === "main" || slot.id === "greeting";
-                const options = isMain ? GREETING_OPTIONS : SUBTITLE_OPTIONS;
-                const isCustom = customMode[slot.id] ?? false;
-                const isPresetMatch = options.some((o) => o.text === slot.text);
+              {(() => {
+                // Collect groups: grouped slots share one editor, ungrouped get individual editors
+                const groups = new Map<string, typeof composition.textSlots>();
+                const ungrouped: typeof composition.textSlots = [];
+                for (const slot of composition.textSlots) {
+                  if (slot.group) {
+                    if (!groups.has(slot.group)) groups.set(slot.group, []);
+                    groups.get(slot.group)!.push(slot);
+                  } else {
+                    ungrouped.push(slot);
+                  }
+                }
 
-                return (
-                  <View key={slot.id} style={{ marginBottom: 20 }}>
-                    <Text style={sectionLabel}>
-                      {isMain ? "Greeting" : slot.id}
-                    </Text>
+                const renderSlotEditor = (slot: typeof composition.textSlots[0]) => {
+                  const isMain = slot.id === "main" || slot.id === "greeting";
+                  const options = isMain ? GREETING_OPTIONS : SUBTITLE_OPTIONS;
+                  const isCustom = customMode[slot.id] ?? false;
+                  const isPresetMatch = options.some((o) => o.text === slot.text);
 
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      style={{ marginBottom: 8 }}
-                    >
-                      {options.map((option) => {
-                        const isActive = !isCustom && slot.text === option.text;
-                        return (
-                          <Pressable
-                            key={option.text}
-                            testID={`greeting-${slot.id}-${option.label.toLowerCase().replace(/\s+/g, "-")}`}
-                            onPress={() => {
-                              updateTextSlot(slot.id, option.text);
-                              setCustomMode((prev) => ({ ...prev, [slot.id]: false }));
-                            }}
-                            style={{
-                              paddingHorizontal: 14,
-                              paddingVertical: 10,
-                              borderRadius: 20,
-                              marginRight: 8,
-                              backgroundColor: isActive ? Colors.goldMuted : Colors.bgSurface,
-                              borderWidth: 1,
-                              borderColor: isActive ? Colors.gold : "transparent",
-                            }}
-                          >
-                            <Text
+                  return (
+                    <View key={slot.id} style={{ marginBottom: 20 }}>
+                      <Text style={sectionLabel}>
+                        {isMain ? "Greeting" : slot.id}
+                      </Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
+                        {options.map((option) => {
+                          const isActive = !isCustom && slot.text === option.text;
+                          return (
+                            <Pressable
+                              key={option.text}
+                              testID={`greeting-${slot.id}-${option.label.toLowerCase().replace(/\s+/g, "-")}`}
+                              onPress={() => {
+                                updateTextSlot(slot.id, option.text);
+                                setCustomMode((prev) => ({ ...prev, [slot.id]: false }));
+                              }}
                               style={{
-                                color: isActive ? Colors.gold : Colors.textSecondary,
-                                fontWeight: "600",
-                                fontSize: 13,
+                                paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, marginRight: 8,
+                                backgroundColor: isActive ? Colors.goldMuted : Colors.bgSurface,
+                                borderWidth: 1, borderColor: isActive ? Colors.gold : "transparent",
                               }}
                             >
-                              {option.label}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                      <Pressable
-                        testID={`greeting-${slot.id}-custom`}
-                        onPress={() =>
-                          setCustomMode((prev) => ({ ...prev, [slot.id]: true }))
-                        }
-                        style={{
-                          paddingHorizontal: 14,
-                          paddingVertical: 10,
-                          borderRadius: 20,
-                          marginRight: 8,
-                          backgroundColor:
-                            isCustom || !isPresetMatch ? Colors.goldMuted : Colors.bgSurface,
-                          borderWidth: 1,
-                          borderColor:
-                            isCustom || !isPresetMatch ? Colors.gold : "transparent",
-                        }}
-                      >
-                        <Text
+                              <Text style={{ color: isActive ? Colors.gold : Colors.textSecondary, fontWeight: "600", fontSize: 13 }}>
+                                {option.label}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                        <Pressable
+                          testID={`greeting-${slot.id}-custom`}
+                          onPress={() => setCustomMode((prev) => ({ ...prev, [slot.id]: true }))}
                           style={{
-                            color: isCustom || !isPresetMatch ? Colors.gold : Colors.textSecondary,
-                            fontWeight: "600",
-                            fontSize: 13,
+                            paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, marginRight: 8,
+                            backgroundColor: isCustom || !isPresetMatch ? Colors.goldMuted : Colors.bgSurface,
+                            borderWidth: 1, borderColor: isCustom || !isPresetMatch ? Colors.gold : "transparent",
                           }}
                         >
-                          Type your own
-                        </Text>
-                      </Pressable>
-                    </ScrollView>
+                          <Text style={{ color: isCustom || !isPresetMatch ? Colors.gold : Colors.textSecondary, fontWeight: "600", fontSize: 13 }}>
+                            Type your own
+                          </Text>
+                        </Pressable>
+                      </ScrollView>
+                      {(isCustom || !isPresetMatch) && (
+                        <TextInput
+                          testID={`text-input-${slot.id}`}
+                          value={slot.text}
+                          onChangeText={(text) => updateTextSlot(slot.id, text)}
+                          style={{
+                            backgroundColor: Colors.bgSurface, borderRadius: 10, padding: 12,
+                            color: Colors.textPrimary, fontSize: 16, borderWidth: 1, borderColor: Colors.borderSubtle,
+                          }}
+                          placeholderTextColor={Colors.textDisabled}
+                          placeholder="Type your message..."
+                        />
+                      )}
+                    </View>
+                  );
+                };
 
-                    {(isCustom || !isPresetMatch) && (
-                      <TextInput
-                        testID={`text-input-${slot.id}`}
-                        value={slot.text}
-                        onChangeText={(text) => updateTextSlot(slot.id, text)}
-                        style={{
-                          backgroundColor: Colors.bgSurface,
-                          borderRadius: 10,
-                          padding: 12,
-                          color: Colors.textPrimary,
-                          fontSize: 16,
-                          borderWidth: 1,
-                          borderColor: Colors.borderSubtle,
-                        }}
-                        placeholderTextColor={Colors.textDisabled}
-                        placeholder="Type your message..."
-                      />
+                const renderGroupEditor = (group: string, slots: typeof composition.textSlots) => {
+                  // Reconstruct the original greeting from slot texts
+                  const currentGreeting = slots.map((s) => s.text).join(" ");
+                  const isCustom = customMode[group] ?? false;
+                  const isPresetMatch = GREETING_OPTIONS.some((o) => o.text.toUpperCase() === currentGreeting);
+
+                  const handleGroupChange = (text: string) => {
+                    const parts = splitGreeting(text);
+                    updateGroupedText(group, parts);
+                  };
+
+                  return (
+                    <View key={group} style={{ marginBottom: 20 }}>
+                      <Text style={sectionLabel}>Greeting</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
+                        {GREETING_OPTIONS.map((option) => {
+                          const parts = splitGreeting(option.text);
+                          const isActive = !isCustom && slots.every((s, i) => s.text === (parts[i] ?? ""));
+                          return (
+                            <Pressable
+                              key={option.text}
+                              testID={`greeting-group-${option.label.toLowerCase().replace(/\s+/g, "-")}`}
+                              onPress={() => {
+                                updateGroupedText(group, parts);
+                                setCustomMode((prev) => ({ ...prev, [group]: false }));
+                              }}
+                              style={{
+                                paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, marginRight: 8,
+                                backgroundColor: isActive ? Colors.goldMuted : Colors.bgSurface,
+                                borderWidth: 1, borderColor: isActive ? Colors.gold : "transparent",
+                              }}
+                            >
+                              <Text style={{ color: isActive ? Colors.gold : Colors.textSecondary, fontWeight: "600", fontSize: 13 }}>
+                                {option.label}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                        <Pressable
+                          testID={`greeting-group-custom`}
+                          onPress={() => setCustomMode((prev) => ({ ...prev, [group]: true }))}
+                          style={{
+                            paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, marginRight: 8,
+                            backgroundColor: isCustom || !isPresetMatch ? Colors.goldMuted : Colors.bgSurface,
+                            borderWidth: 1, borderColor: isCustom || !isPresetMatch ? Colors.gold : "transparent",
+                          }}
+                        >
+                          <Text style={{ color: isCustom || !isPresetMatch ? Colors.gold : Colors.textSecondary, fontWeight: "600", fontSize: 13 }}>
+                            Type your own
+                          </Text>
+                        </Pressable>
+                      </ScrollView>
+                      {(isCustom || !isPresetMatch) && (
+                        <TextInput
+                          testID={`text-input-group-${group}`}
+                          value={currentGreeting}
+                          onChangeText={handleGroupChange}
+                          style={{
+                            backgroundColor: Colors.bgSurface, borderRadius: 10, padding: 12,
+                            color: Colors.textPrimary, fontSize: 16, borderWidth: 1, borderColor: Colors.borderSubtle,
+                          }}
+                          placeholderTextColor={Colors.textDisabled}
+                          placeholder="Type your greeting..."
+                        />
+                      )}
+                    </View>
+                  );
+                };
+
+                return (
+                  <>
+                    {Array.from(groups.entries()).map(([group, slots]) =>
+                      renderGroupEditor(group, slots),
                     )}
-                  </View>
+                    {ungrouped.map((slot) => renderSlotEditor(slot))}
+                  </>
                 );
-              })}
+              })()}
 
               {/* Font picker */}
               <Text style={sectionLabel}>Font Style</Text>
@@ -760,7 +835,7 @@ export default function EditorScreen() {
 
               <Text style={sectionLabel}>Hue Animation</Text>
               <View style={{ flexDirection: "row", gap: 12, marginBottom: 16 }}>
-                {(["pulse", "static"] as const).map((anim) => {
+                {(["pulse", "static", "cycle"] as const).map((anim) => {
                   const isActive = composition.hue.animation === anim;
                   return (
                     <Pressable
