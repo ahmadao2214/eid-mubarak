@@ -70,6 +70,9 @@ describe("Preset-specific values", () => {
     expect(p.textSlots[0].group).toBe("greeting");
     expect(p.head.flowerReveal?.enabled).toBe(true);
     expect(p.head.flowerReveal?.type).toBe("sunflower");
+    expect(p.head.flowerReveal?.videoSource).toBe("/assets/sunflower-bloom.mp4");
+    expect(p.head.flowerReveal?.enterAtFrame).toBe(15);
+    expect(p.head.enterAtFrame).toBe(45);
     expect(p.head.imageUrl).toBe("/assets/heads/zohran.jpg");
     // Rose-heart decorative element with exitAtFrame
     const roseHeart = p.decorativeElements.find((d) => d.animation === "rose-heart");
@@ -83,7 +86,7 @@ describe("Preset-specific values", () => {
     expect(roseHeart!.scale).toBe(3.0);
     const cornerRoses = p.decorativeElements.filter((d) => d.animation !== "rose-heart");
     cornerRoses.forEach((r) => expect(r.scale).toBe(0.8));
-    expect(p.textSlots[0].position.y).toBe(8);
+    expect(p.textSlots[0].position.y).toBe(22);
     expect(p.textSlots[1].position.y).toBe(68);
   });
 

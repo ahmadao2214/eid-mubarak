@@ -1,4 +1,4 @@
-import { Img, useCurrentFrame, useVideoConfig, spring } from "remotion";
+import { Img, OffthreadVideo, useCurrentFrame, useVideoConfig, spring } from "remotion";
 import type { CompositionProps } from "../types";
 import { useLottieData } from "../utils/lottie-loader";
 import { EID_PINK, EID_GOLD, EID_GREEN } from "../utils/colors";
@@ -154,6 +154,38 @@ const PetalFallback: React.FC<{
   );
 };
 
+const VideoReveal: React.FC<{
+  videoSource: string;
+  position: { x: number; y: number };
+  headScale: number;
+}> = ({ videoSource, position, headScale }) => {
+  // No spring animation — the video's own bloom (bud → flower) IS the reveal.
+  // mixBlendMode "screen" on the container burns away the black background.
+  const videoSize = 1100 * headScale;
+
+  return (
+    <div style={{
+      position: "absolute",
+      left: `${position.x}%`,
+      top: `${position.y}%`,
+      width: videoSize,
+      height: videoSize,
+      transform: "translate(-50%, -50%)",
+      borderRadius: "50%",
+      overflow: "hidden",
+      mixBlendMode: "screen",
+      pointerEvents: "none",
+      willChange: "transform",
+    }}>
+      <OffthreadVideo
+        src={videoSource}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        startFrom={0}
+      />
+    </div>
+  );
+};
+
 export const FlowerReveal: React.FC<Props> = ({ head }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -166,8 +198,20 @@ export const FlowerReveal: React.FC<Props> = ({ head }) => {
 
   if (!head.flowerReveal?.enabled) return null;
 
-  const localFrame = frame - head.enterAtFrame;
+  const flowerEnterAt = head.flowerReveal?.enterAtFrame ?? head.enterAtFrame;
+  const localFrame = frame - flowerEnterAt;
   if (localFrame < 0) return null;
+
+  // Video path: transparent video when videoSource is provided
+  if (head.flowerReveal.videoSource) {
+    return (
+      <VideoReveal
+        videoSource={head.flowerReveal.videoSource}
+        position={head.position}
+        headScale={head.scale}
+      />
+    );
+  }
 
   // Always use SVG fallback (Lottie assets not yet available)
   if (!lottieData) {

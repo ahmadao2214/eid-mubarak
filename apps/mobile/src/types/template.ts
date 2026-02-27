@@ -56,6 +56,8 @@ export interface HeadSlotLayer {
   flowerReveal?: {
     enabled: boolean;
     type: FlowerType;
+    videoSource?: string;
+    enterAtFrame?: number;
   };
 }
 

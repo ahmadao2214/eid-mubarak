@@ -36,7 +36,7 @@ export const EidMemeVideo: React.FC<CompositionProps> = (props) => {
       {/* Layer 6: Text slots */}
       {props.textSlots.map((slot) => (
         <Sequence key={slot.id} from={slot.enterAtFrame}>
-          <AnimatedText slot={slot} />
+          <AnimatedText slot={slot} hue={props.hue} />
         </Sequence>
       ))}
 

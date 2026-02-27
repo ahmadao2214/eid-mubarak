@@ -87,4 +87,28 @@ describe("AnimatedText", () => {
     const div = container.firstChild as HTMLDivElement;
     expect(div.style.fontFamily).toContain("Inter");
   });
+
+  test("renders with hue-rotate filter when shadow and hue cycle are enabled", () => {
+    const hue = { enabled: true, color: "#FFD700" as const, opacity: 0.55, animation: "cycle" as const };
+    const { container } = render(
+      <AnimatedText
+        slot={{ ...baseSlot, shadow: true, stroke: "#FFD700" }}
+        hue={hue}
+      />
+    );
+    const div = container.firstChild as HTMLDivElement;
+    // frame=60, fps=30 → deg = Math.round((60/30)*90) = 180
+    expect(div.style.filter).toBe("hue-rotate(180deg)");
+    // Multi-layer glow shadow should contain the stroke color
+    expect(div.style.textShadow).toContain("#FFD700");
+  });
+
+  test("renders standard shadow when hue is not provided", () => {
+    const { container } = render(
+      <AnimatedText slot={{ ...baseSlot, shadow: true }} />
+    );
+    const div = container.firstChild as HTMLDivElement;
+    expect(div.style.textShadow).toBe("0 2px 8px rgba(0,0,0,0.5)");
+    expect(div.style.filter).toBe("");
+  });
 });

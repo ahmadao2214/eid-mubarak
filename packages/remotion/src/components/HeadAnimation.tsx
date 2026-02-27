@@ -77,6 +77,7 @@ export const HeadAnimation: React.FC<Props> = ({ head }) => {
               left: `${head.position.x}%`,
               top: `${head.position.y}%`,
               transform: `translate(-50%, -50%) scale(${head.scale * entranceProgress})`,
+              willChange: "transform",
             },
             "center",
             "center-head"
@@ -104,6 +105,7 @@ export const HeadAnimation: React.FC<Props> = ({ head }) => {
                 top: `${head.position.y}%`,
                 transform: `translate(-50%, -50%) translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${head.scale * copyScale * copyEntrance})`,
                 opacity: copyEntrance,
+                willChange: "transform",
               },
               i,
               "orbit-copy"

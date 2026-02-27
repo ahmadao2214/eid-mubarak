@@ -93,6 +93,8 @@ export interface CompositionProps {
     flowerReveal?: {
       enabled: boolean;
       type: FlowerType;
+      videoSource?: string;
+      enterAtFrame?: number;
     };
   };
 

@@ -24,7 +24,7 @@ export const zohranClassic: PresetConfig = {
       imageUrl: "/assets/heads/zohran.jpg",
       position: { x: 50, y: 45 },
       scale: 0.85,
-      enterAtFrame: 30,
+      enterAtFrame: 45,
       animation: "spiral-multiply",
       animationConfig: {
         spiralCount: 6,
@@ -32,7 +32,7 @@ export const zohranClassic: PresetConfig = {
         orbitSpeed: 0.5,
         copyScale: 0.5,
       },
-      flowerReveal: { enabled: true, type: "sunflower" },
+      flowerReveal: { enabled: true, type: "sunflower", videoSource: "/assets/sunflower-bloom.mp4", enterAtFrame: 15 },
     },
     decorativeElements: [
       {
@@ -53,7 +53,7 @@ export const zohranClassic: PresetConfig = {
       {
         id: "word-0",
         text: "EID",
-        position: { x: 50, y: 8 },
+        position: { x: 50, y: 22 },
         fontFamily: "psychedelic",
         fontSize: 120,
         color: "#FFFFFF",

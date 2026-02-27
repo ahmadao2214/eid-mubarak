@@ -3,9 +3,9 @@ import type { CompositionProps } from "../types";
 import { getFontFamily } from "../utils/animation-helpers";
 
 type TextSlot = CompositionProps["textSlots"][number];
-type Props = { slot: TextSlot };
+type Props = { slot: TextSlot; hue?: CompositionProps["hue"] };
 
-export const AnimatedText: React.FC<Props> = ({ slot }) => {
+export const AnimatedText: React.FC<Props> = ({ slot, hue }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -46,6 +46,18 @@ export const AnimatedText: React.FC<Props> = ({ slot }) => {
     }
   }
 
+  // Multi-layer glow when shadow + hue cycle are both active
+  const useGlow = slot.shadow && hue?.animation === "cycle";
+  const glowColor = slot.stroke ?? "#FFD700";
+  const textShadow = slot.shadow
+    ? useGlow
+      ? `0 0 10px ${glowColor}, 0 0 20px ${glowColor}, 0 0 40px ${glowColor}, 0 2px 8px rgba(0,0,0,0.5)`
+      : "0 2px 8px rgba(0,0,0,0.5)"
+    : undefined;
+  const filter = useGlow
+    ? `hue-rotate(${Math.round((frame / fps) * 90)}deg)`
+    : undefined;
+
   return (
     <div
       style={{
@@ -60,7 +72,8 @@ export const AnimatedText: React.FC<Props> = ({ slot }) => {
         textAlign: "center",
         whiteSpace: "nowrap",
         WebkitTextStroke: slot.stroke ? `2px ${slot.stroke}` : undefined,
-        textShadow: slot.shadow ? `0 2px 8px rgba(0,0,0,0.5)` : undefined,
+        textShadow,
+        filter,
       }}
     >
       {visibleText}

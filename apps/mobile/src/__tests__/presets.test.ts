@@ -59,14 +59,17 @@ describe("Presets", () => {
       expect(preset!.defaultProps.head.flowerReveal).toEqual({
         enabled: true,
         type: "sunflower",
+        videoSource: "/assets/sunflower-bloom.mp4",
+        enterAtFrame: 15,
       });
+      expect(preset!.defaultProps.head.enterAtFrame).toBe(45);
       expect(preset!.defaultProps.head.imageUrl).toBe("/assets/heads/zohran.jpg");
       const roseHeart = preset!.defaultProps.decorativeElements.find((d) => d.animation === "rose-heart");
       expect(roseHeart).toBeDefined();
       expect(roseHeart!.exitAtFrame).toBe(45);
       // Visual refinement: larger head, orbit, text positions, roses
       expect(preset!.defaultProps.head.scale).toBe(0.85);
-      expect(preset!.defaultProps.textSlots[0].position.y).toBe(8);
+      expect(preset!.defaultProps.textSlots[0].position.y).toBe(22);
       expect(preset!.defaultProps.textSlots[1].position.y).toBe(68);
       expect(roseHeart!.scale).toBe(3.0);
       const cornerRoses = preset!.defaultProps.decorativeElements.filter((d) => d.animation !== "rose-heart");
