@@ -1,6 +1,7 @@
 import { Img, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import type { DecorativeElement as DecorativeElementType } from "../types";
-import { isPlaceholderSource, resolvePlaceholder } from "../utils/placeholders";
+import { isPlaceholderSource } from "../utils/placeholders";
+import { resolveAssetSrc } from "../utils/resolve-asset";
 import { useLottieData } from "../utils/lottie-loader";
 
 type Props = { element: DecorativeElementType };
@@ -185,11 +186,8 @@ export const DecorativeElement: React.FC<Props> = ({ element }) => {
   const localFrame = frame - element.enterAtFrame;
   if (localFrame < 0) return null;
 
-  // Resolve source: placeholder SVG or direct URL
-  const isPlaceholder = isPlaceholderSource(element.source);
-  const src = isPlaceholder
-    ? resolvePlaceholder(element.source) ?? element.source
-    : element.source;
+  // Resolve source: placeholder SVG, /assets/ path, or direct URL
+  const src = resolveAssetSrc(element.source);
 
   // Rose-heart formation: multiple roses arranged in a heart shape
   if (element.animation === "rose-heart") {

@@ -131,9 +131,9 @@ describe("Default heads", () => {
     expect(p.head.imageUrl).toBe("/assets/heads/mufti.png");
   });
 
-  test("celebrity-greeting has default head /assets/heads/srk.jpg", () => {
+  test("celebrity-greeting has default head /assets/heads/srk.png", () => {
     const p = getPreset("celebrity-greeting").defaultProps;
-    expect(p.head.imageUrl).toBe("/assets/heads/srk.jpg");
+    expect(p.head.imageUrl).toBe("/assets/heads/srk.png");
   });
 
   test("six-head-spiral has default head /assets/heads/drak-hijab.png", () => {

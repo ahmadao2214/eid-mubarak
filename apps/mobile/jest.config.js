@@ -15,8 +15,8 @@ module.exports = {
     "^expo-sharing$": "<rootDir>/src/__mocks__/expo-sharing.ts",
     "^expo-media-library$": "<rootDir>/src/__mocks__/expo-media-library.ts",
     "^expo-file-system/next$": "<rootDir>/src/__mocks__/expo-file-system-next.ts",
-    "^p-limit$": "<rootDir>/../../node_modules/jest-circus/node_modules/p-limit/index.js",
-    "^yocto-queue$": "<rootDir>/../../node_modules/jest-circus/node_modules/p-limit/node_modules/yocto-queue/index.js",
+    "^p-limit$": "<rootDir>/../../node_modules/p-limit/index.js",
+    "^yocto-queue$": "<rootDir>/../../node_modules/yocto-queue/index.js",
   },
   setupFiles: ["<rootDir>/src/test-utils/setup.ts"],
   collectCoverageFrom: [

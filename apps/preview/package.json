@@ -14,8 +14,10 @@
   "dependencies": {
     "@eid-meme-maker/remotion": "*",
     "@remotion/player": "^4",
-    "react": "^19",
-    "react-dom": "^19",
+    "convex": "^1.32.0",
+    "qrcode": "^1.5.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "remotion": "^4"
   },
   "devDependencies": {
@@ -24,6 +26,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^4",
+    "@types/qrcode": "^1.5.5",
     "esbuild": "^0.25.12",
     "jsdom": "^25",
     "typescript": "~5.9",

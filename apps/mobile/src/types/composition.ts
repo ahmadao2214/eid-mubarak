@@ -41,6 +41,7 @@ export interface CompositionProps {
       orbitSpeed?: number;
       copyScale?: number;
     };
+    cropOffset?: { x: number; y: number }; // 0-100%, default 50/50 = center
     flowerReveal?: {
       enabled: boolean;
       type: FlowerType;

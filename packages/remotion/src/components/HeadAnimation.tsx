@@ -1,6 +1,6 @@
 import { Img, useCurrentFrame, useVideoConfig, interpolate, spring } from "remotion";
 import type { CompositionProps } from "../types";
-import { isPlaceholderSource, resolvePlaceholder } from "../utils/placeholders";
+import { resolveAssetSrc } from "../utils/resolve-asset";
 
 type Props = { head: CompositionProps["head"] };
 
@@ -13,9 +13,7 @@ export const HeadAnimation: React.FC<Props> = ({ head }) => {
   const localFrame = frame - head.enterAtFrame;
   if (localFrame < 0) return null;
 
-  const src = isPlaceholderSource(head.imageUrl)
-    ? resolvePlaceholder(head.imageUrl) ?? head.imageUrl
-    : head.imageUrl;
+  const src = resolveAssetSrc(head.imageUrl);
 
   const entranceProgress = spring({
     frame: localFrame,
@@ -28,10 +26,10 @@ export const HeadAnimation: React.FC<Props> = ({ head }) => {
     key?: string | number,
     testId?: string
   ) => (
-    <div key={key} style={style} data-testid={testId}>
+    <div key={key} style={{ ...style, width: 400, height: 400 }} data-testid={testId}>
       <Img
         src={src}
-        style={{ width: 400, height: 400 }}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
       />
     </div>
   );

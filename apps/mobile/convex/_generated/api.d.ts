@@ -9,6 +9,7 @@
  */
 
 import type * as assets from "../assets.js";
+import type * as gallery from "../gallery.js";
 import type * as projects from "../projects.js";
 import type * as renders from "../renders.js";
 import type * as rendersLambda from "../rendersLambda.js";
@@ -25,6 +26,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   assets: typeof assets;
+  gallery: typeof gallery;
   projects: typeof projects;
   renders: typeof renders;
   rendersLambda: typeof rendersLambda;

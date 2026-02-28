@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ import { TemplateCard } from "@/components/TemplateCard";
 import { PRESETS } from "@/lib/presets";
 import { splitGreeting } from "@/lib/text-split";
 import { Colors } from "@/lib/colors";
-import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
+import { pickImageFromGallery, pickImageFromCamera } from "@/hooks/useImagePicker";
 import { removeBackgroundFromImage } from "@/hooks/useRemoveBg";
 import { useAssetsByType, useCelebrityHeads } from "@/hooks/useConvexData";
 import { useResolvedImageUrl } from "@/hooks/useResolvedImageUrl";
@@ -37,7 +37,7 @@ import type {
   Asset,
 } from "@/types";
 
-type EditorTab = "templates" | "head" | "background" | "text" | "style" | "effects";
+type EditorTab = "templates" | "head" | "background" | "text" | "style" | "effects" | "sound";
 
 const TABS: { id: EditorTab; label: string }[] = [
   { id: "templates", label: "Templates" },
@@ -46,6 +46,7 @@ const TABS: { id: EditorTab; label: string }[] = [
   { id: "text", label: "Text" },
   { id: "style", label: "Style" },
   { id: "effects", label: "Effects" },
+  { id: "sound", label: "Sound" },
 ];
 
 const HUE_COLORS: HueColor[] = [
@@ -60,10 +61,10 @@ const HEAD_IMAGES_BY_FILENAME: Record<string, ReturnType<typeof require>> = {
   "mufti.png": require("../../assets/heads/mufti.png"),
   "onijah-robinson.png": require("../../assets/heads/onijah-robinson.png"),
   "sehad-kamran.png": require("../../assets/heads/sehad-kamran.png"),
-  "srk.jpg": require("../../assets/heads/srk.jpg"),
+  "srk.png": require("../../assets/heads/srk.png"),
 };
 
-/** Head tile — uses bundled asset by filename (case-insensitive) from S3 URL, else presigned URL. */
+/** Head tile — uses bundled asset first, falls back to presigned S3 URL on error. */
 function CelebHeadTile({
   celeb,
   isSelected,
@@ -77,8 +78,13 @@ function CelebHeadTile({
 }) {
   const filename = getHeadFilenameFromUrl(celeb.imageUrl);
   const bundled = filename ? HEAD_IMAGES_BY_FILENAME[filename] : null;
-  const resolvedUri = useResolvedImageUrl(bundled ? undefined : (celeb.thumbnail ?? celeb.imageUrl));
-  const source = bundled ?? (resolvedUri ? { uri: resolvedUri } : { uri: celeb.imageUrl });
+  // Always resolve S3 URL so it's ready as a fallback
+  const resolvedUri = useResolvedImageUrl(celeb.thumbnail ?? celeb.imageUrl);
+  const [useFallback, setUseFallback] = useState(false);
+
+  const source = (!useFallback && bundled)
+    ? bundled
+    : (resolvedUri ? { uri: resolvedUri } : { uri: celeb.imageUrl });
 
   return (
     <Pressable
@@ -104,6 +110,9 @@ function CelebHeadTile({
             borderRadius: (headCellWidth - 14) / 2,
           }}
           resizeMode="cover"
+          onError={() => {
+            if (!useFallback) setUseFallback(true);
+          }}
         />
       </View>
       <Text
@@ -175,6 +184,14 @@ const TEXT_COLORS: { label: string; value: string }[] = [
   { label: "Black", value: "#1A1A1A" },
 ];
 
+const SOUND_OPTIONS = [
+  { id: "none", label: "No Sound", url: "" },
+  { id: "takbeer", label: "Takbeer", url: "" },
+  { id: "nasheed-1", label: "Nasheed", url: "" },
+  { id: "duff-beat", label: "Duff Beat", url: "" },
+  { id: "celebration", label: "Celebration", url: "" },
+];
+
 const MY_PHOTO_ID = "__my-photo__";
 
 export default function EditorScreen() {
@@ -194,6 +211,7 @@ export default function EditorScreen() {
     setTextAnimation,
     setTextColor,
     updateGroupedText,
+    setAudio,
   } = useComposition();
 
   const [activeTab, setActiveTab] = useState<EditorTab>("templates");
@@ -231,6 +249,7 @@ export default function EditorScreen() {
     (screenWidth - 32 - backgroundGap * (backgroundColumns - 1)) / backgroundColumns,
   );
   const selectedBackgroundSource = composition.background.source;
+  const contentScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     if (paramPresetId && paramPresetId !== state.selectedPresetId) {
@@ -266,9 +285,14 @@ export default function EditorScreen() {
   const handleSelectMyPhoto = () => {
     lightTap();
     setSelectedHeadId(MY_PHOTO_ID);
-    if (userPhoto) {
+    // Only set head if userPhoto is a remote URL (S3); file:// URIs crash the preview WebView
+    if (userPhoto && !userPhoto.startsWith("file://")) {
       setHeadImage(userPhoto);
     }
+    // Auto-scroll so the upload buttons are visible
+    setTimeout(() => {
+      contentScrollRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
   /** Remove background from local image; Convex uploads only the result to S3. No upload before. */
@@ -300,20 +324,18 @@ export default function EditorScreen() {
   const handlePickGallery = async () => {
     const result = await pickImageFromGallery();
     if (result) {
-      const cropped = await cropToSquare(result.uri, result.width, result.height);
-      setUserPhoto(cropped);
-      setHeadImage(cropped);
-      await removeBgThenSetPhoto(cropped);
+      setUserPhoto(result.uri);
+      setSelectedHeadId(MY_PHOTO_ID);
+      await removeBgThenSetPhoto(result.uri);
     }
   };
 
   const handlePickCamera = async () => {
     const result = await pickImageFromCamera();
     if (result) {
-      const cropped = await cropToSquare(result.uri, result.width, result.height);
-      setUserPhoto(cropped);
-      setHeadImage(cropped);
-      await removeBgThenSetPhoto(cropped);
+      setUserPhoto(result.uri);
+      setSelectedHeadId(MY_PHOTO_ID);
+      await removeBgThenSetPhoto(result.uri);
     }
   };
 
@@ -390,6 +412,7 @@ export default function EditorScreen() {
 
         {/* Tab content — bottom ~45% */}
         <ScrollView
+          ref={contentScrollRef}
           style={{ flex: 1 }}
           contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
           keyboardShouldPersistTaps="handled"
@@ -962,6 +985,49 @@ export default function EditorScreen() {
                         }}
                       >
                         {anim}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {/* Sound Tab */}
+          {activeTab === "sound" && (
+            <View>
+              <Text style={sectionLabel}>Choose a Sound</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {SOUND_OPTIONS.map((option) => {
+                  const isActive =
+                    option.id === "none"
+                      ? composition.audio.trackUrl === ""
+                      : composition.audio.trackUrl === option.url && option.url !== "";
+                  return (
+                    <Pressable
+                      key={option.id}
+                      testID={`sound-${option.id}`}
+                      onPress={() => {
+                        lightTap();
+                        setAudio(option.url, option.id === "none" ? 0 : 0.8);
+                      }}
+                      style={{
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                        borderRadius: 20,
+                        backgroundColor: isActive ? Colors.goldMuted : Colors.bgSurface,
+                        borderWidth: 1,
+                        borderColor: isActive ? Colors.gold : "transparent",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: isActive ? Colors.gold : Colors.textSecondary,
+                          fontWeight: "600",
+                          fontSize: 14,
+                        }}
+                      >
+                        {option.label}
                       </Text>
                     </Pressable>
                   );

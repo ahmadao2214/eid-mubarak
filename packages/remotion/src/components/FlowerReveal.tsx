@@ -1,6 +1,7 @@
 import { Img, OffthreadVideo, useCurrentFrame, useVideoConfig, spring } from "remotion";
 import type { CompositionProps } from "../types";
 import { useLottieData } from "../utils/lottie-loader";
+import { resolveAssetSrc } from "../utils/resolve-asset";
 import { EID_PINK, EID_GOLD, EID_GREEN } from "../utils/colors";
 
 type Props = {
@@ -20,7 +21,7 @@ const PETAL_COUNTS: Record<string, number> = {
 };
 
 /** Real rose image for rose type, SVG ellipses for others */
-const ROSE_IMAGE_SRC = "/assets/rose.png";
+const ROSE_IMAGE_SRC = resolveAssetSrc("/assets/rose.png");
 
 /**
  * Renders petals as a wreath AROUND the head.
@@ -206,7 +207,7 @@ export const FlowerReveal: React.FC<Props> = ({ head }) => {
   if (head.flowerReveal.videoSource) {
     return (
       <VideoReveal
-        videoSource={head.flowerReveal.videoSource}
+        videoSource={resolveAssetSrc(head.flowerReveal.videoSource)}
         position={head.position}
         headScale={head.scale}
       />

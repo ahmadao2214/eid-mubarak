@@ -144,9 +144,9 @@ describe("Presets", () => {
       expect(preset!.defaultProps.head.imageUrl).toBe("/assets/heads/mufti.png");
     });
 
-    it("celebrity-greeting has default head /assets/heads/srk.jpg", () => {
+    it("celebrity-greeting has default head /assets/heads/srk.png", () => {
       const preset = getPresetById("celebrity-greeting");
-      expect(preset!.defaultProps.head.imageUrl).toBe("/assets/heads/srk.jpg");
+      expect(preset!.defaultProps.head.imageUrl).toBe("/assets/heads/srk.png");
     });
 
     it("six-head-spiral has default head /assets/heads/drak-hijab.png", () => {

@@ -1,6 +1,6 @@
 import { AbsoluteFill, Img, useCurrentFrame, useVideoConfig, interpolate } from "remotion";
 import type { CompositionProps } from "../types";
-import { isPlaceholderSource, resolvePlaceholder } from "../utils/placeholders";
+import { resolveAssetSrc } from "../utils/resolve-asset";
 
 type Props = { background: CompositionProps["background"] };
 
@@ -12,9 +12,7 @@ export const BackgroundLayer: React.FC<Props> = ({ background }) => {
     return <AbsoluteFill style={{ backgroundColor: background.source }} />;
   }
 
-  const src = isPlaceholderSource(background.source)
-    ? resolvePlaceholder(background.source) ?? background.source
-    : background.source;
+  const src = resolveAssetSrc(background.source);
 
   const animation = background.animation ?? "static";
 

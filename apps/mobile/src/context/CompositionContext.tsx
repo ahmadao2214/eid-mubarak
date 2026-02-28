@@ -43,7 +43,9 @@ export type CompositionAction =
       composition: CompositionProps;
     }
   | { type: "SET_PROJECT_ID"; projectId: string }
-  | { type: "UPDATE_GROUPED_TEXT"; group: string; texts: string[] };
+  | { type: "UPDATE_GROUPED_TEXT"; group: string; texts: string[] }
+  | { type: "SET_AUDIO"; trackUrl: string; volume: number }
+  | { type: "SET_HEAD_CROP"; x: number; y: number };
 
 // ── Initial state factory ────────────────────────────────
 
@@ -157,6 +159,20 @@ export function compositionReducer(
         },
       };
 
+    case "SET_HEAD_CROP": {
+      const clamp = (v: number) => Math.min(100, Math.max(0, v));
+      return {
+        ...state,
+        composition: {
+          ...state.composition,
+          head: {
+            ...state.composition.head,
+            cropOffset: { x: clamp(action.x), y: clamp(action.y) },
+          },
+        },
+      };
+    }
+
     case "TOGGLE_FLOWER_REVEAL":
       return {
         ...state,
@@ -224,6 +240,15 @@ export function compositionReducer(
         projectId: action.projectId,
       };
 
+    case "SET_AUDIO":
+      return {
+        ...state,
+        composition: {
+          ...state.composition,
+          audio: { trackUrl: action.trackUrl, volume: action.volume },
+        },
+      };
+
     case "UPDATE_GROUPED_TEXT": {
       let textIdx = 0;
       return {
@@ -263,6 +288,8 @@ interface CompositionContextValue {
   setTextFont: (slotId: string, fontFamily: FontStyle) => void;
   setTextAnimation: (slotId: string, animation: TextAnimation) => void;
   setTextColor: (slotId: string, color: string) => void;
+  setHeadCrop: (x: number, y: number) => void;
+  setAudio: (trackUrl: string, volume: number) => void;
   updateGroupedText: (group: string, texts: string[]) => void;
   loadProject: (
     projectId: string | null,
@@ -319,6 +346,9 @@ export function CompositionProvider({
       dispatch({ type: "SET_TEXT_ANIMATION", slotId, animation }),
     setTextColor: (slotId, color) =>
       dispatch({ type: "SET_TEXT_COLOR", slotId, color }),
+    setHeadCrop: (x, y) => dispatch({ type: "SET_HEAD_CROP", x, y }),
+    setAudio: (trackUrl, volume) =>
+      dispatch({ type: "SET_AUDIO", trackUrl, volume }),
     updateGroupedText: (group, texts) =>
       dispatch({ type: "UPDATE_GROUPED_TEXT", group, texts }),
     loadProject: (projectId, presetId, composition) =>

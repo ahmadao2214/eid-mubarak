@@ -51,6 +51,18 @@ export const updateProgress = mutation({
   },
 });
 
+/** Delete all renders. Used for gallery reset. */
+export const deleteAll = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db.query("renders").collect();
+    for (const doc of all) {
+      await ctx.db.delete(doc._id);
+    }
+    return all.length;
+  },
+});
+
 export const internalUpdateProgress = internalMutation({
   args: {
     renderId: v.id("renders"),

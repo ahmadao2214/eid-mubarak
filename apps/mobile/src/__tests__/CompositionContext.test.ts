@@ -97,3 +97,85 @@ describe("CompositionContext reducer - SELECT_PRESET head auto-select", () => {
     expect(newState.composition.head.imageUrl).toBe("/assets/heads/mufti.png");
   });
 });
+
+describe("CompositionContext reducer - SET_AUDIO", () => {
+  test("SET_AUDIO sets trackUrl and volume", () => {
+    const state = createInitialState("zohran-classic");
+    expect(state.composition.audio.trackUrl).toBe("");
+
+    const newState = compositionReducer(state, {
+      type: "SET_AUDIO",
+      trackUrl: "https://cdn.example.com/takbeer.mp3",
+      volume: 0.8,
+    });
+
+    expect(newState.composition.audio.trackUrl).toBe(
+      "https://cdn.example.com/takbeer.mp3",
+    );
+    expect(newState.composition.audio.volume).toBe(0.8);
+  });
+
+  test("SET_AUDIO with empty trackUrl clears audio", () => {
+    const state = createInitialState("zohran-classic");
+    // First set audio
+    const withAudio = compositionReducer(state, {
+      type: "SET_AUDIO",
+      trackUrl: "https://cdn.example.com/takbeer.mp3",
+      volume: 0.8,
+    });
+
+    // Then clear it (selecting "No Sound")
+    const cleared = compositionReducer(withAudio, {
+      type: "SET_AUDIO",
+      trackUrl: "",
+      volume: 0,
+    });
+
+    expect(cleared.composition.audio.trackUrl).toBe("");
+    expect(cleared.composition.audio.volume).toBe(0);
+  });
+});
+
+describe("CompositionContext reducer - SET_HEAD_CROP", () => {
+  test("SET_HEAD_CROP sets cropOffset on head", () => {
+    const state = createInitialState("zohran-classic");
+    expect(state.composition.head.cropOffset).toBeUndefined();
+
+    const newState = compositionReducer(state, {
+      type: "SET_HEAD_CROP",
+      x: 30,
+      y: 70,
+    });
+
+    expect(newState.composition.head.cropOffset).toEqual({ x: 30, y: 70 });
+  });
+
+  test("SET_HEAD_CROP clamps values to 0-100", () => {
+    const state = createInitialState("zohran-classic");
+
+    const clamped = compositionReducer(state, {
+      type: "SET_HEAD_CROP",
+      x: -20,
+      y: 150,
+    });
+
+    expect(clamped.composition.head.cropOffset).toEqual({ x: 0, y: 100 });
+  });
+
+  test("SET_HEAD_CROP preserves other head properties", () => {
+    const state = createInitialState("zohran-classic");
+    const originalHead = { ...state.composition.head };
+
+    const newState = compositionReducer(state, {
+      type: "SET_HEAD_CROP",
+      x: 40,
+      y: 60,
+    });
+
+    expect(newState.composition.head.imageUrl).toBe(originalHead.imageUrl);
+    expect(newState.composition.head.position).toEqual(originalHead.position);
+    expect(newState.composition.head.scale).toBe(originalHead.scale);
+    expect(newState.composition.head.animation).toBe(originalHead.animation);
+    expect(newState.composition.head.cropOffset).toEqual({ x: 40, y: 60 });
+  });
+});

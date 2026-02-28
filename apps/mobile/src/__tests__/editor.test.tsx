@@ -26,6 +26,7 @@ jest.mock("@/hooks/useImagePicker", () => ({
 
 jest.mock("@/hooks/useRemoveBg", () => ({
   removeBackground: jest.fn().mockResolvedValue({ success: false }),
+  removeBackgroundFromImage: jest.fn().mockResolvedValue({ success: false }),
 }));
 
 jest.mock("@/hooks/useConvexData", () => ({

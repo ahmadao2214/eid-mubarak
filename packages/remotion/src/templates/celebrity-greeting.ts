@@ -20,7 +20,7 @@ export const celebrityGreeting: PresetConfig = {
       animation: "static",
     },
     head: {
-      imageUrl: "/assets/heads/srk.jpg",
+      imageUrl: "/assets/heads/srk.png",
       position: { x: 50, y: 38 },
       scale: 0.5,
       enterAtFrame: 10,

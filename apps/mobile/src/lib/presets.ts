@@ -137,14 +137,14 @@ const truckerArt: PresetConfig = {
       },
       {
         type: "image",
-        source: "/assets/pakistani-truck-art-chain.png",
+        source: "/assets/pakistani-truck-art-chain.jpg",
         position: { x: 50, y: 15 },
         scale: 1,
         enterAtFrame: 5,
       },
       {
         type: "image",
-        source: "/assets/pakistani-truck-art-peacock.png",
+        source: "/assets/pakistani-truck-art-peacock.jpg",
         position: { x: 50, y: 90 },
         scale: 0.9,
         enterAtFrame: 10,
@@ -191,7 +191,7 @@ const celebrityGreeting: PresetConfig = {
       animation: "static",
     },
     head: {
-      imageUrl: "/assets/heads/srk.jpg",
+      imageUrl: "/assets/heads/srk.png",
       position: { x: 50, y: 38 },
       scale: 1.5,
       enterAtFrame: 10,

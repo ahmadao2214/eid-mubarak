@@ -7,7 +7,8 @@
   ],
   "dependencies": {
     "@aws-sdk/client-s3": "^3.700.0",
-    "@aws-sdk/s3-request-presigner": "^3.700.0"
+    "@aws-sdk/s3-request-presigner": "^3.700.0",
+    "lightningcss-darwin-arm64": "^1.31.1"
   },
   "scripts": {
     "dev": "turbo dev",

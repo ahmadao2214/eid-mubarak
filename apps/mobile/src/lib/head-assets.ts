@@ -9,7 +9,7 @@ export const KNOWN_HEAD_FILENAMES = [
   "mufti.png",
   "onijah-robinson.png",
   "sehad-kamran.png",
-  "srk.jpg",
+  "srk.png",
 ] as const;
 
 const KNOWN_SET = new Set(KNOWN_HEAD_FILENAMES);

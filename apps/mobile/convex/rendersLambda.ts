@@ -9,13 +9,17 @@ import {
 } from "@remotion/lambda/client";
 import type { AwsRegion } from "@remotion/lambda";
 
-const POLL_INTERVAL_MS = 3000;
+export const RENDER_CONFIG = {
+  framesPerLambda: 300, // Render all frames in a single Lambda to avoid AWS concurrency limits
+  pollIntervalMs: 2000, // was 3000 — faster status updates
+  codec: "h264" as const,
+};
 
 /** Extract S3 key from our stored URL (https://bucket.s3.region.amazonaws.com/key). */
 function extractS3KeyFromUrl(url: string | null | undefined): string | null {
   if (!url?.includes("amazonaws.com/")) return null;
   const after = url.split("amazonaws.com/")[1]?.split("?")[0];
-  return after && (after.startsWith("user-photos/") || after.startsWith("rendered-videos/"))
+  return after && (after.startsWith("user-photos/") || after.startsWith("rendered-videos/") || after.startsWith("heads/"))
     ? after
     : null;
 }
@@ -82,11 +86,12 @@ export const executeRender = internalAction({
         serveUrl,
         composition: "EidMemeVideo",
         inputProps: compositionForLambda,
-        codec: "h264",
+        codec: RENDER_CONFIG.codec,
         outName: `renders/${renderId}.mp4`,
+        framesPerLambda: RENDER_CONFIG.framesPerLambda,
       });
       await ctx.scheduler.runAfter(
-        POLL_INTERVAL_MS,
+        RENDER_CONFIG.pollIntervalMs,
         internal.rendersLambda.pollRenderProgress,
         {
           renderId,
@@ -144,7 +149,7 @@ export const pollRenderProgress = internalAction({
         status: "rendering",
       });
       await ctx.scheduler.runAfter(
-        POLL_INTERVAL_MS,
+        RENDER_CONFIG.pollIntervalMs,
         internal.rendersLambda.pollRenderProgress,
         args,
       );

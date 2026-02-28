@@ -39,14 +39,14 @@ export const truckerArt: PresetConfig = {
       },
       {
         type: "image",
-        source: "/assets/pakistani-truck-art-chain.png",
+        source: "/assets/pakistani-truck-art-chain.jpg",
         position: { x: 50, y: 15 },
         scale: 1,
         enterAtFrame: 5,
       },
       {
         type: "image",
-        source: "/assets/pakistani-truck-art-peacock.png",
+        source: "/assets/pakistani-truck-art-peacock.jpg",
         position: { x: 50, y: 90 },
         scale: 0.9,
         enterAtFrame: 10,

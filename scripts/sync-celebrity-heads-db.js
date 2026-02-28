@@ -57,7 +57,7 @@ const CANONICAL_HEADS = [
   { name: "Mufti", s3Key: "heads/mufti.png", tags: ["celebrity"] },
   { name: "Onijah Robinson", s3Key: "heads/onijah-robinson.png", tags: ["celebrity"] },
   { name: "Sehad Kamran", s3Key: "heads/sehad-kamran.png", tags: ["celebrity"] },
-  { name: "SRK", s3Key: "heads/srk.jpg", tags: ["celebrity", "bollywood"] },
+  { name: "SRK", s3Key: "heads/srk.png", tags: ["celebrity", "bollywood"] },
 ];
 
 async function main() {

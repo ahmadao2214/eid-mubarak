@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
-import { WebView } from "react-native-webview";
+import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import type { CompositionProps } from "@/types";
 import { StaticCardPreview } from "./StaticCardPreview";
 import { useResolvedImageUrl } from "@/hooks/useResolvedImageUrl";
@@ -16,7 +16,7 @@ interface RemotionPreviewProps {
 
 export function RemotionPreview({ composition, width, height }: RemotionPreviewProps) {
   const webViewRef = useRef<WebView>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
 
   const rawHeadUrl = composition.head?.imageUrl ?? "";
@@ -28,6 +28,10 @@ export function RemotionPreview({ composition, width, height }: RemotionPreviewP
     ? `${PREVIEW_URL}/assets/heads/${headFilename}`
     : (resolvedHeadUrl ?? rawHeadUrl);
 
+  const buildComp = useCallback((): CompositionProps => ({
+    ...composition,
+    head: { ...composition.head, imageUrl: headImageUrl },
+  }), [composition, headImageUrl]);
 
   const injectComposition = useCallback(
     (comp: CompositionProps) => {
@@ -44,23 +48,29 @@ export function RemotionPreview({ composition, width, height }: RemotionPreviewP
     [],
   );
 
-  // After page loads, wait for React to mount then send composition
-  useEffect(() => {
-    if (!loaded) return;
-    const comp = { ...composition, head: { ...composition.head, imageUrl: headImageUrl } };
-    const timer = setTimeout(() => injectComposition(comp), 500);
-    return () => clearTimeout(timer);
-  }, [loaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  // When the WebView's React app sends READY (on mount), send the composition
+  const handleWebViewMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      try {
+        const msg = JSON.parse(event.nativeEvent.data);
+        if (msg.type === "READY") {
+          setReady(true);
+          injectComposition(buildComp());
+        } else if (msg.type === "ACK") {
+          setReady(true);
+        }
+      } catch {
+        // ignore parse errors
+      }
+    },
+    [injectComposition, buildComp],
+  );
 
-  // Send composition updates when composition or resolved head URL changes
+  // Send composition updates whenever composition or head URL changes
   useEffect(() => {
-    if (!loaded) return;
-    const comp: CompositionProps = {
-      ...composition,
-      head: { ...composition.head, imageUrl: headImageUrl },
-    };
-    injectComposition(comp);
-  }, [composition, headImageUrl, loaded, injectComposition]);
+    if (!ready) return;
+    injectComposition(buildComp());
+  }, [composition, headImageUrl, ready, injectComposition, buildComp]);
 
   if (!PREVIEW_URL || error) {
     return (
@@ -73,7 +83,7 @@ export function RemotionPreview({ composition, width, height }: RemotionPreviewP
 
   return (
     <View style={[styles.container, { width, height }]}>
-      {!loaded && (
+      {!ready && (
         <View style={StyleSheet.absoluteFill}>
           <StaticCardPreview
             composition={composition}
@@ -85,11 +95,11 @@ export function RemotionPreview({ composition, width, height }: RemotionPreviewP
         ref={webViewRef}
         testID="remotion-webview"
         source={{ uri: PREVIEW_URL }}
-        onLoadEnd={() => setLoaded(true)}
+        onMessage={handleWebViewMessage}
         onError={() => setError(true)}
         style={[
           styles.webview,
-          { width, height, opacity: loaded ? 1 : 0 },
+          { width, height, opacity: ready ? 1 : 0 },
         ]}
         allowsInlineMediaPlayback
         mediaPlaybackRequiresUserAction={false}
