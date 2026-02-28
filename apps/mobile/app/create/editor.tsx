@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -219,6 +220,7 @@ export default function EditorScreen() {
         const uploadResult = await uploadPhoto(userPhoto);
         if (!uploadResult.success || !uploadResult.s3Key) {
           setRemovingBg(false);
+          Alert.alert("Upload Failed", uploadResult.error ?? "Could not upload photo");
           return;
         }
         s3Key = uploadResult.s3Key;
@@ -232,6 +234,8 @@ export default function EditorScreen() {
       if (result.success && result.transparentUrl) {
         setUserPhoto(result.transparentUrl);
         setHeadImage(result.transparentUrl);
+      } else if (!result.success) {
+        Alert.alert("Background Removal Failed", result.error ?? "Could not remove background");
       }
     } finally {
       setRemovingBg(false);

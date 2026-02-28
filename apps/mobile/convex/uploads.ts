@@ -10,13 +10,25 @@ import {
 
 const PHOTOROOM_SEGMENT_URL = "https://sdk.photoroom.com/v1/segment";
 
+const ALLOWED_S3_KEY_PREFIXES = ["user-photos/", "rendered-videos/"] as const;
+
+function isAllowedS3Key(s3Key: string): boolean {
+  return ALLOWED_S3_KEY_PREFIXES.some((prefix) => s3Key.startsWith(prefix));
+}
+
 /**
- * Fetch image from S3, remove background via PhotoRoom API, upload result to S3, return public URL.
+ * Fetch image from S3, remove background via PhotoRoom API, upload result to S3, return S3 key.
+ * Client should call storage.getDownloadUrl with the returned key for a presigned URL (bucket may be private).
  * Requires Convex env: S3_*, AWS_*, PHOTOROOM_API_KEY (or PHOTOROOM_SANDBOX_API_KEY for testing).
  */
 export const removeBackground = action({
   args: { s3Key: v.string() },
-  handler: async (_ctx, args): Promise<{ resultS3Url: string }> => {
+  handler: async (_ctx, args): Promise<{ resultS3Key: string }> => {
+    if (!isAllowedS3Key(args.s3Key)) {
+      throw new Error(
+        `s3Key must start with one of: ${ALLOWED_S3_KEY_PREFIXES.join(", ")}`
+      );
+    }
     const bucket = process.env.S3_BUCKET;
     const region = process.env.AWS_REGION;
     const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
@@ -86,7 +98,6 @@ export const removeBackground = action({
       })
     );
 
-    const resultS3Url = `https://${bucket}.s3.${region}.amazonaws.com/${resultKey}`;
-    return { resultS3Url };
+    return { resultS3Key: resultKey };
   },
 });

@@ -26,7 +26,11 @@ export async function uploadToS3(
 export async function removeBackground(
   imageUri: string,
 ): Promise<RemoveBgResponse> {
-  return await convexClient.action(api.uploads.removeBackground, {
+  const { resultS3Key } = await convexClient.action(api.uploads.removeBackground, {
     s3Key: imageUri,
   });
+  const { url } = await convexClient.action(api.storage.getDownloadUrl, {
+    s3Key: resultS3Key,
+  });
+  return { resultS3Url: url };
 }
