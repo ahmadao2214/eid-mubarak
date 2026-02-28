@@ -11,6 +11,7 @@
   },
   "scripts": {
     "dev": "turbo dev",
+    "dev:all": "concurrently -n preview,mobile -c blue,green \"bun run --cwd apps/preview dev\" \"bun run mobile\"",
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",
@@ -19,6 +20,7 @@
     "mobile:android": "cd apps/mobile && bun run android"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "jest": "^29.7.0",
     "turbo": "^2"
   },

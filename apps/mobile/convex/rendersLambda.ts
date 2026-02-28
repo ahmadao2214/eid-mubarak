@@ -1,7 +1,7 @@
 "use node";
 
 import { internalAction } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { v } from "convex/values";
 import {
   renderMediaOnLambda,
@@ -10,6 +10,15 @@ import {
 import type { AwsRegion } from "@remotion/lambda";
 
 const POLL_INTERVAL_MS = 3000;
+
+/** Extract S3 key from our stored URL (https://bucket.s3.region.amazonaws.com/key). */
+function extractS3KeyFromUrl(url: string | null | undefined): string | null {
+  if (!url?.includes("amazonaws.com/")) return null;
+  const after = url.split("amazonaws.com/")[1]?.split("?")[0];
+  return after && (after.startsWith("user-photos/") || after.startsWith("rendered-videos/"))
+    ? after
+    : null;
+}
 
 export const executeRender = internalAction({
   args: {
@@ -50,13 +59,29 @@ export const executeRender = internalAction({
       status: "rendering",
     });
 
+    let compositionForLambda = project.composition;
+    const headUrl = project.composition.head?.imageUrl;
+    const s3Key = extractS3KeyFromUrl(headUrl);
+    if (s3Key) {
+      const { url: presignedUrl } = await ctx.runAction(api.storage.getDownloadUrl, {
+        s3Key,
+      });
+      compositionForLambda = {
+        ...project.composition,
+        head: {
+          ...project.composition.head,
+          imageUrl: presignedUrl,
+        },
+      };
+    }
+
     try {
       const result = await renderMediaOnLambda({
         region,
         functionName,
         serveUrl,
         composition: "EidMemeVideo",
-        inputProps: project.composition,
+        inputProps: compositionForLambda,
         codec: "h264",
         outName: `renders/${renderId}.mp4`,
       });

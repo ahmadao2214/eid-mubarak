@@ -21,10 +21,8 @@ import { PRESETS } from "@/lib/presets";
 import { splitGreeting } from "@/lib/text-split";
 import { Colors } from "@/lib/colors";
 import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
-import { removeBackground } from "@/hooks/useRemoveBg";
-import { extractS3Key } from "@/hooks/useResolvedImageUrl";
+import { removeBackgroundFromImage } from "@/hooks/useRemoveBg";
 import { useCelebrityHeads } from "@/hooks/useConvexData";
-import { useUpload } from "@/hooks/useUpload";
 import { lightTap } from "@/lib/haptics";
 import type {
   PresetId,
@@ -127,7 +125,6 @@ export default function EditorScreen() {
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [removingBg, setRemovingBg] = useState(false);
   const celebHeads = useCelebrityHeads();
-  const { uploadPhoto } = useUpload();
   const [selectedHeadId, setSelectedHeadId] = useState<string | null>(null);
   const [customMode, setCustomMode] = useState<Record<string, boolean>>({});
 
@@ -192,12 +189,29 @@ export default function EditorScreen() {
     }
   };
 
+  /** Remove background from local image; Convex uploads only the result to S3. No upload before. */
+  const removeBgThenSetPhoto = async (localUri: string) => {
+    setRemovingBg(true);
+    try {
+      const result = await removeBackgroundFromImage(localUri);
+      if (result.success && result.transparentUrl) {
+        setUserPhoto(result.transparentUrl);
+        setHeadImage(result.transparentUrl);
+      } else if (!result.success) {
+        Alert.alert("Background Removal Failed", result.error ?? "Could not remove background");
+      }
+    } finally {
+      setRemovingBg(false);
+    }
+  };
+
   const handlePickGallery = async () => {
     const result = await pickImageFromGallery();
     if (result) {
       const cropped = await cropToSquare(result.uri, result.width, result.height);
       setUserPhoto(cropped);
       setHeadImage(cropped);
+      await removeBgThenSetPhoto(cropped);
     }
   };
 
@@ -207,38 +221,7 @@ export default function EditorScreen() {
       const cropped = await cropToSquare(result.uri, result.width, result.height);
       setUserPhoto(cropped);
       setHeadImage(cropped);
-    }
-  };
-
-  const handleRemoveBg = async () => {
-    if (!userPhoto) return;
-    setRemovingBg(true);
-    try {
-      // Backend needs an S3 key. If the photo is still local (file://, content://, blob:), upload first.
-      let s3Key: string | null = extractS3Key(userPhoto);
-      if (!s3Key) {
-        const uploadResult = await uploadPhoto(userPhoto);
-        if (!uploadResult.success || !uploadResult.s3Key) {
-          setRemovingBg(false);
-          Alert.alert("Upload Failed", uploadResult.error ?? "Could not upload photo");
-          return;
-        }
-        s3Key = uploadResult.s3Key;
-        // Show the uploaded image so the user sees progress
-        if (uploadResult.s3Url) {
-          setUserPhoto(uploadResult.s3Url);
-          setHeadImage(uploadResult.s3Url);
-        }
-      }
-      const result = await removeBackground(s3Key);
-      if (result.success && result.transparentUrl) {
-        setUserPhoto(result.transparentUrl);
-        setHeadImage(result.transparentUrl);
-      } else if (!result.success) {
-        Alert.alert("Background Removal Failed", result.error ?? "Could not remove background");
-      }
-    } finally {
-      setRemovingBg(false);
+      await removeBgThenSetPhoto(cropped);
     }
   };
 
@@ -524,30 +507,11 @@ export default function EditorScreen() {
                     </Pressable>
                   </View>
 
-                  {userPhoto && (
-                    <Pressable
-                      testID="remove-bg-button"
-                      onPress={handleRemoveBg}
-                      disabled={removingBg}
-                      style={{
-                        alignSelf: "center",
-                        backgroundColor: Colors.pink,
-                        paddingHorizontal: 20,
-                        paddingVertical: 10,
-                        borderRadius: 10,
-                        opacity: removingBg ? 0.6 : 1,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 8,
-                      }}
-                    >
-                      {removingBg && (
-                        <ActivityIndicator testID="remove-bg-loading" size="small" color="#fff" />
-                      )}
-                      <Text style={{ color: Colors.textPrimary, fontWeight: "600" }}>
-                        {removingBg ? "Removing..." : "Remove Background"}
-                      </Text>
-                    </Pressable>
+                  {removingBg && (
+                    <View style={{ alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
+                      <ActivityIndicator testID="remove-bg-loading" size="small" color={Colors.gold} />
+                      <Text style={{ color: Colors.textSecondary, fontSize: 14 }}>Uploading & removing background...</Text>
+                    </View>
                   )}
                 </View>
               )}
