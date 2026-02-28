@@ -43,6 +43,11 @@ const backgrounds = [
   { name: "Mountain Road Psychedelic", s3Key: "backgrounds/mountain-road.mp4", tags: ["psychedelic", "outdoor"] },
   { name: "Desert Highway Golden", s3Key: "backgrounds/desert-highway.mp4", tags: ["golden", "outdoor"] },
   { name: "Trucker Panel Art", s3Key: "backgrounds/trucker-panel.jpg", tags: ["trucker", "art"] },
+  // Phase 5 backgrounds from assets/backgrounds/
+  { name: "Desert Dunes", s3Key: "backgrounds/desert.jpg", tags: ["desert", "outdoor"] },
+  { name: "Desert Road", s3Key: "backgrounds/desert-road.jpg", tags: ["desert", "road", "outdoor"] },
+  { name: "Caribbean Beach", s3Key: "backgrounds/beach-caribbean.jpg", tags: ["beach", "ocean", "outdoor"] },
+  { name: "Flower Landscape", s3Key: "backgrounds/flower-landscape.jpg", tags: ["flowers", "landscape"] },
 ];
 
 // ── Lottie Animations ───────────────────────────────────────

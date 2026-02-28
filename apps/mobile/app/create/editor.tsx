@@ -22,7 +22,7 @@ import { splitGreeting } from "@/lib/text-split";
 import { Colors } from "@/lib/colors";
 import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
 import { removeBackgroundFromImage } from "@/hooks/useRemoveBg";
-import { useCelebrityHeads } from "@/hooks/useConvexData";
+import { useAssetsByType, useCelebrityHeads } from "@/hooks/useConvexData";
 import { lightTap } from "@/lib/haptics";
 import type {
   PresetId,
@@ -32,13 +32,15 @@ import type {
   FlowerType,
   TextAnimation,
   CelebrityHead,
+  Asset,
 } from "@/types";
 
-type EditorTab = "templates" | "head" | "text" | "style" | "effects";
+type EditorTab = "templates" | "head" | "background" | "text" | "style" | "effects";
 
 const TABS: { id: EditorTab; label: string }[] = [
   { id: "templates", label: "Templates" },
   { id: "head", label: "Head" },
+  { id: "background", label: "Background" },
   { id: "text", label: "Text" },
   { id: "style", label: "Style" },
   { id: "effects", label: "Effects" },
@@ -110,6 +112,7 @@ export default function EditorScreen() {
     state,
     selectPreset,
     setHeadImage,
+    setBackground,
     updateTextSlot,
     setHueColor,
     setHueAnimation,
@@ -125,6 +128,9 @@ export default function EditorScreen() {
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [removingBg, setRemovingBg] = useState(false);
   const celebHeads = useCelebrityHeads();
+  const backgroundAssets = useAssetsByType("background").filter(
+    (asset) => asset.type === "background-image",
+  ) as Asset[];
   const [selectedHeadId, setSelectedHeadId] = useState<string | null>(null);
   const [customMode, setCustomMode] = useState<Record<string, boolean>>({});
 
@@ -147,6 +153,12 @@ export default function EditorScreen() {
   const headCellWidth = Math.floor(
     (screenWidth - 32 - headGap * (headColumns - 1)) / headColumns,
   );
+  const backgroundColumns = 2;
+  const backgroundGap = 12;
+  const backgroundCellWidth = Math.floor(
+    (screenWidth - 32 - backgroundGap * (backgroundColumns - 1)) / backgroundColumns,
+  );
+  const selectedBackgroundSource = composition.background.source;
 
   useEffect(() => {
     if (paramPresetId && paramPresetId !== state.selectedPresetId) {
@@ -203,6 +215,16 @@ export default function EditorScreen() {
     } finally {
       setRemovingBg(false);
     }
+  };
+
+  const handleSelectBackground = (asset: Asset) => {
+    lightTap();
+    const next = {
+      type: "image" as const,
+      source: asset.url,
+      animation: composition.background.animation ?? "slow-zoom",
+    };
+    setBackground(next);
   };
 
   const handlePickGallery = async () => {
@@ -515,6 +537,63 @@ export default function EditorScreen() {
                   )}
                 </View>
               )}
+            </View>
+          )}
+
+          {/* Background Tab — preset S3 backgrounds */}
+          {activeTab === "background" && (
+            <View>
+              <Text style={sectionLabel}>Choose a Background</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: backgroundGap,
+                  marginBottom: 16,
+                }}
+              >
+                {backgroundAssets.map((asset) => {
+                  const isSelected = selectedBackgroundSource === asset.url;
+                  return (
+                    <Pressable
+                      key={asset.id}
+                      testID={`background-${asset.id}`}
+                      onPress={() => handleSelectBackground(asset)}
+                      style={{ width: backgroundCellWidth }}
+                    >
+                      <View
+                        style={{
+                          width: backgroundCellWidth,
+                          height: Math.round(backgroundCellWidth * (9 / 16)),
+                          borderRadius: 12,
+                          borderWidth: 2,
+                          borderColor: isSelected ? Colors.gold : Colors.borderSubtle,
+                          overflow: "hidden",
+                          backgroundColor: Colors.bgSurface,
+                        }}
+                      >
+                        <Image
+                          source={{ uri: asset.url }}
+                          style={{ width: "100%", height: "100%" }}
+                          resizeMode="cover"
+                        />
+                      </View>
+                      <Text
+                        style={{
+                          color: isSelected ? Colors.gold : Colors.textSecondary,
+                          fontSize: 11,
+                          marginTop: 4,
+                          textAlign: "center",
+                          fontWeight: isSelected ? "bold" : "normal",
+                        }}
+                        numberOfLines={1}
+                      >
+                        {asset.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
           )}
 

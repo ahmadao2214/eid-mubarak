@@ -23,6 +23,7 @@ export interface CompositionState {
 export type CompositionAction =
   | { type: "SELECT_PRESET"; presetId: PresetId }
   | { type: "SET_HEAD_IMAGE"; imageUrl: string }
+  | { type: "SET_BACKGROUND"; background: CompositionProps["background"] }
   | { type: "UPDATE_TEXT_SLOT"; slotId: string; text: string }
   | { type: "SET_HUE_COLOR"; color: HueColor }
   | { type: "SET_HUE_ANIMATION"; animation: "pulse" | "static" | "cycle" }
@@ -102,6 +103,15 @@ export function compositionReducer(
         composition: {
           ...state.composition,
           head: { ...state.composition.head, imageUrl: action.imageUrl },
+        },
+      };
+
+    case "SET_BACKGROUND":
+      return {
+        ...state,
+        composition: {
+          ...state.composition,
+          background: action.background,
         },
       };
 
@@ -244,6 +254,7 @@ interface CompositionContextValue {
   dispatch: React.Dispatch<CompositionAction>;
   selectPreset: (presetId: PresetId) => void;
   setHeadImage: (imageUrl: string) => void;
+  setBackground: (background: CompositionProps["background"]) => void;
   updateTextSlot: (slotId: string, text: string) => void;
   setHueColor: (color: HueColor) => void;
   setHueAnimation: (animation: "pulse" | "static" | "cycle") => void;
@@ -291,6 +302,8 @@ export function CompositionProvider({
     dispatch,
     selectPreset: (presetId) => dispatch({ type: "SELECT_PRESET", presetId }),
     setHeadImage: (imageUrl) => dispatch({ type: "SET_HEAD_IMAGE", imageUrl }),
+    setBackground: (background) =>
+      dispatch({ type: "SET_BACKGROUND", background }),
     updateTextSlot: (slotId, text) =>
       dispatch({ type: "UPDATE_TEXT_SLOT", slotId, text }),
     setHueColor: (color) => dispatch({ type: "SET_HUE_COLOR", color }),

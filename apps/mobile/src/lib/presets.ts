@@ -258,7 +258,7 @@ const sixHeadSpiral: PresetConfig = {
     background: {
       type: "image",
       source: "/assets/zagros-mtns.jpg",
-      animation: "pan-left",
+      animation: "static",
     },
     hue: {
       enabled: true,

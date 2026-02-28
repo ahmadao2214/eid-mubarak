@@ -1,0 +1,6 @@
+[
+  { "name": "Desert Dunes", "type": "background", "s3Key": "backgrounds/desert.jpg", "localPath": "assets/backgrounds/desert.jpg", "tags": ["desert", "outdoor"] },
+  { "name": "Desert Road", "type": "background", "s3Key": "backgrounds/desert-road.jpg", "localPath": "assets/backgrounds/desert-road.jpg", "tags": ["desert", "road", "outdoor"] },
+  { "name": "Caribbean Beach", "type": "background", "s3Key": "backgrounds/beach-caribbean.jpg", "localPath": "assets/backgrounds/beach-caribbean.jpg", "tags": ["beach", "ocean", "outdoor"] },
+  { "name": "Flower Landscape", "type": "background", "s3Key": "backgrounds/flower-landscape.jpg", "localPath": "assets/backgrounds/flower-landscape.jpg", "tags": ["flowers", "landscape"] }
+]

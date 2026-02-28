@@ -2,6 +2,7 @@ import {
   compositionReducer,
   createInitialState,
 } from "@/context/CompositionContext";
+import type { CompositionProps } from "@/types";
 
 describe("CompositionContext reducer - UPDATE_GROUPED_TEXT", () => {
   test("updates all slots matching the group", () => {
@@ -33,6 +34,27 @@ describe("CompositionContext reducer - UPDATE_GROUPED_TEXT", () => {
 
     const newTexts = newState.composition.textSlots.map((s) => s.text);
     expect(newTexts).toEqual(originalTexts);
+  });
+});
+
+describe("CompositionContext reducer - SET_BACKGROUND", () => {
+  test("replaces background while preserving other fields", () => {
+    const state = createInitialState("zohran-classic");
+    const originalHead: CompositionProps["head"] = state.composition.head;
+
+    const newBackground: CompositionProps["background"] = {
+      type: "image",
+      source: "https://example.com/new-background.jpg",
+      animation: "slow-zoom",
+    };
+
+    const next = compositionReducer(state, {
+      type: "SET_BACKGROUND",
+      background: newBackground,
+    });
+
+    expect(next.composition.background).toEqual(newBackground);
+    expect(next.composition.head).toEqual(originalHead);
   });
 });
 

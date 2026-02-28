@@ -48,8 +48,12 @@ function guessContentType(filePath) {
 }
 
 async function main() {
-  const manifestPath =
-    path.resolve(repoRoot, process.argv[2] || "scripts/asset-manifest.json");
+  const args = process.argv.slice(2);
+  const uploadOnly = args.includes("--upload-only");
+  const manifestPath = path.resolve(
+    repoRoot,
+    args.find((a) => !a.startsWith("--")) || "scripts/asset-manifest.json"
+  );
   if (!fs.existsSync(manifestPath)) {
     console.error(
       "Manifest not found:",
@@ -118,26 +122,28 @@ async function main() {
     });
     console.log("Uploaded:", entry.s3Key);
 
-    const s3Url = buildS3Url(bucket, region, entry.s3Key);
-    const seedPayload = JSON.stringify({
-      name: entry.name,
-      type: entry.type,
-      s3Key: entry.s3Key,
-      s3Url,
-      tags: entry.tags || [],
-    });
-    const result = spawnSync(
-      "bun",
-      ["x", "convex", "run", "assets:seed", seedPayload],
-      { stdio: "inherit", cwd: path.join(repoRoot, "apps/mobile") }
-    );
-    if (result.status !== 0) {
-      console.error("Convex seed failed for:", entry.name);
-      process.exit(1);
+    if (!uploadOnly) {
+      const s3Url = buildS3Url(bucket, region, entry.s3Key);
+      const seedPayload = JSON.stringify({
+        name: entry.name,
+        type: entry.type,
+        s3Key: entry.s3Key,
+        s3Url,
+        tags: entry.tags || [],
+      });
+      const result = spawnSync(
+        "bun",
+        ["x", "convex", "run", "assets:seed", seedPayload],
+        { stdio: "inherit", cwd: path.join(repoRoot, "apps/mobile"), env: process.env }
+      );
+      if (result.status !== 0) {
+        console.error("Convex seed failed for:", entry.name);
+        process.exit(1);
+      }
+      console.log("Seeded:", entry.name);
     }
-    console.log("Seeded:", entry.name);
   }
-  console.log("Done. Upload and seed complete.");
+  console.log(uploadOnly ? "Done. S3 upload complete (Convex seed skipped)." : "Done. Upload and seed complete.");
 }
 
 main().catch((err) => {
