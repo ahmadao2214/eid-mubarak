@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,7 +22,9 @@ import { splitGreeting } from "@/lib/text-split";
 import { Colors } from "@/lib/colors";
 import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
 import { removeBackground } from "@/hooks/useRemoveBg";
+import { extractS3Key } from "@/hooks/useResolvedImageUrl";
 import { useCelebrityHeads } from "@/hooks/useConvexData";
+import { useUpload } from "@/hooks/useUpload";
 import { lightTap } from "@/lib/haptics";
 import type {
   PresetId,
@@ -124,6 +127,7 @@ export default function EditorScreen() {
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const [removingBg, setRemovingBg] = useState(false);
   const celebHeads = useCelebrityHeads();
+  const { uploadPhoto } = useUpload();
   const [selectedHeadId, setSelectedHeadId] = useState<string | null>(null);
   const [customMode, setCustomMode] = useState<Record<string, boolean>>({});
 
@@ -209,12 +213,33 @@ export default function EditorScreen() {
   const handleRemoveBg = async () => {
     if (!userPhoto) return;
     setRemovingBg(true);
-    const result = await removeBackground(userPhoto);
-    if (result.success && result.transparentUrl) {
-      setUserPhoto(result.transparentUrl);
-      setHeadImage(result.transparentUrl);
+    try {
+      // Backend needs an S3 key. If the photo is still local (file://, content://, blob:), upload first.
+      let s3Key: string | null = extractS3Key(userPhoto);
+      if (!s3Key) {
+        const uploadResult = await uploadPhoto(userPhoto);
+        if (!uploadResult.success || !uploadResult.s3Key) {
+          setRemovingBg(false);
+          Alert.alert("Upload Failed", uploadResult.error ?? "Could not upload photo");
+          return;
+        }
+        s3Key = uploadResult.s3Key;
+        // Show the uploaded image so the user sees progress
+        if (uploadResult.s3Url) {
+          setUserPhoto(uploadResult.s3Url);
+          setHeadImage(uploadResult.s3Url);
+        }
+      }
+      const result = await removeBackground(s3Key);
+      if (result.success && result.transparentUrl) {
+        setUserPhoto(result.transparentUrl);
+        setHeadImage(result.transparentUrl);
+      } else if (!result.success) {
+        Alert.alert("Background Removal Failed", result.error ?? "Could not remove background");
+      }
+    } finally {
+      setRemovingBg(false);
     }
-    setRemovingBg(false);
   };
 
   return (

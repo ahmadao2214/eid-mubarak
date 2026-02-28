@@ -3,7 +3,7 @@ import { useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 /** Extract S3 key from our stored publicUrl (https://bucket.s3.region.amazonaws.com/key). */
-function extractS3Key(url: string): string | null {
+export function extractS3Key(url: string): string | null {
   if (!url?.includes("amazonaws.com/")) return null;
   const after = url.split("amazonaws.com/")[1]?.split("?")[0];
   return after && (after.startsWith("user-photos/") || after.startsWith("rendered-videos/"))

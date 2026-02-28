@@ -7,6 +7,7 @@ jest.mock("@/lib/convex", () => ({
   api: {
     storage: {
       getUploadUrl: "storage:getUploadUrl",
+      getDownloadUrl: "storage:getDownloadUrl",
     },
     uploads: {
       removeBackground: "uploads:removeBackground",
@@ -46,13 +47,16 @@ describe("uploads repository", () => {
     expect(result).toBe("user-photos/123.png");
   });
 
-  it("removeBackground calls convexClient.action", async () => {
-    convexClient.action.mockResolvedValue({
-      resultS3Url: "https://transparent.png",
+  it("removeBackground calls removeBackground then getDownloadUrl and returns presigned URL", async () => {
+    convexClient.action
+      .mockResolvedValueOnce({ resultS3Key: "user-photos/rembg/xyz.png" })
+      .mockResolvedValueOnce({ url: "https://transparent.png" });
+    const result = await removeBackground("user-photos/abc.png");
+    expect(convexClient.action).toHaveBeenNthCalledWith(1, "uploads:removeBackground", {
+      s3Key: "user-photos/abc.png",
     });
-    const result = await removeBackground("file:///photo.jpg");
-    expect(convexClient.action).toHaveBeenCalledWith("uploads:removeBackground", {
-      s3Key: "file:///photo.jpg",
+    expect(convexClient.action).toHaveBeenNthCalledWith(2, "storage:getDownloadUrl", {
+      s3Key: "user-photos/rembg/xyz.png",
     });
     expect(result).toEqual({ resultS3Url: "https://transparent.png" });
   });
