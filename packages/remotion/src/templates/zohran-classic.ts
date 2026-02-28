@@ -21,7 +21,7 @@ export const zohranClassic: PresetConfig = {
       animation: "cycle",
     },
     head: {
-      imageUrl: "/assets/heads/zohran.jpg",
+      imageUrl: "/assets/heads/zohran.png",
       position: { x: 50, y: 45 },
       scale: 0.85,
       enterAtFrame: 45,
@@ -37,17 +37,17 @@ export const zohranClassic: PresetConfig = {
     decorativeElements: [
       {
         type: "image",
-        source: "/assets/rose.jpg",
+        source: "/assets/rose.png",
         position: { x: 50, y: 45 },
         scale: 3.0,
         enterAtFrame: 0,
         exitAtFrame: 45,
         animation: "rose-heart",
       },
-      { type: "image", source: "/assets/rose.jpg", position: { x: 15, y: 10 }, scale: 0.8, enterAtFrame: 50, animation: "pulse" },
-      { type: "image", source: "/assets/rose.jpg", position: { x: 85, y: 15 }, scale: 0.8, enterAtFrame: 55, animation: "pulse" },
-      { type: "image", source: "/assets/rose.jpg", position: { x: 10, y: 85 }, scale: 0.8, enterAtFrame: 60, animation: "pulse" },
-      { type: "image", source: "/assets/rose.jpg", position: { x: 90, y: 80 }, scale: 0.8, enterAtFrame: 65, animation: "pulse" },
+      { type: "image", source: "/assets/rose.png", position: { x: 15, y: 10 }, scale: 0.8, enterAtFrame: 50, animation: "pulse" },
+      { type: "image", source: "/assets/rose.png", position: { x: 85, y: 15 }, scale: 0.8, enterAtFrame: 55, animation: "pulse" },
+      { type: "image", source: "/assets/rose.png", position: { x: 10, y: 85 }, scale: 0.8, enterAtFrame: 60, animation: "pulse" },
+      { type: "image", source: "/assets/rose.png", position: { x: 90, y: 80 }, scale: 0.8, enterAtFrame: 65, animation: "pulse" },
     ],
     textSlots: [
       {

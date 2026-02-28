@@ -168,8 +168,8 @@ export async function mockListCelebrityHeads(): Promise<CelebrityHead[]> {
     {
       id: "zohran",
       name: "Zohran",
-      imageUrl: "/assets/heads/zohran.jpg",
-      thumbnail: "/assets/heads/zohran.jpg",
+      imageUrl: "/assets/heads/zohran.png",
+      thumbnail: "/assets/heads/zohran.png",
     },
     {
       id: "drake",

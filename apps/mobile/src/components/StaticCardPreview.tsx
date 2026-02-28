@@ -1,8 +1,10 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Image } from "react-native";
 import type { CompositionProps } from "@/types";
 import { RN_FONT_MAP } from "@/lib/font-map";
 import { Colors } from "@/lib/colors";
+import { useResolvedImageUrl } from "@/hooks/useResolvedImageUrl";
+import { getHeadFilenameFromUrl, isKnownHeadFilename } from "@/lib/head-assets";
 
 interface StaticCardPreviewProps {
   composition: CompositionProps;
@@ -13,6 +15,8 @@ interface StaticCardPreviewProps {
  * Maps background image sources to representative native colors
  * for lightweight mobile preview rendering.
  */
+const PREVIEW_BASE = process.env.EXPO_PUBLIC_PREVIEW_URL?.replace(/\/$/, "") ?? "";
+
 const PLACEHOLDER_BG_COLORS: Record<string, string> = {
   "/assets/ladakh-highway.jpg": "#2a1043",
   "/assets/pakistan-truck-art.jpg": "#5C3A1E",
@@ -23,7 +27,7 @@ const PLACEHOLDER_BG_COLORS: Record<string, string> = {
  * Maps decorative element sources to simple visual hints for mobile preview.
  */
 const DECORATIVE_COLORS: Record<string, { color: string; shape: "heart" | "circle" | "border" }> = {
-  "/assets/rose.jpg": { color: "#FF69B4", shape: "heart" },
+  "/assets/rose.png": { color: "#FF69B4", shape: "heart" },
   "/assets/moon-crescent-icon-moon.jpg": { color: "#FFD700", shape: "circle" },
   "placeholder:gold-particles": { color: "#FFD700", shape: "circle" },
   "/assets/pakistani-truck-art-fram.jpg": { color: "#F5A623", shape: "border" },
@@ -42,6 +46,16 @@ function resolveBackground(source: string, type: string): string {
  */
 export function StaticCardPreview({ composition, size }: StaticCardPreviewProps) {
   const scale = size.width / composition.width;
+  const rawHeadUrl = composition.head?.imageUrl ?? "";
+  const headFilename = getHeadFilenameFromUrl(rawHeadUrl);
+  const usePreviewHead =
+    PREVIEW_BASE && headFilename && isKnownHeadFilename(headFilename);
+  const resolved = useResolvedImageUrl(usePreviewHead ? undefined : rawHeadUrl || undefined);
+  const headImageUrl = usePreviewHead
+    ? `${PREVIEW_BASE}/assets/heads/${headFilename}`
+    : resolved && resolved.startsWith("/") && PREVIEW_BASE
+      ? `${PREVIEW_BASE}${resolved}`
+      : resolved;
 
   const bgColor = resolveBackground(
     composition.background.source,
@@ -112,12 +126,18 @@ export function StaticCardPreview({ composition, size }: StaticCardPreviewProps)
           overflow: "hidden",
           borderWidth: 1.5,
           borderColor: Colors.gold,
-          borderStyle: "dashed",
-          justifyContent: "center",
-          alignItems: "center",
+          borderStyle: headImageUrl ? "solid" : "dashed",
           backgroundColor: "rgba(255,255,255,0.08)",
         }}
-      />
+      >
+        {headImageUrl ? (
+          <Image
+            source={{ uri: headImageUrl }}
+            style={{ width: headSize, height: headSize }}
+            resizeMode="cover"
+          />
+        ) : null}
+      </View>
 
       {/* Text slots — static, visible */}
       {composition.textSlots.map((slot) => (

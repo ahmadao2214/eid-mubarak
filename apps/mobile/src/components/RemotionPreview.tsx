@@ -3,8 +3,10 @@ import { View, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 import type { CompositionProps } from "@/types";
 import { StaticCardPreview } from "./StaticCardPreview";
+import { useResolvedImageUrl } from "@/hooks/useResolvedImageUrl";
+import { getHeadFilenameFromUrl, isKnownHeadFilename } from "@/lib/head-assets";
 
-const PREVIEW_URL = process.env.EXPO_PUBLIC_PREVIEW_URL ?? "";
+const PREVIEW_URL = (process.env.EXPO_PUBLIC_PREVIEW_URL ?? "").replace(/\/$/, "");
 
 interface RemotionPreviewProps {
   composition: CompositionProps;
@@ -16,6 +18,16 @@ export function RemotionPreview({ composition, width, height }: RemotionPreviewP
   const webViewRef = useRef<WebView>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+
+  const rawHeadUrl = composition.head?.imageUrl ?? "";
+  const headFilename = getHeadFilenameFromUrl(rawHeadUrl);
+  const usePreviewServerHead =
+    PREVIEW_URL && headFilename && isKnownHeadFilename(headFilename);
+  const resolvedHeadUrl = useResolvedImageUrl(usePreviewServerHead ? undefined : rawHeadUrl || undefined);
+  const headImageUrl = usePreviewServerHead
+    ? `${PREVIEW_URL}/assets/heads/${headFilename}`
+    : (resolvedHeadUrl ?? rawHeadUrl);
+
 
   const injectComposition = useCallback(
     (comp: CompositionProps) => {
@@ -35,14 +47,20 @@ export function RemotionPreview({ composition, width, height }: RemotionPreviewP
   // After page loads, wait for React to mount then send composition
   useEffect(() => {
     if (!loaded) return;
-    const timer = setTimeout(() => injectComposition(composition), 500);
+    const comp = { ...composition, head: { ...composition.head, imageUrl: headImageUrl } };
+    const timer = setTimeout(() => injectComposition(comp), 500);
     return () => clearTimeout(timer);
   }, [loaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Send composition updates immediately after initial load
+  // Send composition updates when composition or resolved head URL changes
   useEffect(() => {
-    if (loaded) injectComposition(composition);
-  }, [composition, loaded, injectComposition]);
+    if (!loaded) return;
+    const comp: CompositionProps = {
+      ...composition,
+      head: { ...composition.head, imageUrl: headImageUrl },
+    };
+    injectComposition(comp);
+  }, [composition, headImageUrl, loaded, injectComposition]);
 
   if (!PREVIEW_URL || error) {
     return (

@@ -21,7 +21,7 @@ export const truckerArt: PresetConfig = {
       animation: "pulse",
     },
     head: {
-      imageUrl: "/assets/heads/mufti.jpg",
+      imageUrl: "/assets/heads/mufti.png",
       position: { x: 50, y: 42 },
       scale: 0.4,
       enterAtFrame: 10,
@@ -39,14 +39,14 @@ export const truckerArt: PresetConfig = {
       },
       {
         type: "image",
-        source: "/assets/pakistani-truck-art-chain.jpg",
+        source: "/assets/pakistani-truck-art-chain.png",
         position: { x: 50, y: 15 },
         scale: 1,
         enterAtFrame: 5,
       },
       {
         type: "image",
-        source: "/assets/pakistani-truck-art-peacock.jpg",
+        source: "/assets/pakistani-truck-art-peacock.png",
         position: { x: 50, y: 90 },
         scale: 0.9,
         enterAtFrame: 10,

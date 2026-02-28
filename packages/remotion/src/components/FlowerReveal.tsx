@@ -20,11 +20,11 @@ const PETAL_COUNTS: Record<string, number> = {
 };
 
 /** Real rose image for rose type, SVG ellipses for others */
-const ROSE_IMAGE_SRC = "/assets/rose.jpg";
+const ROSE_IMAGE_SRC = "/assets/rose.png";
 
 /**
  * Renders petals as a wreath AROUND the head.
- * For rose type: uses the real rose.jpg with screen blend.
+ * For rose type: uses the real rose.png with screen blend.
  * For other types: SVG ellipse fallback.
  */
 const PetalFallback: React.FC<{

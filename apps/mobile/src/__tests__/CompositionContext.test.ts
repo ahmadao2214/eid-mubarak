@@ -69,7 +69,7 @@ describe("CompositionContext reducer - SELECT_PRESET head auto-select", () => {
       presetId: "zohran-classic",
     });
 
-    expect(newState.composition.head.imageUrl).toBe("/assets/heads/zohran.jpg");
+    expect(newState.composition.head.imageUrl).toBe("/assets/heads/zohran.png");
   });
 
   test("SELECT_PRESET with empty head preserves previous head", () => {
@@ -94,6 +94,6 @@ describe("CompositionContext reducer - SELECT_PRESET head auto-select", () => {
       presetId: "trucker-art",
     });
 
-    expect(newState.composition.head.imageUrl).toBe("/assets/heads/mufti.jpg");
+    expect(newState.composition.head.imageUrl).toBe("/assets/heads/mufti.png");
   });
 });

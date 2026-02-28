@@ -73,7 +73,7 @@ describe("Preset-specific values", () => {
     expect(p.head.flowerReveal?.videoSource).toBe("/assets/sunflower-bloom.mp4");
     expect(p.head.flowerReveal?.enterAtFrame).toBe(15);
     expect(p.head.enterAtFrame).toBe(45);
-    expect(p.head.imageUrl).toBe("/assets/heads/zohran.jpg");
+    expect(p.head.imageUrl).toBe("/assets/heads/zohran.png");
     // Rose-heart decorative element with exitAtFrame
     const roseHeart = p.decorativeElements.find((d) => d.animation === "rose-heart");
     expect(roseHeart).toBeDefined();
@@ -126,9 +126,9 @@ describe("Preset-specific values", () => {
 });
 
 describe("Default heads", () => {
-  test("trucker-art has default head /assets/heads/mufti.jpg", () => {
+  test("trucker-art has default head /assets/heads/mufti.png", () => {
     const p = getPreset("trucker-art").defaultProps;
-    expect(p.head.imageUrl).toBe("/assets/heads/mufti.jpg");
+    expect(p.head.imageUrl).toBe("/assets/heads/mufti.png");
   });
 
   test("celebrity-greeting has default head /assets/heads/srk.jpg", () => {
@@ -136,8 +136,8 @@ describe("Default heads", () => {
     expect(p.head.imageUrl).toBe("/assets/heads/srk.jpg");
   });
 
-  test("six-head-spiral has default head /assets/heads/drak-hijab.jpg", () => {
+  test("six-head-spiral has default head /assets/heads/drak-hijab.png", () => {
     const p = getPreset("six-head-spiral").defaultProps;
-    expect(p.head.imageUrl).toBe("/assets/heads/drak-hijab.jpg");
+    expect(p.head.imageUrl).toBe("/assets/heads/drak-hijab.png");
   });
 });

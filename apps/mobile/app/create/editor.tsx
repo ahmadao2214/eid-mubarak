@@ -23,6 +23,8 @@ import { Colors } from "@/lib/colors";
 import { pickImageFromGallery, pickImageFromCamera, cropToSquare } from "@/hooks/useImagePicker";
 import { removeBackgroundFromImage } from "@/hooks/useRemoveBg";
 import { useAssetsByType, useCelebrityHeads } from "@/hooks/useConvexData";
+import { useResolvedImageUrl } from "@/hooks/useResolvedImageUrl";
+import { getHeadFilenameFromUrl } from "@/lib/head-assets";
 import { lightTap } from "@/lib/haptics";
 import type {
   PresetId,
@@ -49,6 +51,76 @@ const TABS: { id: EditorTab; label: string }[] = [
 const HUE_COLORS: HueColor[] = [
   "#FFD700", "#FF69B4", "#00C853", "#2196F3", "#F5A623", "none",
 ];
+
+// Bundled head images by filename — require() must be static for Metro. Key = lowercase filename.
+const HEAD_IMAGES_BY_FILENAME: Record<string, ReturnType<typeof require>> = {
+  "zohran.png": require("../../assets/heads/zohran.png"),
+  "central-cee.png": require("../../assets/heads/central-cee.png"),
+  "drak-hijab.png": require("../../assets/heads/drak-hijab.png"),
+  "mufti.png": require("../../assets/heads/mufti.png"),
+  "onijah-robinson.png": require("../../assets/heads/onijah-robinson.png"),
+  "sehad-kamran.png": require("../../assets/heads/sehad-kamran.png"),
+  "srk.jpg": require("../../assets/heads/srk.jpg"),
+};
+
+/** Head tile — uses bundled asset by filename (case-insensitive) from S3 URL, else presigned URL. */
+function CelebHeadTile({
+  celeb,
+  isSelected,
+  headCellWidth,
+  onPress,
+}: {
+  celeb: CelebrityHead;
+  isSelected: boolean;
+  headCellWidth: number;
+  onPress: () => void;
+}) {
+  const filename = getHeadFilenameFromUrl(celeb.imageUrl);
+  const bundled = filename ? HEAD_IMAGES_BY_FILENAME[filename] : null;
+  const resolvedUri = useResolvedImageUrl(bundled ? undefined : (celeb.thumbnail ?? celeb.imageUrl));
+  const source = bundled ?? (resolvedUri ? { uri: resolvedUri } : { uri: celeb.imageUrl });
+
+  return (
+    <Pressable
+      testID={`celeb-head-${celeb.id}`}
+      onPress={onPress}
+      style={{ alignItems: "center", width: headCellWidth }}
+    >
+      <View
+        style={{
+          width: headCellWidth - 8,
+          height: headCellWidth - 8,
+          borderRadius: (headCellWidth - 8) / 2,
+          borderWidth: 3,
+          borderColor: isSelected ? Colors.gold : Colors.borderSubtle,
+          overflow: "hidden",
+        }}
+      >
+        <Image
+          source={source}
+          style={{
+            width: headCellWidth - 14,
+            height: headCellWidth - 14,
+            borderRadius: (headCellWidth - 14) / 2,
+          }}
+          resizeMode="cover"
+        />
+      </View>
+      <Text
+        style={{
+          color: isSelected ? Colors.gold : Colors.textSecondary,
+          fontSize: 11,
+          marginTop: 4,
+          textAlign: "center",
+          fontWeight: isSelected ? "bold" : "normal",
+        }}
+        numberOfLines={1}
+      >
+        {celeb.name}
+      </Text>
+    </Pressable>
+  );
+}
 
 const HEAD_ANIMATIONS: { id: HeadAnimationType; label: string }[] = [
   { id: "pop", label: "Pop" },
@@ -166,24 +238,22 @@ export default function EditorScreen() {
     }
   }, [paramPresetId]);
 
-  // Sync head picker selection when template changes
+  // Sync head picker selection when template changes (highlight which head is selected)
+  // Do NOT overwrite /assets/ paths with S3 URLs — /assets/ loads in WebView; S3 may not.
   useEffect(() => {
     const headUrl = composition.head.imageUrl;
     if (!headUrl) {
       setSelectedHeadId(null);
       return;
     }
-    // Extract filename from the preset's local path (e.g. "zohran.jpg" from "/assets/heads/zohran.jpg")
-    const filename = headUrl.split("/").pop() ?? "";
-    const match = celebHeads.find((celeb) => celeb.imageUrl.endsWith(filename));
+    const filename = getHeadFilenameFromUrl(headUrl);
+    const match = filename
+      ? celebHeads.find((celeb) => getHeadFilenameFromUrl(celeb.imageUrl) === filename)
+      : null;
     if (match) {
       setSelectedHeadId(match.id);
-      // Only update head image to S3 URL if it's currently a local asset path
-      if (headUrl.startsWith("/assets/")) {
-        setHeadImage(match.imageUrl);
-      }
     }
-  }, [state.selectedPresetId, celebHeads.length]);
+  }, [state.selectedPresetId, celebHeads.length, composition.head.imageUrl]);
 
   const isMyPhoto = selectedHeadId === MY_PHOTO_ID;
 
@@ -410,51 +480,16 @@ export default function EditorScreen() {
                   </Text>
                 </Pressable>
 
-                {/* Celebrity heads with real images */}
-                {celebHeads.map((celeb) => {
-                  const isSelected = selectedHeadId === celeb.id;
-                  return (
-                    <Pressable
-                      key={celeb.id}
-                      testID={`celeb-head-${celeb.id}`}
-                      onPress={() => handleSelectCeleb(celeb)}
-                      style={{ alignItems: "center", width: headCellWidth }}
-                    >
-                      <View
-                        style={{
-                          width: headCellWidth - 8,
-                          height: headCellWidth - 8,
-                          borderRadius: (headCellWidth - 8) / 2,
-                          borderWidth: 3,
-                          borderColor: isSelected ? Colors.gold : Colors.borderSubtle,
-                          overflow: "hidden",
-                        }}
-                      >
-                        <Image
-                          source={{ uri: celeb.thumbnail ?? celeb.imageUrl }}
-                          style={{
-                            width: headCellWidth - 14,
-                            height: headCellWidth - 14,
-                            borderRadius: (headCellWidth - 14) / 2,
-                          }}
-                          resizeMode="cover"
-                        />
-                      </View>
-                      <Text
-                        style={{
-                          color: isSelected ? Colors.gold : Colors.textSecondary,
-                          fontSize: 11,
-                          marginTop: 4,
-                          textAlign: "center",
-                          fontWeight: isSelected ? "bold" : "normal",
-                        }}
-                        numberOfLines={1}
-                      >
-                        {celeb.name}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+                {/* Celebrity heads with real images (resolved for private S3) */}
+                {celebHeads.map((celeb) => (
+                  <CelebHeadTile
+                    key={celeb.id}
+                    celeb={celeb}
+                    isSelected={selectedHeadId === celeb.id}
+                    headCellWidth={headCellWidth}
+                    onPress={() => handleSelectCeleb(celeb)}
+                  />
+                ))}
               </View>
 
               {/* My Photo upload UI */}

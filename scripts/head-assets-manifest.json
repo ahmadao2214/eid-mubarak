@@ -1,0 +1,45 @@
+[
+  {
+    "name": "Zohran",
+    "type": "celebrity_head",
+    "localPath": "assets/heads/zohran.png",
+    "s3Key": "heads/zohran.png",
+    "tags": ["celebrity", "politician"]
+  },
+  {
+    "name": "Central Cee",
+    "type": "celebrity_head",
+    "localPath": "assets/heads/central-cee.png",
+    "s3Key": "heads/central-cee.png",
+    "tags": ["celebrity"]
+  },
+  {
+    "name": "Drake Hijab",
+    "type": "celebrity_head",
+    "localPath": "assets/heads/drak-hijab.png",
+    "s3Key": "heads/drak-hijab.png",
+    "tags": ["celebrity"]
+  },
+  {
+    "name": "Mufti",
+    "type": "celebrity_head",
+    "localPath": "assets/heads/mufti.png",
+    "s3Key": "heads/mufti.png",
+    "tags": ["celebrity"]
+  },
+  {
+    "name": "Onijah Robinson",
+    "type": "celebrity_head",
+    "localPath": "assets/heads/onijah-robinson.png",
+    "s3Key": "heads/onijah-robinson.png",
+    "tags": ["celebrity"]
+  },
+  {
+    "name": "Sehad Kamran",
+    "type": "celebrity_head",
+    "localPath": "assets/heads/sehad-kamran.png",
+    "s3Key": "heads/sehad-kamran.png",
+    "tags": ["celebrity"]
+  }
+]
+

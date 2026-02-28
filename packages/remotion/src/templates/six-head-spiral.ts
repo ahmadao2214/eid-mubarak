@@ -21,7 +21,7 @@ export const sixHeadSpiral: PresetConfig = {
       animation: "pulse",
     },
     head: {
-      imageUrl: "/assets/heads/drak-hijab.jpg",
+      imageUrl: "/assets/heads/drak-hijab.png",
       position: { x: 50, y: 45 },
       scale: 0.3,
       enterAtFrame: 15,

@@ -63,7 +63,7 @@ describe("FlowerReveal", () => {
     // Rose has 8 petals rendered as <img> tags
     const imgs = getAllByTestId("rose-petal-img");
     expect(imgs).toHaveLength(8);
-    expect(imgs[0].getAttribute("src")).toBe("/assets/rose.jpg");
+    expect(imgs[0].getAttribute("src")).toBe("/assets/rose.png");
   });
 
   test("renders SVG petal fallback for sunflower", () => {

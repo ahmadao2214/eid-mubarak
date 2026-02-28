@@ -63,11 +63,12 @@ export function mapAsset(doc: Doc<"assets">): Asset {
 }
 
 export function mapCelebrityHead(doc: Doc<"assets">): CelebrityHead {
+  // Use S3 URLs; CelebHeadTile + RemotionPreview resolve to presigned HTTPS via useResolvedImageUrl.
   return {
     id: doc._id,
     name: doc.name,
     imageUrl: doc.s3Url,
-    thumbnail: doc.s3Url, // Same URL for now; can add thumbs later
+    thumbnail: doc.s3Url,
   };
 }
 

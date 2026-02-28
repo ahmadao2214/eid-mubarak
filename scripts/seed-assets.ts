@@ -5,16 +5,37 @@
  * Usage:
  *   CONVEX_URL=<your-deployment-url> bun run scripts/seed-assets.ts
  *
- * The S3 URLs below are placeholders. Replace them with real S3 URLs after
- * running upload-assets-to-s3.sh.
+ * S3 URLs: if S3_BUCKET (and optionally AWS_REGION) are set in apps/mobile/.env
+ * or env, uses https://${S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com so DB matches
+ * Convex storage; otherwise falls back to default bucket URL.
+ *
+ * For celebrity heads only, use scripts/sync-celebrity-heads-db.js to replace
+ * all heads with the canonical 7 (fixes stale keys after S3 .jpg → .png changes).
  *
  * All seed mutations are idempotent (safe to re-run).
  */
 
+import { readFileSync, existsSync } from "fs";
+import { resolve } from "path";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../apps/mobile/convex/_generated/api";
 
-const CONVEX_URL = process.env.CONVEX_URL ?? process.env.EXPO_PUBLIC_CONVEX_URL ?? "";
+const REPO_ROOT = resolve(import.meta.dir, "..");
+
+function loadEnv(): Record<string, string> {
+  const env = { ...process.env } as Record<string, string>;
+  const envPath = resolve(REPO_ROOT, "apps", "mobile", ".env");
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, "utf8").split("\n")) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.+)\s*$/);
+      if (m && !env[m[1]]) env[m[1]] = m[2].trim().replace(/^['"]|['"]$/g, "");
+    }
+  }
+  return env;
+}
+
+const env = loadEnv();
+const CONVEX_URL = env.CONVEX_URL ?? env.EXPO_PUBLIC_CONVEX_URL ?? "";
 
 if (!CONVEX_URL) {
   console.error("Error: CONVEX_URL or EXPO_PUBLIC_CONVEX_URL env var required");
@@ -23,17 +44,20 @@ if (!CONVEX_URL) {
 
 const client = new ConvexHttpClient(CONVEX_URL);
 
-const S3_BASE = "https://eid-meme-maker-assets.s3.amazonaws.com";
+const bucket = env.S3_BUCKET;
+const region = env.AWS_REGION ?? "us-east-1";
+const S3_BASE =
+  bucket ? `https://${bucket}.s3.${region}.amazonaws.com` : "https://eid-meme-maker-assets.s3.amazonaws.com";
 
 // ── Celebrity Heads ─────────────────────────────────────────
 
 const celebrityHeads = [
-  { name: "Zohran", s3Key: "heads/zohran.jpg", tags: ["celebrity", "politician"] },
-  { name: "Central Cee", s3Key: "heads/central-cee.jpg", tags: ["celebrity"] },
-  { name: "Drake Hijab", s3Key: "heads/drak-hijab.jpg", tags: ["celebrity"] },
-  { name: "Mufti", s3Key: "heads/mufti.jpg", tags: ["celebrity"] },
-  { name: "Onijah Robinson", s3Key: "heads/onijah-robinson.jpg", tags: ["celebrity"] },
-  { name: "Sehad Kamran", s3Key: "heads/sehad-kamran.jpg", tags: ["celebrity"] },
+  { name: "Zohran", s3Key: "heads/zohran.png", tags: ["celebrity", "politician"] },
+  { name: "Central Cee", s3Key: "heads/central-cee.png", tags: ["celebrity"] },
+  { name: "Drake Hijab", s3Key: "heads/drak-hijab.png", tags: ["celebrity"] },
+  { name: "Mufti", s3Key: "heads/mufti.png", tags: ["celebrity"] },
+  { name: "Onijah Robinson", s3Key: "heads/onijah-robinson.png", tags: ["celebrity"] },
+  { name: "Sehad Kamran", s3Key: "heads/sehad-kamran.png", tags: ["celebrity"] },
   { name: "SRK", s3Key: "heads/srk.jpg", tags: ["celebrity", "bollywood"] },
 ];
 

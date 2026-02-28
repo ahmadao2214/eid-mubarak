@@ -6,9 +6,9 @@ import { api } from "../../convex/_generated/api";
 export function extractS3Key(url: string): string | null {
   if (!url?.includes("amazonaws.com/")) return null;
   const after = url.split("amazonaws.com/")[1]?.split("?")[0];
-  return after && (after.startsWith("user-photos/") || after.startsWith("rendered-videos/"))
-    ? after
-    : null;
+  if (!after) return null;
+  const allowedPrefixes = ["user-photos/", "rendered-videos/", "heads/", "backgrounds/"];
+  return allowedPrefixes.some((p) => after.startsWith(p)) ? after : null;
 }
 
 /**
